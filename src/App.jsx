@@ -75,6 +75,8 @@ export default function App() {
           <Route path="/verify-receipt" element={<VerifyReceiptPage />} />
           <Route path="/verify-receipt/:token" element={<VerifyReceiptPage />} />
           
+          <Route path="/dashboard" element={<MemberDashboardPage />} />
+          <Route path="/member" element={<MemberDashboardPage />} />
           <Route path="/member/dashboard" element={<MemberDashboardPage />} />
           <Route path="/member/profile" element={<MemberDashboardPage />} />
           <Route path="/member/shares" element={<MemberDashboardPage />} />
@@ -82,6 +84,8 @@ export default function App() {
           <Route path="/member/loans" element={<MemberDashboardPage />} />
           <Route path="/member/receipts" element={<MemberDashboardPage />} />
           <Route path="/portal" element={<MemberDashboardPage />} />
+          <Route path="/staff" element={<MemberDashboardPage />} />
+          <Route path="/staff/dashboard" element={<MemberDashboardPage />} />
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
