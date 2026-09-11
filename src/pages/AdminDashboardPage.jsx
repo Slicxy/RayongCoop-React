@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ShieldCheck, Users, Settings, Database, Activity, 
@@ -6,7 +6,8 @@ import {
   Trash2, Edit, CheckCircle2, AlertTriangle, Lock, 
   Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles, 
   LogOut, ArrowRight, Eye, Bell, Newspaper, Image, 
-  Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink
+  Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink,
+  UploadCloud, FileImage, ImagePlus
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
@@ -75,6 +76,51 @@ export default function AdminDashboardPage() {
       };
     }
   });
+
+  // Pop-up Drag & Drop File State
+  const popupFileRef = useRef(null);
+  const [isPopupDragging, setIsPopupDragging] = useState(false);
+  const [popupFileInfo, setPopupFileInfo] = useState(null);
+
+  const handlePopupFileUpload = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น (เช่น PNG, JPG, JPEG, WEBP, SVG)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ไฟล์รูปภาพมีขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ที่มีขนาดเล็กลง');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      setPopupCampaign(prev => ({ ...prev, imageUrl: base64 }));
+      setPopupFileInfo({
+        name: file.name,
+        size: (file.size / 1024).toFixed(1) + ' KB'
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePopupDrop = (e) => {
+    e.preventDefault();
+    setIsPopupDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handlePopupFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handlePopupDragOver = (e) => {
+    e.preventDefault();
+    setIsPopupDragging(true);
+  };
+
+  const handlePopupDragLeave = () => {
+    setIsPopupDragging(false);
+  };
 
   // 5. Member Feedback & Complaints State
   const [feedbacks, setFeedbacks] = useState(() => {
@@ -589,9 +635,134 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">รูปภาพแคมเปญ (Image URL)</label>
-                <input type="text" className="form-control" value={popupCampaign.imageUrl} onChange={(e) => setPopupCampaign({ ...popupCampaign, imageUrl: e.target.value })} placeholder="/assets/img/popup_dividend.jpg" />
+              {/* Drop File Image Upload Zone */}
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>รูปภาพแคมเปญ (Drop / Upload Image File)</span>
+                  {popupCampaign.imageUrl && (
+                    <span style={{ fontSize: '0.78rem', color: 'var(--accent-emerald-dark)', fontWeight: 600 }}>
+                      ✓ มีรูปภาพพร้อมแสดงผล
+                    </span>
+                  )}
+                </label>
+
+                {/* Hidden Native File Input */}
+                <input
+                  type="file"
+                  ref={popupFileRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handlePopupFileUpload(e.target.files[0]);
+                    }
+                  }}
+                />
+
+                {/* Dropzone Box */}
+                <div
+                  onDrop={handlePopupDrop}
+                  onDragOver={handlePopupDragOver}
+                  onDragLeave={handlePopupDragLeave}
+                  onClick={() => popupFileRef.current && popupFileRef.current.click()}
+                  style={{
+                    border: isPopupDragging ? '2px dashed var(--primary-600)' : '2px dashed var(--border-subtle)',
+                    background: isPopupDragging ? 'rgba(2, 132, 199, 0.08)' : 'var(--bg-subtle)',
+                    borderRadius: '14px',
+                    padding: '2rem 1.5rem',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.75rem'
+                  }}
+                >
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '50%',
+                    background: isPopupDragging ? 'var(--primary-600)' : 'rgba(2, 132, 199, 0.1)',
+                    color: isPopupDragging ? '#ffffff' : 'var(--primary-600)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <UploadCloud size={28} />
+                  </div>
+
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+                      {isPopupDragging ? 'ปล่อยไฟล์เพื่ออัปโหลดทันที' : 'ลากไฟล์รูปภาพมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์'}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      รองรับไฟล์ PNG, JPG, JPEG, WEBP (ขนาดไม่เกิน 5MB) • อัตราส่วนแนะนำ 2:1
+                    </div>
+                  </div>
+
+                  {popupFileInfo && (
+                    <div style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-subtle)',
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '20px',
+                      fontSize: '0.78rem',
+                      color: 'var(--primary-700)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}>
+                      <FileImage size={14} />
+                      <span>{popupFileInfo.name} ({popupFileInfo.size})</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick Preset / Action Buttons */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPopupCampaign({ ...popupCampaign, imageUrl: '/assets/img/popup_dividend.jpg' });
+                        setPopupFileInfo(null);
+                      }}
+                      className="btn btn-sm btn-subtle"
+                      style={{ fontSize: '0.75rem', padding: '0.25rem 0.55rem' }}
+                    >
+                      ✨ ใช้ภาพปันผลเริ่มต้น
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPopupCampaign({ ...popupCampaign, imageUrl: '/assets/img/hero_bg_coop.jpg' });
+                        setPopupFileInfo(null);
+                      }}
+                      className="btn btn-sm btn-subtle"
+                      style={{ fontSize: '0.75rem', padding: '0.25rem 0.55rem' }}
+                    >
+                      🏛️ ภาพอาคารสหกรณ์
+                    </button>
+                  </div>
+
+                  {popupCampaign.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPopupCampaign({ ...popupCampaign, imageUrl: '' });
+                        setPopupFileInfo(null);
+                      }}
+                      className="btn btn-sm btn-outline"
+                      style={{ fontSize: '0.75rem', color: 'var(--accent-rose)', borderColor: 'var(--border-subtle)', padding: '0.25rem 0.55rem' }}
+                    >
+                      <Trash2 size={13} style={{ marginRight: '0.25rem' }} />
+                      <span>ลบรูปภาพ</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Preview */}
