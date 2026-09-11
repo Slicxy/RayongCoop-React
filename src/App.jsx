@@ -24,6 +24,7 @@ import NewsPage from './pages/NewsPage';
 import ContactPage from './pages/ContactPage';
 import VerifyReceiptPage from './pages/VerifyReceiptPage';
 import MemberDashboardPage from './pages/MemberDashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -80,6 +81,8 @@ export default function App() {
           <Route path="/member/loans" element={<MemberDashboardPage />} />
           <Route path="/member/receipts" element={<MemberDashboardPage />} />
           <Route path="/portal" element={<MemberDashboardPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           
           <Route path="*" element={<NotFoundPage />} />

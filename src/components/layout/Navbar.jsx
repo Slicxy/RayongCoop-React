@@ -193,10 +193,16 @@ export default function Navbar() {
           </Link>
 
           {isLoggedIn ? (
-            <Link to="/member/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-              <LayoutDashboard size={15} />
-              <span>พอร์ทัลสมาชิก</span>
-            </Link>
+            user?.role === 'super_admin' ? (
+              <Link to="/admin/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #ef4444, #991b1b)' }}>
+                <span>👑 Admin Dashboard</span>
+              </Link>
+            ) : (
+              <Link to="/member/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                <LayoutDashboard size={15} />
+                <span>{user?.role === 'staff' ? 'แดชบอร์ดเจ้าหน้าที่' : user?.role === 'auditor' ? 'แดชบอร์ดผู้ตรวจสอบ' : 'พอร์ทัลสมาชิก'}</span>
+              </Link>
+            )
           ) : (
             <button 
               onClick={() => setShowAuthModal(true)} 
