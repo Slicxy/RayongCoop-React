@@ -46,31 +46,31 @@ export default function Navbar() {
       boxShadow: isScrolled ? 'var(--shadow-md)' : 'none',
       transition: 'all 0.3s ease'
     }}>
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem' }}>
+      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', gap: '1rem' }}>
         
         {/* Logo & Brand */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', textDecoration: 'none' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', flexShrink: 0 }}>
           <img 
             src="/assets/img/logo.webp" 
             alt="Logo" 
-            style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+            style={{ width: '44px', height: '44px', objectFit: 'contain', flexShrink: 0 }}
             onError={(e) => { e.target.src = '/img/logo.webp'; }}
           />
-          <div>
+          <div style={{ whiteSpace: 'nowrap' }}>
             <div style={{ 
               fontFamily: 'var(--font-heading)', 
               fontWeight: 800, 
-              fontSize: '1.15rem', 
+              fontSize: '1.1rem', 
               color: 'var(--primary-700)', 
-              lineHeight: 1.2 
+              lineHeight: 1.25 
             }}>
               {COOP_INFO.nameTh}
             </div>
             <div style={{ 
-              fontSize: '0.75rem', 
+              fontSize: '0.72rem', 
               color: 'var(--text-muted)', 
               fontWeight: 500,
-              letterSpacing: '0.02em' 
+              letterSpacing: '0.01em' 
             }}>
               {COOP_INFO.nameEn}
             </div>
@@ -78,7 +78,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexWrap: 'nowrap' }}>
           
           <Link 
             to="/" 
@@ -93,31 +93,31 @@ export default function Navbar() {
             <button 
               onClick={() => toggleDropdown('about')}
               onMouseEnter={() => setActiveDropdown('about')}
-              style={{ ...navLinkStyle(isActive('/about') || isActive('/board') || isActive('/statistics')), display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              style={{ ...navLinkStyle(isActive('/about') || isActive('/board') || isActive('/statistics')), display: 'flex', alignItems: 'center', gap: '0.25rem' }}
             >
               <span>เกี่ยวกับเรา</span>
               <ChevronDown size={14} />
             </button>
             {activeDropdown === 'about' && (
-              <div className="dropdown-menu" style={dropdownMenuStyle}>
+              <div className="dropdown-menu animate-fade-in" style={dropdownMenuStyle}>
                 <Link to="/about" style={dropdownItemStyle}>
-                  <Landmark size={16} style={{ color: 'var(--primary-600)' }} />
+                  <Landmark size={16} style={{ color: 'var(--primary-600)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>ประวัติและวิสัยทัศน์</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ประวัติและวิสัยทัศน์</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ความเป็นมาและพันธกิจ</div>
                   </div>
                 </Link>
                 <Link to="/board" style={dropdownItemStyle}>
-                  <Award size={16} style={{ color: 'var(--accent-gold-dark)' }} />
+                  <Award size={16} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>คณะกรรมการดำเนินการ</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>คณะกรรมการดำเนินการ</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>และฝ่ายจัดการบริหาร</div>
                   </div>
                 </Link>
                 <Link to="/statistics" style={dropdownItemStyle}>
-                  <ShieldCheck size={16} style={{ color: 'var(--accent-teal)' }} />
+                  <ShieldCheck size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>ฐานะและสถิติทางการเงิน</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ฐานะและสถิติทางการเงิน</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ความมั่นคงของสหกรณ์</div>
                   </div>
                 </Link>
@@ -130,45 +130,45 @@ export default function Navbar() {
             <button 
               onClick={() => toggleDropdown('financial')}
               onMouseEnter={() => setActiveDropdown('financial')}
-              style={{ ...navLinkStyle(isActive('/deposits') || isActive('/loans') || isActive('/calculator') || isActive('/loan-checklist') || isActive('/dividend-estimator')), display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              style={{ ...navLinkStyle(isActive('/deposits') || isActive('/loans') || isActive('/calculator') || isActive('/loan-checklist') || isActive('/dividend-estimator')), display: 'flex', alignItems: 'center', gap: '0.25rem' }}
             >
-              <span>บริการทางการเงิน</span>
+              <span>บริการการเงิน</span>
               <ChevronDown size={14} />
             </button>
             {activeDropdown === 'financial' && (
-              <div className="dropdown-menu" style={dropdownMenuStyle}>
+              <div className="dropdown-menu animate-fade-in" style={dropdownMenuStyle}>
                 <Link to="/deposits" style={dropdownItemStyle}>
-                  <Landmark size={16} style={{ color: 'var(--accent-teal)' }} />
+                  <Landmark size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>เงินฝากและดอกเบี้ย</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>เงินฝากและดอกเบี้ย</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ออมทรัพย์ และเงินฝากประจำ</div>
                   </div>
                 </Link>
                 <Link to="/loans" style={dropdownItemStyle}>
-                  <ShieldCheck size={16} style={{ color: 'var(--primary-600)' }} />
+                  <ShieldCheck size={16} style={{ color: 'var(--primary-600)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>ผลิตภัณฑ์สินเชื่อ</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ผลิตภัณฑ์สินเชื่อ</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ฉุกเฉิน, สามัญ, พิเศษ</div>
                   </div>
                 </Link>
                 <Link to="/calculator" style={dropdownItemStyle}>
-                  <Calculator size={16} style={{ color: 'var(--accent-gold-dark)' }} />
+                  <Calculator size={16} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>โปรแกรมคำนวณเงินกู้</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>โปรแกรมคำนวณเงินกู้</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>คำนวณค่างวดและดอกเบี้ย</div>
                   </div>
                 </Link>
                 <Link to="/loan-checklist" style={dropdownItemStyle}>
-                  <FileText size={16} style={{ color: 'var(--accent-emerald)' }} />
+                  <FileText size={16} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>เช็คความพร้อมการกู้</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>เช็คความพร้อมการกู้</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ตรวจคุณสมบัติและเอกสาร</div>
                   </div>
                 </Link>
                 <Link to="/dividend-estimator" style={dropdownItemStyle}>
-                  <Award size={16} style={{ color: 'var(--accent-rose)' }} />
+                  <Award size={16} style={{ color: 'var(--accent-rose)', flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>ประมาณการเงินปันผล</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ประมาณการเงินปันผล</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>และเงินเฉลี่ยคืนสิ้นปี</div>
                   </div>
                 </Link>
@@ -185,15 +185,15 @@ export default function Navbar() {
         </nav>
 
         {/* Right CTA Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           
-          <Link to="/calculator" className="btn btn-gold btn-sm hide-mobile" style={{ fontSize: '0.85rem' }}>
+          <Link to="/calculator" className="btn btn-gold btn-sm hide-mobile" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
             <Calculator size={15} />
             <span>คำนวณเงินกู้</span>
           </Link>
 
           {isLoggedIn ? (
-            <Link to="/member/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem' }}>
+            <Link to="/member/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
               <LayoutDashboard size={15} />
               <span>พอร์ทัลสมาชิก</span>
             </Link>
@@ -201,10 +201,10 @@ export default function Navbar() {
             <button 
               onClick={() => setShowAuthModal(true)} 
               className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.85rem' }}
+              style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}
             >
               <LogIn size={15} />
-              <span>เข้าสู่ระบบสมาชิก</span>
+              <span>เข้าสู่ระบบ</span>
             </button>
           )}
 
@@ -217,8 +217,10 @@ export default function Navbar() {
               color: 'var(--text-main)', 
               background: 'var(--bg-subtle)', 
               borderRadius: '8px',
-              display: 'none'
+              display: 'none',
+              border: '1px solid var(--border-subtle)'
             }}
+            aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -229,13 +231,14 @@ export default function Navbar() {
 
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div style={{
+        <div className="animate-fade-in" style={{
           background: 'var(--bg-surface)',
           borderTop: '1px solid var(--border-subtle)',
           padding: '1.25rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.75rem'
+          gap: '0.65rem',
+          boxShadow: 'var(--shadow-xl)'
         }}>
           <Link to="/" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>หน้าแรก</Link>
           <Link to="/about" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>เกี่ยวกับสหกรณ์</Link>
@@ -258,15 +261,19 @@ export default function Navbar() {
 }
 
 const navLinkStyle = (active) => ({
-  padding: '0.5rem 0.85rem',
-  fontSize: '0.92rem',
+  padding: '0.45rem 0.65rem',
+  fontSize: '0.88rem',
   fontFamily: 'var(--font-heading)',
   fontWeight: active ? '700' : '500',
   color: active ? 'var(--primary-600)' : 'var(--text-main)',
   borderRadius: '8px',
   background: active ? 'var(--primary-50)' : 'transparent',
   transition: 'all 0.2s ease',
-  cursor: 'pointer'
+  whiteSpace: 'nowrap',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  flexShrink: 0
 });
 
 const dropdownMenuStyle = {
@@ -274,7 +281,7 @@ const dropdownMenuStyle = {
   top: '100%',
   left: 0,
   minWidth: '240px',
-  background: 'var(--bg-surface)',
+  background: 'var(--bg-surface-elevated)',
   border: '1px solid var(--border-subtle)',
   borderRadius: '12px',
   boxShadow: 'var(--shadow-xl)',
@@ -293,7 +300,8 @@ const dropdownItemStyle = {
   borderRadius: '8px',
   fontSize: '0.88rem',
   color: 'var(--text-main)',
-  transition: 'background 0.15s ease'
+  transition: 'background 0.15s ease',
+  whiteSpace: 'nowrap'
 };
 
 const mobileItemStyle = {
