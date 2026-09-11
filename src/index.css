@@ -240,15 +240,18 @@ input, select, textarea {
   color: var(--primary-700);
   border-radius: var(--radius-full);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.75rem;
   font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
 }
 
 [data-theme='dark'] .section-badge {
-  background: rgba(37, 99, 235, 0.2);
-  color: var(--primary-300);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(37, 99, 235, 0.25) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(147, 197, 253, 0.4) !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.25) !important;
 }
 
 .section-title {
@@ -421,11 +424,11 @@ input, select, textarea {
 .badge-emerald { background: var(--accent-emerald-light); color: var(--accent-emerald-dark); }
 .badge-rose { background: var(--accent-rose-light); color: var(--accent-rose); }
 
-[data-theme='dark'] .badge-primary { background: rgba(37, 99, 235, 0.2); color: var(--primary-300); }
-[data-theme='dark'] .badge-gold { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
-[data-theme='dark'] .badge-teal { background: rgba(13, 148, 136, 0.2); color: #5eead4; }
-[data-theme='dark'] .badge-emerald { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
-[data-theme='dark'] .badge-rose { background: rgba(244, 63, 94, 0.2); color: #fda4af; }
+[data-theme='dark'] .badge-primary { background: rgba(37, 99, 235, 0.25) !important; color: #93c5fd !important; border: 1px solid rgba(147, 197, 253, 0.3); }
+[data-theme='dark'] .badge-gold { background: rgba(245, 158, 11, 0.25) !important; color: #fde047 !important; border: 1px solid rgba(253, 224, 71, 0.3); }
+[data-theme='dark'] .badge-teal { background: rgba(13, 148, 136, 0.25) !important; color: #5eead4 !important; border: 1px solid rgba(94, 234, 212, 0.3); }
+[data-theme='dark'] .badge-emerald { background: rgba(16, 185, 129, 0.25) !important; color: #6ee7b7 !important; border: 1px solid rgba(110, 231, 183, 0.3); }
+[data-theme='dark'] .badge-rose { background: rgba(244, 63, 94, 0.25) !important; color: #fda4af !important; border: 1px solid rgba(253, 164, 175, 0.3); }
 
 /* Grid Systems */
 .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
