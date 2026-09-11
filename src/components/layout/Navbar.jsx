@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Menu, X, ChevronDown, UserCheck, Calculator, 
-  Landmark, ShieldCheck, HeartHandshake, FileText, 
-  Bell, PhoneCall, LayoutDashboard, LogIn, Award
+  Menu, X, ChevronDown, Landmark, ShieldCheck, HeartHandshake, 
+  FileText, Bell, PhoneCall, LayoutDashboard, LogIn, Award,
+  PiggyBank, TrendingUp, Zap, Banknote, Home, CheckSquare,
+  Calculator, Sparkles, GraduationCap, Stethoscope, LifeBuoy,
+  Medal, Shield, Users, Newspaper, Megaphone, Calendar,
+  Download, Globe, QrCode, HelpCircle, Coins, CreditCard,
+  Receipt, FilePlus2, Briefcase, FileSpreadsheet, Lock,
+  ArrowRight, CheckCircle2, ChevronRight, UserCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { COOP_INFO } from '../../data/mockData';
+import { COOP_INFO, INTEREST_RATES } from '../../data/mockData';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [activeMegaMenu, setActiveMegaMenu] = useState(null);
+  const [mobileAccordion, setMobileAccordion] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const navRef = useRef(null);
   const location = useLocation();
   const { user, isLoggedIn, setShowAuthModal } = useAuth();
 
@@ -23,30 +30,50 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMobileMenuOpen(false);
-    setActiveDropdown(null);
+    setActiveMegaMenu(null);
+    setMobileAccordion(null);
   }, [location.pathname]);
 
-  const toggleDropdown = (name) => {
-    setActiveDropdown(activeDropdown === name ? null : name);
+  // Click outside to close mega menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setActiveMegaMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleMegaMenu = (menuName) => {
+    setActiveMegaMenu(activeMegaMenu === menuName ? null : menuName);
+  };
+
+  const toggleMobileAccordion = (menuName) => {
+    setMobileAccordion(mobileAccordion === menuName ? null : menuName);
   };
 
   const isActive = (path) => location.pathname === path;
+  const isCategoryActive = (paths) => paths.some(p => location.pathname.startsWith(p));
 
   return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 1000,
-      background: isScrolled ? 'var(--glass-bg)' : 'var(--bg-surface)',
-      backdropFilter: isScrolled ? 'var(--glass-blur)' : 'none',
-      borderBottom: '1px solid var(--border-subtle)',
-      boxShadow: isScrolled ? 'var(--shadow-md)' : 'none',
-      transition: 'all 0.3s ease'
-    }}>
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', gap: '1rem' }}>
+    <header 
+      ref={navRef}
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        background: isScrolled ? 'var(--glass-bg)' : 'var(--bg-surface)',
+        backdropFilter: isScrolled ? 'var(--glass-blur)' : 'none',
+        borderBottom: '1px solid var(--border-subtle)',
+        boxShadow: isScrolled ? 'var(--shadow-md)' : 'none',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', gap: '1rem', position: 'relative' }}>
         
         {/* Logo & Brand */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', flexShrink: 0 }}>
@@ -77,110 +104,103 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexWrap: 'nowrap' }}>
+        {/* Desktop Navigation - EXACT 6 ITEMS REQUIRED */}
+        <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'nowrap' }}>
           
+          {/* 1. หน้าแรก */}
           <Link 
             to="/" 
             className={`nav-link ${isActive('/') ? 'active' : ''}`}
             style={navLinkStyle(isActive('/'))}
+            onMouseEnter={() => setActiveMegaMenu(null)}
           >
             หน้าแรก
           </Link>
 
-          {/* Dropdown: เกี่ยวกับเรา */}
-          <div style={{ position: 'relative' }} onMouseLeave={() => setActiveDropdown(null)}>
+          {/* 2. เกี่ยวกับสหกรณ์ (Mega Menu) */}
+          <div style={{ position: 'static' }}>
             <button 
-              onClick={() => toggleDropdown('about')}
-              onMouseEnter={() => setActiveDropdown('about')}
-              style={{ ...navLinkStyle(isActive('/about') || isActive('/board') || isActive('/statistics')), display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              onClick={() => toggleMegaMenu('about')}
+              onMouseEnter={() => setActiveMegaMenu('about')}
+              style={{
+                ...navLinkStyle(isCategoryActive(['/about', '/board', '/statistics']) || activeMegaMenu === 'about'),
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
             >
-              <span>เกี่ยวกับเรา</span>
-              <ChevronDown size={14} />
+              <span>เกี่ยวกับสหกรณ์</span>
+              <ChevronDown size={14} style={{ transform: activeMegaMenu === 'about' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
             </button>
-            {activeDropdown === 'about' && (
-              <div className="dropdown-menu animate-fade-in" style={dropdownMenuStyle}>
-                <Link to="/about" style={dropdownItemStyle}>
-                  <Landmark size={16} style={{ color: 'var(--primary-600)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ประวัติและวิสัยทัศน์</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ความเป็นมาและพันธกิจ</div>
-                  </div>
-                </Link>
-                <Link to="/board" style={dropdownItemStyle}>
-                  <Award size={16} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>คณะกรรมการดำเนินการ</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>และฝ่ายจัดการบริหาร</div>
-                  </div>
-                </Link>
-                <Link to="/statistics" style={dropdownItemStyle}>
-                  <ShieldCheck size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ฐานะและสถิติทางการเงิน</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ความมั่นคงของสหกรณ์</div>
-                  </div>
-                </Link>
-              </div>
-            )}
           </div>
 
-          {/* Dropdown: บริการการเงิน */}
-          <div style={{ position: 'relative' }} onMouseLeave={() => setActiveDropdown(null)}>
+          {/* 3. บริการทางการเงิน (Mega Menu) */}
+          <div style={{ position: 'static' }}>
             <button 
-              onClick={() => toggleDropdown('financial')}
-              onMouseEnter={() => setActiveDropdown('financial')}
-              style={{ ...navLinkStyle(isActive('/deposits') || isActive('/loans') || isActive('/calculator') || isActive('/loan-checklist') || isActive('/dividend-estimator')), display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              onClick={() => toggleMegaMenu('finance')}
+              onMouseEnter={() => setActiveMegaMenu('finance')}
+              style={{
+                ...navLinkStyle(isCategoryActive(['/deposits', '/loans', '/calculator', '/loan-checklist', '/dividend-estimator']) || activeMegaMenu === 'finance'),
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
             >
-              <span>บริการการเงิน</span>
-              <ChevronDown size={14} />
+              <span>บริการทางการเงิน</span>
+              <ChevronDown size={14} style={{ transform: activeMegaMenu === 'finance' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
             </button>
-            {activeDropdown === 'financial' && (
-              <div className="dropdown-menu animate-fade-in" style={dropdownMenuStyle}>
-                <Link to="/deposits" style={dropdownItemStyle}>
-                  <Landmark size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>เงินฝากและดอกเบี้ย</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ออมทรัพย์ และเงินฝากประจำ</div>
-                  </div>
-                </Link>
-                <Link to="/loans" style={dropdownItemStyle}>
-                  <ShieldCheck size={16} style={{ color: 'var(--primary-600)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ผลิตภัณฑ์สินเชื่อ</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ฉุกเฉิน, สามัญ, พิเศษ</div>
-                  </div>
-                </Link>
-                <Link to="/calculator" style={dropdownItemStyle}>
-                  <Calculator size={16} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>โปรแกรมคำนวณเงินกู้</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>คำนวณค่างวดและดอกเบี้ย</div>
-                  </div>
-                </Link>
-                <Link to="/loan-checklist" style={dropdownItemStyle}>
-                  <FileText size={16} style={{ color: 'var(--accent-emerald)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>เช็คความพร้อมการกู้</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ตรวจคุณสมบัติและเอกสาร</div>
-                  </div>
-                </Link>
-                <Link to="/dividend-estimator" style={dropdownItemStyle}>
-                  <Award size={16} style={{ color: 'var(--accent-rose)', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>ประมาณการเงินปันผล</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>และเงินเฉลี่ยคืนสิ้นปี</div>
-                  </div>
-                </Link>
-              </div>
-            )}
           </div>
 
-          <Link to="/welfare" style={navLinkStyle(isActive('/welfare'))}>สวัสดิการ</Link>
-          <Link to="/eservice" style={navLinkStyle(isActive('/eservice'))}>e-Services</Link>
-          <Link to="/news" style={navLinkStyle(isActive('/news'))}>ข่าวสาร</Link>
-          <Link to="/documents" style={navLinkStyle(isActive('/documents'))}>ดาวน์โหลด</Link>
-          <Link to="/contact" style={navLinkStyle(isActive('/contact'))}>ติดต่อเรา</Link>
+          {/* 4. สวัสดิการ (Mega Menu) */}
+          <div style={{ position: 'static' }}>
+            <button 
+              onClick={() => toggleMegaMenu('welfare')}
+              onMouseEnter={() => setActiveMegaMenu('welfare')}
+              style={{
+                ...navLinkStyle(isCategoryActive(['/welfare']) || activeMegaMenu === 'welfare'),
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
+            >
+              <span>สวัสดิการ</span>
+              <ChevronDown size={14} style={{ transform: activeMegaMenu === 'welfare' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+          </div>
+
+          {/* 5. ข่าวสารและเอกสาร (Mega Menu) */}
+          <div style={{ position: 'static' }}>
+            <button 
+              onClick={() => toggleMegaMenu('news_docs')}
+              onMouseEnter={() => setActiveMegaMenu('news_docs')}
+              style={{
+                ...navLinkStyle(isCategoryActive(['/news', '/documents', '/eservice', '/verify-receipt']) || activeMegaMenu === 'news_docs'),
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
+            >
+              <span>ข่าวสารและเอกสาร</span>
+              <ChevronDown size={14} style={{ transform: activeMegaMenu === 'news_docs' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+          </div>
+
+          {/* 6. Member Portal (Mega Menu) */}
+          <div style={{ position: 'static' }}>
+            <button 
+              onClick={() => toggleMegaMenu('member_portal')}
+              onMouseEnter={() => setActiveMegaMenu('member_portal')}
+              style={{
+                ...navLinkStyle(isCategoryActive(['/member', '/admin', '/login']) || activeMegaMenu === 'member_portal'),
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
+            >
+              <span>Member Portal</span>
+              <ChevronDown size={14} style={{ transform: activeMegaMenu === 'member_portal' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+          </div>
 
         </nav>
 
@@ -195,12 +215,12 @@ export default function Navbar() {
           {isLoggedIn ? (
             user?.role === 'super_admin' ? (
               <Link to="/admin/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #ef4444, #991b1b)' }}>
-                <span>👑 Admin Dashboard</span>
+                <span>👑 Super Admin</span>
               </Link>
             ) : (
               <Link to="/member/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                 <LayoutDashboard size={15} />
-                <span>{user?.role === 'staff' ? 'แดชบอร์ดเจ้าหน้าที่' : user?.role === 'auditor' ? 'แดชบอร์ดผู้ตรวจสอบ' : 'พอร์ทัลสมาชิก'}</span>
+                <span>{user?.role === 'staff' ? 'เจ้าหน้าที่' : user?.role === 'auditor' ? 'ผู้ตรวจสอบ' : 'ระบบสมาชิก'}</span>
               </Link>
             )
           ) : (
@@ -235,7 +255,619 @@ export default function Navbar() {
 
       </div>
 
-      {/* Mobile Drawer Navigation */}
+      {/* ========================================================================= */}
+      {/* DESKTOP MEGA MENUS CONTAINER                                            */}
+      {/* ========================================================================= */}
+      {activeMegaMenu && (
+        <div 
+          className="mega-menu-wrapper"
+          onMouseLeave={() => setActiveMegaMenu(null)}
+        >
+          
+          {/* MEGA MENU 1: เกี่ยวกับสหกรณ์ */}
+          {activeMegaMenu === 'about' && (
+            <div className="mega-menu-grid">
+              <div className="mega-menu-col-main">
+                <div>
+                  <div className="mega-menu-category-title">
+                    <Landmark size={14} style={{ color: 'var(--primary-600)' }} />
+                    <span>ข้อมูลและโครงสร้างองค์กร</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/about" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <Landmark size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ประวัติและวิสัยทัศน์</div>
+                        <div className="mega-menu-item-desc">ความเป็นมา พันธกิจ และค่านิยมหลักของสหกรณ์</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/board" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <Award size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">คณะกรรมการดำเนินการ</div>
+                        <div className="mega-menu-item-desc">ทำเนียบคณะกรรมการชุดที่ 32 และผู้ทรงคุณวุฒิ</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/board" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <Users size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ฝ่ายจัดการและเจ้าหน้าที่</div>
+                        <div className="mega-menu-item-desc">โครงสร้างบริหารและการดำเนินงานสาธารณสุขระยอง</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mega-menu-category-title">
+                    <ShieldCheck size={14} style={{ color: 'var(--accent-emerald-dark)' }} />
+                    <span>ความมั่นคงและธรรมาภิบาล</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/statistics" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
+                        <ShieldCheck size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>ฐานะและสถิติทางการเงิน</span>
+                          <span className="badge badge-emerald" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>มั่นคงสูง</span>
+                        </div>
+                        <div className="mega-menu-item-desc">สินทรัพย์ ทุนเรือนหุ้น และผลการดำเนินงานย้อนหลัง 5 ปี</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/statistics" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <Coins size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">สถิติเงินปันผล-เฉลี่ยคืน</div>
+                        <div className="mega-menu-item-desc">ประวัติอัตราจ่ายเงินปันผล 5.25% - 5.50% ทุกปี</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/documents" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <FileText size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ข้อบังคับและระเบียบสหกรณ์</div>
+                        <div className="mega-menu-item-desc">กฎเกณฑ์ ความโปร่งใส และนโยบายคุ้มครองข้อมูล</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Highlight Card */}
+              <div className="mega-menu-col-side">
+                <div className="mega-menu-feature-banner">
+                  <div>
+                    <span className="badge badge-gold" style={{ background: 'rgba(245, 158, 11, 0.25)', color: '#fef08a', marginBottom: '0.75rem' }}>
+                      ความมั่นคงขององค์กร
+                    </span>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.5rem' }}>
+                      สหกรณ์ออมทรัพย์สาธารณสุขระยอง
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.45, marginBottom: '1rem' }}>
+                      สินทรัพย์รวมกว่า 4,850 ล้านบาท มุ่งมั่นดูแลคุณภาพชีวิตบุคลากรสาธารณสุขจังหวัดระยองอย่างยั่งยืน
+                    </p>
+                  </div>
+                  <Link 
+                    to="/statistics" 
+                    className="btn btn-gold btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
+                  >
+                    <span>ดูรายงานฐานะการเงิน</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MEGA MENU 2: บริการทางการเงิน */}
+          {activeMegaMenu === 'finance' && (
+            <div className="mega-menu-grid">
+              <div className="mega-menu-col-main">
+                <div>
+                  <div className="mega-menu-category-title">
+                    <PiggyBank size={14} style={{ color: 'var(--accent-teal)' }} />
+                    <span>เงินฝากและผลตอบแทน</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/deposits" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <PiggyBank size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>เงินฝากออมทรัพย์ & ประจำ</span>
+                          <span className="badge badge-teal" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>ปลอดภาษี</span>
+                        </div>
+                        <div className="mega-menu-item-desc">ดอกเบี้ยสูง รับดอกเบี้ยรายเดือนและรายปี</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/deposits" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <TrendingUp size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ตารางอัตราดอกเบี้ยเงินฝาก</div>
+                        <div className="mega-menu-item-desc">อัปเดตอัตราดอกเบี้ยเงินฝากประจำและออมทรัพย์ล่าสุด</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/dividend-estimator" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <Sparkles size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>ประมาณการเงินปันผล-เฉลี่ยคืน</span>
+                          <span className="badge badge-gold" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>ยอดนิยม</span>
+                        </div>
+                        <div className="mega-menu-item-desc">คำนวณผลตอบแทนหุ้นและเงินเฉลี่ยคืนสิ้นปีล่วงหน้า</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mega-menu-category-title">
+                    <Banknote size={14} style={{ color: 'var(--primary-600)' }} />
+                    <span>ผลิตภัณฑ์สินเชื่อ & เงินกู้</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/loans" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <Zap size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>เงินกู้เพื่อเหตุฉุกเฉิน</span>
+                          <span className="badge badge-rose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>อนุมัติไว</span>
+                        </div>
+                        <div className="mega-menu-item-desc">วงเงินตามความจำเป็น ไม่ต้องมีผู้ค้ำประกัน</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/loans" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <Banknote size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">เงินกู้สามัญ & สามัญศึกษา</div>
+                        <div className="mega-menu-item-desc">เพื่อการลงทุน สวัสดิการ และการศึกษาต่อ</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/loans" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
+                        <Home size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">เงินกู้พิเศษเพื่อเคหะ</div>
+                        <div className="mega-menu-item-desc">ซื้อที่อยู่อาศัย ปลูกสร้าง หรือไถ่ถอนจำนอง</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/loan-checklist" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <CheckSquare size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">เช็คความพร้อมและเอกสารขอกู้</div>
+                        <div className="mega-menu-item-desc">ตรวจสอบคุณสมบัติและรายการเอกสารที่ต้องใช้</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Quick Calculator Card */}
+              <div className="mega-menu-col-side">
+                <div className="mega-menu-feature-banner" style={{ background: 'linear-gradient(135deg, #064e3b, #047857)' }}>
+                  <div>
+                    <span className="badge badge-emerald" style={{ background: 'rgba(52, 211, 153, 0.25)', color: '#a7f3d0', marginBottom: '0.75rem' }}>
+                      เครื่องมือคำนวณเงินกู้
+                    </span>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.5rem' }}>
+                      วางแผนการกู้ยืมอย่างมั่นใจ
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: '#d1fae5', lineHeight: 1.45, marginBottom: '1rem' }}>
+                      คำนวณค่างวดรายเดือน ดอกเบี้ยลดต้นลดดอก และตารางการผ่อนชำระแบบเรียลไทม์
+                    </p>
+                  </div>
+                  <Link 
+                    to="/calculator" 
+                    className="btn btn-gold btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
+                  >
+                    <Calculator size={15} />
+                    <span>เปิดโปรแกรมคำนวณ</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MEGA MENU 3: สวัสดิการ */}
+          {activeMegaMenu === 'welfare' && (
+            <div className="mega-menu-grid">
+              <div className="mega-menu-col-main">
+                <div>
+                  <div className="mega-menu-category-title">
+                    <HeartHandshake size={14} style={{ color: 'var(--accent-rose)' }} />
+                    <span>กองทุนสวัสดิการสมาชิก</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/welfare" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-rose-light)', color: 'var(--accent-rose)' }}>
+                        <HeartHandshake size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>สวัสดิการสงเคราะห์ 6 ประเภท</span>
+                          <span className="badge badge-rose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>ครอบคลุม</span>
+                        </div>
+                        <div className="mega-menu-item-desc">ดูแลสมาชิกตั้งแต่แรกเข้า ตลอดจนถึงวัยเกษียณ</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/welfare" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <GraduationCap size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ทุนการศึกษาบุตรสมาชิก</div>
+                        <div className="mega-menu-item-desc">สนับสนุนการศึกษาตั้งแต่ระดับประถมจนถึงปริญญาตรี</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/welfare" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <Stethoscope size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">สวัสดิการรักษาพยาบาล/เจ็บป่วย</div>
+                        <div className="mega-menu-item-desc">เงินช่วยเหลือเมื่อเข้ารับการรักษาตัวในโรงพยาบาล</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mega-menu-category-title">
+                    <Shield size={14} style={{ color: 'var(--primary-600)' }} />
+                    <span>สวัสดิการคุ้มครองและเกียรติยศ</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/welfare" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
+                        <Medal size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">สวัสดิการสมาชิกผู้สูงอายุ</div>
+                        <div className="mega-menu-item-desc">บำเหน็จเกียรติยศและเงินขวัญถุงแด่สมาชิกอาวุโส</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/welfare" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <Shield size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">คุ้มครองหนี้ & ฌาปนกิจ (สสธท.)</div>
+                        <div className="mega-menu-item-desc">ปกป้องครอบครัวและทายาท วงเงินสงเคราะห์สูงสุด</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/documents" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--bg-subtle)', color: 'var(--text-main)' }}>
+                        <FileText size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ดาวน์โหลดฟอร์มขอรับสวัสดิการ</div>
+                        <div className="mega-menu-item-desc">แบบคำขอและเอกสารแนบเพื่อยื่นขอสวัสดิการ</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Welfare Highlight */}
+              <div className="mega-menu-col-side">
+                <div className="mega-menu-feature-banner" style={{ background: 'linear-gradient(135deg, #881337, #be123c)' }}>
+                  <div>
+                    <span className="badge badge-rose" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', marginBottom: '0.75rem' }}>
+                      ดูแลด้วยใจ
+                    </span>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.5rem' }}>
+                      กองทุนสวัสดิการสมาชิก
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: '#ffe4e6', lineHeight: 1.45, marginBottom: '1rem' }}>
+                      จัดสรรงบประมาณสวัสดิการกว่า 15 ล้านบาท/ปี เพื่อคุ้มครองและเสริมสร้างความสุขแก่สมาชิกทุกคน
+                    </p>
+                  </div>
+                  <Link 
+                    to="/welfare" 
+                    className="btn btn-light btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%', background: '#ffffff', color: '#881337', fontWeight: 700 }}
+                  >
+                    <span>ดูสวัสดิการทั้งหมด</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MEGA MENU 4: ข่าวสารและเอกสาร */}
+          {activeMegaMenu === 'news_docs' && (
+            <div className="mega-menu-grid">
+              <div className="mega-menu-col-main">
+                <div>
+                  <div className="mega-menu-category-title">
+                    <Newspaper size={14} style={{ color: 'var(--primary-600)' }} />
+                    <span>ข่าวสารและกิจกรรมสหกรณ์</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/news" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <Newspaper size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>ข่าวประชาสัมพันธ์ & กิจกรรม</span>
+                          <span className="badge badge-primary" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>อัปเดต</span>
+                        </div>
+                        <div className="mega-menu-item-desc">ข่าวสารโครงการ สัมมนา และภาพกิจกรรมสหกรณ์</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/news" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <Megaphone size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ประกาศทางการสหกรณ์</div>
+                        <div className="mega-menu-item-desc">ประกาศอัตราดอกเบี้ย วันหยุด และมติที่ประชุม</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/news" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <Calendar size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ปฏิทินกิจกรรมและการประชุม</div>
+                        <div className="mega-menu-item-desc">กำหนดการประชุมใหญ่สามัญและวันจ่ายเงินปันผล</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mega-menu-category-title">
+                    <FileText size={14} style={{ color: 'var(--accent-emerald-dark)' }} />
+                    <span>เอกสารและศูนย์บริการดิจิทัล</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/documents" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
+                        <Download size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>ดาวน์โหลดแบบฟอร์ม & รายงาน</span>
+                          <span className="badge badge-emerald" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>PDF</span>
+                        </div>
+                        <div className="mega-menu-item-desc">คำขอกู้เงิน สมัครสมาชิก และรายงานประจำปี</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/eservice" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <Globe size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ศูนย์บริการออนไลน์ e-Services</div>
+                        <div className="mega-menu-item-desc">ยื่นคำขอออนไลน์ ปรับค่าหุ้น ขอหนังสือรับรองภาษี</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/verify-receipt" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <QrCode size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ตรวจสอบใบเสร็จ e-Receipt</div>
+                        <div className="mega-menu-item-desc">ตรวจสอบความถูกต้องและลายมือชื่อดิจิทัล</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Document Card */}
+              <div className="mega-menu-col-side">
+                <div className="mega-menu-feature-banner" style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)' }}>
+                  <div>
+                    <span className="badge badge-primary" style={{ background: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', marginBottom: '0.75rem' }}>
+                      ดาวน์โหลดด่วน
+                    </span>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.5rem' }}>
+                      คลังเอกสาร & ฟอร์มออนไลน์
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: '#dbeafe', lineHeight: 1.45, marginBottom: '1rem' }}>
+                      ดาวน์โหลดแบบฟอร์มสัญญากู้เงิน แบบฟอร์มสวัสดิการ และรายงานประจำปี ครบถ้วนในที่เดียว
+                    </p>
+                  </div>
+                  <Link 
+                    to="/documents" 
+                    className="btn btn-gold btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
+                  >
+                    <Download size={14} />
+                    <span>ไปที่คลังเอกสาร</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MEGA MENU 5: Member Portal */}
+          {activeMegaMenu === 'member_portal' && (
+            <div className="mega-menu-grid">
+              <div className="mega-menu-col-main">
+                <div>
+                  <div className="mega-menu-category-title">
+                    <Coins size={14} style={{ color: 'var(--primary-600)' }} />
+                    <span>บริการสำหรับสมาชิกสหกรณ์</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/member/dashboard" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
+                        <Coins size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>ตรวจสอบทุนเรือนหุ้น & เงินฝาก</span>
+                          <span className="badge badge-emerald" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>24 ชม.</span>
+                        </div>
+                        <div className="mega-menu-item-desc">ดูยอดสะสมหุ้น บัญชีเงินฝาก และประวัติรายการเคลื่อนไหว</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/member/dashboard" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <CreditCard size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ภาระหนี้สิน & ตารางผ่อนชำระ</div>
+                        <div className="mega-menu-item-desc">ตรวจยอดหนี้คงเหลือ ยอดชำระรายเดือน และประวัติค่างวด</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/member/dashboard" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <Receipt size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ใบเสร็จรับเงินออนไลน์ e-Receipt</div>
+                        <div className="mega-menu-item-desc">ดาวน์โหลดใบเสร็จประจำเดือนพร้อมลายเซ็นดิจิทัล</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/eservice" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-rose-light)', color: 'var(--accent-rose)' }}>
+                        <FilePlus2 size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">ยื่นกู้ฉุกเฉินออนไลน์ (e-Loan)</div>
+                        <div className="mega-menu-item-desc">ยื่นขอสินเชื่อฉุกเฉินด่วน อนุมัติรวดเร็วไม่ต้องมาสำนักงาน</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mega-menu-category-title">
+                    <ShieldCheck size={14} style={{ color: 'var(--accent-gold-dark)' }} />
+                    <span>สำหรับเจ้าหน้าที่และผู้บริหาร</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    <Link to="/member/dashboard" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                        <Briefcase size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">แดชบอร์ดเจ้าหน้าที่สินเชื่อ</div>
+                        <div className="mega-menu-item-desc">ระบบตรวจสอบคำขอ e-Services และบริการสมาชิก</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/member/dashboard" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <FileSpreadsheet size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">แดชบอร์ดผู้ตรวจสอบกิจการ</div>
+                        <div className="mega-menu-item-desc">ตรวจสอบรายงานบัญชี สถิติ และ Audit Trail</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/admin/dashboard" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}>
+                        <ShieldCheck size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>แผงควบคุมระบบ Super Admin</span>
+                          <span className="badge badge-rose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>Admin</span>
+                        </div>
+                        <div className="mega-menu-item-desc">จัดการ 6 โมดูล CMS, ประกาศ, ข่าว, ป๊อปอัป, ข้อเสนอแนะ</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Login Action Banner */}
+              <div className="mega-menu-col-side">
+                <div className="mega-menu-feature-banner" style={{ background: 'linear-gradient(135deg, #1e1b4b, #312e81)' }}>
+                  <div>
+                    <span className="badge badge-gold" style={{ background: 'rgba(245, 158, 11, 0.25)', color: '#fde047', marginBottom: '0.75rem' }}>
+                      เข้าถึงข้อมูล 24 ชม.
+                    </span>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.5rem' }}>
+                      ระบบสมาชิกดิจิทัล
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: '#c7d2fe', lineHeight: 1.45, marginBottom: '1rem' }}>
+                      ตรวจสอบข้อมูลทางการเงิน ใบเสร็จรับเงิน และสิทธิประโยชน์ได้ง่ายๆ ปลอดภัยด้วยการเข้ารหัส 256-bit
+                    </p>
+                  </div>
+                  {isLoggedIn ? (
+                    <Link 
+                      to={user?.role === 'super_admin' ? '/admin/dashboard' : '/member/dashboard'}
+                      className="btn btn-gold btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
+                    >
+                      <LayoutDashboard size={15} />
+                      <span>เข้าสู่แดชบอร์ดของคุณ</span>
+                    </Link>
+                  ) : (
+                    <Link 
+                      to="/login"
+                      className="btn btn-gold btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
+                    >
+                      <LogIn size={15} />
+                      <span>เข้าสู่ระบบสมาชิก</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MOBILE DRAWER NAVIGATION (Clean Accordion for all 6 Categories)            */}
+      {/* ========================================================================= */}
       {mobileMenuOpen && (
         <div className="animate-fade-in" style={{
           background: 'var(--bg-surface)',
@@ -243,23 +875,116 @@ export default function Navbar() {
           padding: '1.25rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.65rem',
-          boxShadow: 'var(--shadow-xl)'
+          gap: '0.4rem',
+          boxShadow: 'var(--shadow-xl)',
+          maxHeight: '80vh',
+          overflowY: 'auto'
         }}>
-          <Link to="/" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>หน้าแรก</Link>
-          <Link to="/about" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>เกี่ยวกับสหกรณ์</Link>
-          <Link to="/board" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>คณะกรรมการและฝ่ายจัดการ</Link>
-          <Link to="/statistics" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ฐานะทางการเงินและสถิติ</Link>
-          <Link to="/deposits" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>เงินฝากและอัตราดอกเบี้ย</Link>
-          <Link to="/loans" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ผลิตภัณฑ์สินเชื่อ</Link>
-          <Link to="/calculator" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>โปรแกรมคำนวณเงินกู้</Link>
-          <Link to="/dividend-estimator" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ประมาณการปันผล-เฉลี่ยคืน</Link>
-          <Link to="/welfare" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>สวัสดิการสมาชิก</Link>
-          <Link to="/eservice" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ศูนย์บริการออนไลน์ (e-Services)</Link>
-          <Link to="/news" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ข่าวสารและประกาศ</Link>
-          <Link to="/documents" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ดาวน์โหลดแบบฟอร์ม</Link>
-          <Link to="/verify-receipt" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ตรวจสอบใบเสร็จออนไลน์</Link>
-          <Link to="/contact" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>ติดต่อเรา / ร้องเรียน</Link>
+          {/* 1. หน้าแรก */}
+          <Link to="/" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>
+            <span>หน้าแรก</span>
+          </Link>
+
+          {/* 2. เกี่ยวกับสหกรณ์ Accordion */}
+          <div>
+            <button 
+              onClick={() => toggleMobileAccordion('about')}
+              style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <span>เกี่ยวกับสหกรณ์</span>
+              <ChevronDown size={16} style={{ transform: mobileAccordion === 'about' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            {mobileAccordion === 'about' && (
+              <div style={mobileSubMenuStyle}>
+                <Link to="/about" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ประวัติและวิสัยทัศน์</Link>
+                <Link to="/board" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• คณะกรรมการดำเนินการ</Link>
+                <Link to="/board" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฝ่ายจัดการและเจ้าหน้าที่</Link>
+                <Link to="/statistics" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฐานะและสถิติทางการเงิน</Link>
+                <Link to="/documents" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ข้อบังคับและระเบียบสหกรณ์</Link>
+              </div>
+            )}
+          </div>
+
+          {/* 3. บริการทางการเงิน Accordion */}
+          <div>
+            <button 
+              onClick={() => toggleMobileAccordion('finance')}
+              style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <span>บริการทางการเงิน</span>
+              <ChevronDown size={16} style={{ transform: mobileAccordion === 'finance' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            {mobileAccordion === 'finance' && (
+              <div style={mobileSubMenuStyle}>
+                <Link to="/deposits" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• เงินฝากออมทรัพย์ & ประจำ</Link>
+                <Link to="/deposits" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ตารางอัตราดอกเบี้ยเงินฝาก</Link>
+                <Link to="/loans" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ผลิตภัณฑ์สินเชื่อทุกประเภท</Link>
+                <Link to="/calculator" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• โปรแกรมคำนวณเงินกู้</Link>
+                <Link to="/loan-checklist" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• เช็คความพร้อมการกู้</Link>
+                <Link to="/dividend-estimator" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ประมาณการเงินปันผล-เฉลี่ยคืน</Link>
+              </div>
+            )}
+          </div>
+
+          {/* 4. สวัสดิการ Accordion */}
+          <div>
+            <button 
+              onClick={() => toggleMobileAccordion('welfare')}
+              style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <span>สวัสดิการ</span>
+              <ChevronDown size={16} style={{ transform: mobileAccordion === 'welfare' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            {mobileAccordion === 'welfare' && (
+              <div style={mobileSubMenuStyle}>
+                <Link to="/welfare" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• สวัสดิการสงเคราะห์ 6 ประเภท</Link>
+                <Link to="/welfare" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ทุนการศึกษาบุตรสมาชิก</Link>
+                <Link to="/welfare" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• สวัสดิการค่ารักษาพยาบาล/เจ็บป่วย</Link>
+                <Link to="/welfare" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• สวัสดิการสมาชิกผู้สูงอายุ</Link>
+                <Link to="/welfare" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• คุ้มครองหนี้ & ฌาปนกิจ (สสธท.)</Link>
+              </div>
+            )}
+          </div>
+
+          {/* 5. ข่าวสารและเอกสาร Accordion */}
+          <div>
+            <button 
+              onClick={() => toggleMobileAccordion('news_docs')}
+              style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <span>ข่าวสารและเอกสาร</span>
+              <ChevronDown size={16} style={{ transform: mobileAccordion === 'news_docs' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            {mobileAccordion === 'news_docs' && (
+              <div style={mobileSubMenuStyle}>
+                <Link to="/news" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ข่าวประชาสัมพันธ์ & กิจกรรม</Link>
+                <Link to="/news" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ประกาศทางการสหกรณ์</Link>
+                <Link to="/documents" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ดาวน์โหลดแบบฟอร์ม & รายงาน</Link>
+                <Link to="/eservice" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ศูนย์บริการออนไลน์ e-Services</Link>
+                <Link to="/verify-receipt" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ตรวจสอบใบเสร็จ e-Receipt</Link>
+              </div>
+            )}
+          </div>
+
+          {/* 6. Member Portal Accordion */}
+          <div>
+            <button 
+              onClick={() => toggleMobileAccordion('member_portal')}
+              style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <span>Member Portal</span>
+              <ChevronDown size={16} style={{ transform: mobileAccordion === 'member_portal' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            </button>
+            {mobileAccordion === 'member_portal' && (
+              <div style={mobileSubMenuStyle}>
+                <Link to="/login" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• เข้าสู่ระบบสมาชิก</Link>
+                <Link to="/member/dashboard" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ตรวจสอบหุ้น เงินฝาก หนี้สิน</Link>
+                <Link to="/member/dashboard" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ใบเสร็จรับเงินออนไลน์</Link>
+                <Link to="/admin/dashboard" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• แผงควบคุม Super Admin</Link>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </header>
@@ -267,10 +992,10 @@ export default function Navbar() {
 }
 
 const navLinkStyle = (active) => ({
-  padding: '0.45rem 0.65rem',
-  fontSize: '0.88rem',
+  padding: '0.45rem 0.75rem',
+  fontSize: '0.9rem',
   fontFamily: 'var(--font-heading)',
-  fontWeight: active ? '700' : '500',
+  fontWeight: active ? '700' : '600',
   color: active ? 'var(--primary-600)' : 'var(--text-main)',
   borderRadius: '8px',
   background: active ? 'var(--primary-50)' : 'transparent',
@@ -279,42 +1004,36 @@ const navLinkStyle = (active) => ({
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
+  border: 'none',
+  outline: 'none',
   flexShrink: 0
 });
 
-const dropdownMenuStyle = {
-  position: 'absolute',
-  top: '100%',
-  left: 0,
-  minWidth: '240px',
-  background: 'var(--bg-surface-elevated)',
-  border: '1px solid var(--border-subtle)',
-  borderRadius: '12px',
-  boxShadow: 'var(--shadow-xl)',
-  padding: '0.5rem',
+const mobileItemStyle = {
+  padding: '0.75rem 0',
+  fontSize: '0.98rem',
+  fontFamily: 'var(--font-heading)',
+  fontWeight: 700,
+  color: 'var(--text-main)',
+  borderBottom: '1px solid var(--border-subtle)',
+  textDecoration: 'none'
+};
+
+const mobileSubMenuStyle = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.25rem',
-  zIndex: 1050
-};
-
-const dropdownItemStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  padding: '0.6rem 0.85rem',
+  padding: '0.35rem 0 0.5rem 1rem',
+  gap: '0.4rem',
+  background: 'var(--bg-subtle)',
   borderRadius: '8px',
-  fontSize: '0.88rem',
-  color: 'var(--text-main)',
-  transition: 'background 0.15s ease',
-  whiteSpace: 'nowrap'
+  marginTop: '0.35rem',
+  marginBottom: '0.5rem'
 };
 
-const mobileItemStyle = {
-  padding: '0.65rem 0',
-  fontSize: '0.95rem',
-  fontFamily: 'var(--font-heading)',
-  fontWeight: 600,
-  color: 'var(--text-main)',
-  borderBottom: '1px solid var(--border-subtle)'
+const mobileSubItemStyle = {
+  fontSize: '0.88rem',
+  color: 'var(--text-muted)',
+  padding: '0.3rem 0',
+  textDecoration: 'none',
+  display: 'block'
 };
