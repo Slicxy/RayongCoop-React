@@ -97,30 +97,38 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Map Placeholder */}
+              {/* Google Map Section */}
               <div style={{
-                height: '200px',
-                background: 'var(--bg-subtle)',
                 borderRadius: '12px',
+                overflow: 'hidden',
                 border: '1px solid var(--border-subtle)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                color: 'var(--text-muted)'
+                background: 'var(--bg-subtle)'
               }}>
-                <MapPin size={32} style={{ color: 'var(--accent-rose)' }} />
-                <span style={{ fontSize: '0.85rem' }}>พิกัดสำนักงานสหกรณ์ (ถนนสุขุมวิท เมืองระยอง)</span>
-                <a 
-                  href="https://maps.google.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="btn btn-outline btn-sm"
-                  style={{ fontSize: '0.78rem' }}
-                >
-                  เปิด Google Maps
-                </a>
+                <iframe
+                  title="Rayong Coop Location Map"
+                  src={COOP_INFO.mapEmbedUrl}
+                  width="100%"
+                  height="220"
+                  style={{ border: 0, display: 'block' }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    📍 142 ม.2 ถ.สุขุมวิท ต.เนินพระ อ.เมืองระยอง
+                  </div>
+                  <a 
+                    href={COOP_INFO.mapUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn btn-primary btn-sm"
+                    style={{ fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    <MapPin size={14} />
+                    <span>นำทางด้วย Google Maps</span>
+                  </a>
+                </div>
               </div>
 
             </div>

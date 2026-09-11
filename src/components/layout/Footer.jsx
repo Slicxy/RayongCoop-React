@@ -147,10 +147,16 @@ export default function Footer() {
               ติดต่อสำนักงาน
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
+              <a 
+                href={COOP_INFO.mapUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem', color: '#cbd5e1', textDecoration: 'none', transition: 'color 0.2s' }}
+                title="คลิกเพื่อดูแผนที่ Google Maps"
+              >
                 <MapPin size={18} style={{ color: 'var(--accent-gold)', flexShrink: 0, marginTop: '3px' }} />
-                <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>{COOP_INFO.address}</span>
-              </div>
+                <span style={{ fontSize: '0.85rem' }}>{COOP_INFO.address}</span>
+              </a>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                 <Phone size={16} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
                 <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>{COOP_INFO.phone}</span>
