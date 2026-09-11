@@ -9,7 +9,7 @@ import {
   Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
-import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS } from '../data/mockData';
+import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
 
 export default function AdminDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
@@ -77,12 +77,17 @@ export default function AdminDashboardPage() {
   });
 
   // 5. Member Feedback & Complaints State
-  const [feedbacks, setFeedbacks] = useState([
-    { id: 'FB-001', name: 'นายเกียรติศักดิ์ พูลเพิ่ม', phone: '081-234-5678', email: 'kiatisak@mail.com', topic: 'ข้อเสนอแนะการให้บริการ', message: 'อยากให้มีระบบส่งแจ้งเตือน SMS หรือ LINE ทันทีเมื่อเงินปันผลหรือเงินกู้โอนเข้าบัญชีครับ', date: '11 มี.ค. 2567', status: 'ตอบกลับแล้ว' },
-    { id: 'FB-002', name: 'นางสาวจารุณี รัตนโชติ', phone: '089-987-6543', email: 'jarunee@mail.com', topic: 'สอบถามข้อมูลทั่วไป', message: 'ต้องการขอหนังสือรับรองดอกเบี้ยเงินกู้ย้อนหลัง 2 ปี สามารถยื่นผ่าน e-Services ได้เลยไหมคะ', date: '10 มี.ค. 2567', status: 'รอดำเนินการ' },
-    { id: 'FB-003', name: 'นายอนุชา เจริญผล', phone: '086-555-4321', email: 'anucha@mail.com', topic: 'แจ้งปัญหาการใช้งานระบบออนไลน์', message: 'ขอสอบถามขั้นตอนการดาวน์โหลดใบเสร็จ e-Receipt ย้อนหลังปี 2566 ครับ', date: '09 มี.ค. 2567', status: 'กำลังตรวจสอบ' }
-  ]);
+  const [feedbacks, setFeedbacks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('coop_member_complaints');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return MEMBER_COMPLAINTS;
+  });
+  const [feedbackFilter, setFeedbackFilter] = useState('all');
+  const [feedbackSearch, setFeedbackSearch] = useState('');
   const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [replyInput, setReplyInput] = useState('');
 
   // 6. FAQs State
   const [faqsList, setFaqsList] = useState(FAQS);
@@ -188,9 +193,49 @@ export default function AdminDashboardPage() {
   };
 
   const handleUpdateFeedbackStatus = (id, newStatus) => {
-    setFeedbacks(feedbacks.map(f => f.id === id ? { ...f, status: newStatus } : f));
+    const updated = feedbacks.map(f => f.id === id ? { ...f, status: newStatus } : f);
+    setFeedbacks(updated);
+    try {
+      localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+    } catch (e) {}
     if (selectedFeedback && selectedFeedback.id === id) {
       setSelectedFeedback({ ...selectedFeedback, status: newStatus });
+    }
+  };
+
+  const handleSaveAdminReply = (id, replyText) => {
+    const now = new Date().toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.';
+    const updated = feedbacks.map(f => f.id === id ? { 
+      ...f, 
+      adminReply: replyText, 
+      status: 'ตอบกลับแล้ว',
+      replyDate: now 
+    } : f);
+    setFeedbacks(updated);
+    try {
+      localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+    } catch (e) {}
+    if (selectedFeedback && selectedFeedback.id === id) {
+      setSelectedFeedback({ 
+        ...selectedFeedback, 
+        adminReply: replyText, 
+        status: 'ตอบกลับแล้ว',
+        replyDate: now 
+      });
+    }
+    alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว (สมาชิกสามารถตรวจสอบผลได้ทันที)`);
+  };
+
+  const handleDeleteFeedback = (id) => {
+    if (confirm(`ยืนยันการลบรายการเรื่องร้องเรียน ${id}?`)) {
+      const updated = feedbacks.filter(f => f.id !== id);
+      setFeedbacks(updated);
+      try {
+        localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+      } catch (e) {}
+      if (selectedFeedback && selectedFeedback.id === id) {
+        setSelectedFeedback(null);
+      }
     }
   };
 
@@ -559,10 +604,51 @@ export default function AdminDashboardPage() {
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>กล่องข้อเสนอแนะและเรื่องร้องเรียน (Feedback & Complaints Inbox)</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ตรวจสอบข้อความและข้อเสนอแนะที่สมาชิกส่งเข้ามาผ่านหน้าติดต่อเรา</p>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <MessageSquare size={22} style={{ color: 'var(--accent-rose)' }} />
+                  <span>กล่องข้อเสนอแนะและเรื่องร้องเรียน (Feedback & Complaints Inbox)</span>
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ตรวจสอบข้อความ เรื่องร้องเรียน และข้อเสนอแนะที่สมาชิกส่งเข้ามา พร้อมเขียนตอบกลับแบบเรียลไทม์</p>
               </div>
-              <span className="badge badge-primary">ทั้งหมด {feedbacks.length} รายการ</span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <span className="badge badge-rose">ร้องเรียน {feedbacks.filter(f => f.topic.includes('ร้องเรียน')).length}</span>
+                <span className="badge badge-gold">รอดำเนินการ {feedbacks.filter(f => f.status === 'รอดำเนินการ').length}</span>
+                <span className="badge badge-emerald">ตอบกลับแล้ว {feedbacks.filter(f => f.status === 'ตอบกลับแล้ว').length}</span>
+              </div>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                {[
+                  { key: 'all', label: `ทั้งหมด (${feedbacks.length})` },
+                  { key: 'complaint', label: `เรื่องร้องเรียน (${feedbacks.filter(f => f.topic.includes('ร้องเรียน')).length})` },
+                  { key: 'feedback', label: `ข้อเสนอแนะ (${feedbacks.filter(f => f.topic.includes('ข้อเสนอแนะ')).length})` },
+                  { key: 'pending', label: `รอดำเนินการ (${feedbacks.filter(f => f.status === 'รอดำเนินการ').length})` },
+                  { key: 'replied', label: `ตอบกลับแล้ว (${feedbacks.filter(f => f.status === 'ตอบกลับแล้ว').length})` }
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setFeedbackFilter(tab.key)}
+                    className={`btn btn-sm ${feedbackFilter === tab.key ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ position: 'relative', width: '260px' }}>
+                <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="ค้นหาชื่อ, รหัส, ข้อความ..."
+                  value={feedbackSearch}
+                  onChange={(e) => setFeedbackSearch(e.target.value)}
+                  className="form-control"
+                  style={{ paddingLeft: '2rem', fontSize: '0.82rem' }}
+                />
+              </div>
             </div>
 
             <div style={{ overflowX: 'auto' }}>
@@ -570,43 +656,83 @@ export default function AdminDashboardPage() {
                 <thead>
                   <tr style={{ background: 'var(--bg-subtle)', borderBottom: '2px solid var(--border-subtle)', textAlign: 'left' }}>
                     <th style={{ padding: '0.85rem' }}>รหัส / วันที่</th>
-                    <th style={{ padding: '0.85rem' }}>ผู้ส่ง / เบอร์โทร</th>
+                    <th style={{ padding: '0.85rem' }}>ผู้ส่ง / สังกัด</th>
                     <th style={{ padding: '0.85rem' }}>หัวข้อเรื่อง</th>
                     <th style={{ padding: '0.85rem' }}>ข้อความสรุป</th>
                     <th style={{ padding: '0.85rem', textAlign: 'center' }}>สถานะ</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'right' }}>ดูรายละเอียด</th>
+                    <th style={{ padding: '0.85rem', textAlign: 'right' }}>การจัดการ</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {feedbacks.map((f) => (
-                    <tr key={f.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '0.85rem' }}>
-                        <strong>{f.id}</strong>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.date}</div>
-                      </td>
-                      <td style={{ padding: '0.85rem' }}>
-                        <div style={{ fontWeight: 600 }}>{f.name}</div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{f.phone}</div>
-                      </td>
-                      <td style={{ padding: '0.85rem', fontWeight: 600, color: 'var(--primary-700)' }}>
-                        {f.topic}
-                      </td>
-                      <td style={{ padding: '0.85rem', color: 'var(--text-muted)' }}>
-                        {f.message.slice(0, 45)}...
-                      </td>
-                      <td style={{ padding: '0.85rem', textAlign: 'center' }}>
-                        <span className={`badge badge-${f.status === 'ตอบกลับแล้ว' ? 'emerald' : f.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
-                          {f.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem', textAlign: 'right' }}>
-                        <button onClick={() => setSelectedFeedback(f)} className="btn btn-outline btn-sm">
-                          <Eye size={13} />
-                          <span>เปิดดู</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {feedbacks
+                    .filter(f => {
+                      if (feedbackFilter === 'complaint') return f.topic.includes('ร้องเรียน');
+                      if (feedbackFilter === 'feedback') return f.topic.includes('ข้อเสนอแนะ');
+                      if (feedbackFilter === 'pending') return f.status === 'รอดำเนินการ';
+                      if (feedbackFilter === 'replied') return f.status === 'ตอบกลับแล้ว';
+                      return true;
+                    })
+                    .filter(f => {
+                      if (!feedbackSearch) return true;
+                      const q = feedbackSearch.toLowerCase();
+                      return f.id.toLowerCase().includes(q) || f.name.toLowerCase().includes(q) || f.topic.toLowerCase().includes(q) || f.message.toLowerCase().includes(q);
+                    })
+                    .map((f) => {
+                      const isComplaint = f.topic.includes('ร้องเรียน');
+                      return (
+                        <tr key={f.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: isComplaint ? 'rgba(244, 63, 94, 0.02)' : 'transparent' }}>
+                          <td style={{ padding: '0.85rem' }}>
+                            <strong style={{ color: 'var(--primary-700)' }}>{f.id}</strong>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.date}</div>
+                          </td>
+                          <td style={{ padding: '0.85rem' }}>
+                            <div style={{ fontWeight: 600 }}>{f.name}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{f.department || f.phone}</div>
+                          </td>
+                          <td style={{ padding: '0.85rem' }}>
+                            <span className={`badge ${isComplaint ? 'badge-rose' : 'badge-primary'}`}>{f.topic}</span>
+                          </td>
+                          <td style={{ padding: '0.85rem', color: 'var(--text-muted)', maxWidth: '280px' }}>
+                            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {f.message}
+                            </div>
+                            {f.adminReply && (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald-dark)', marginTop: '0.2rem' }}>
+                                💬 ตอบแล้ว: {f.adminReply.slice(0, 30)}...
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.85rem', textAlign: 'center' }}>
+                            <span className={`badge badge-${f.status === 'ตอบกลับแล้ว' ? 'emerald' : f.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
+                              {f.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.85rem', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
+                              <button 
+                                onClick={() => {
+                                  setSelectedFeedback(f);
+                                  setReplyInput(f.adminReply || '');
+                                }} 
+                                className="btn btn-outline btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                              >
+                                <Eye size={13} />
+                                <span>เปิดดู / ตอบกลับ</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFeedback(f.id)}
+                                className="btn btn-outline btn-sm"
+                                style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)', padding: '0.35rem 0.5rem' }}
+                                title="ลบรายการนี้"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
@@ -766,28 +892,47 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Modal: View Feedback Details */}
+        {/* Modal: View Feedback Details & Reply */}
         {selectedFeedback && (
           <div style={modalBackdropStyle}>
-            <div className="glass-card animate-fade-in" style={modalBoxStyle}>
+            <div className="glass-card animate-fade-in" style={{ ...modalBoxStyle, maxWidth: '600px' }}>
               <div style={modalHeaderStyle}>
                 <div>
-                  <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)' }}>รายละเอียดข้อเสนอแนะ {selectedFeedback.id}</h3>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>วันที่ส่ง: {selectedFeedback.date}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <span className="badge badge-primary">{selectedFeedback.id}</span>
+                    <span className={`badge badge-${selectedFeedback.status === 'ตอบกลับแล้ว' ? 'emerald' : selectedFeedback.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
+                      {selectedFeedback.status}
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)', margin: 0 }}>
+                    {selectedFeedback.topic}
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                    วันที่ส่ง: {selectedFeedback.date} • ผู้ส่ง: <strong>{selectedFeedback.name}</strong> ({selectedFeedback.phone})
+                  </div>
                 </div>
-                <button onClick={() => setSelectedFeedback(null)}>✕</button>
+                <button onClick={() => setSelectedFeedback(null)} style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                <div><strong>ผู้ส่ง:</strong> {selectedFeedback.name} (โทร: {selectedFeedback.phone})</div>
-                <div><strong>อีเมล:</strong> {selectedFeedback.email}</div>
-                <div><strong>หัวข้อ:</strong> {selectedFeedback.topic}</div>
-                <div style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '8px', lineHeight: 1.6 }}>
-                  <strong>ข้อความ:</strong><br />
-                  {selectedFeedback.message}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.85rem', borderRadius: '8px', fontSize: '0.82rem' }}>
+                  <div><strong>อีเมล:</strong> {selectedFeedback.email || '-'}</div>
+                  <div><strong>สังกัด:</strong> {selectedFeedback.department || 'สมาชิกทั่วไป'}</div>
                 </div>
+
+                <div style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '8px', lineHeight: 1.6, border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <MessageSquare size={16} style={{ color: 'var(--primary-600)' }} />
+                    <span>ข้อความจากสมาชิก / เรื่องร้องเรียน:</span>
+                  </div>
+                  <p style={{ color: 'var(--text-main)', margin: 0 }}>
+                    {selectedFeedback.message}
+                  </p>
+                </div>
+
+                {/* Status Switcher */}
                 <div>
-                  <label className="form-label">ปรับเปลี่ยนสถานะการดำเนินการ:</label>
+                  <label className="form-label" style={{ fontWeight: 700 }}>ปรับเปลี่ยนสถานะการดำเนินการ:</label>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {['รอดำเนินการ', 'กำลังตรวจสอบ', 'ตอบกลับแล้ว'].map((st) => (
                       <button
@@ -795,16 +940,53 @@ export default function AdminDashboardPage() {
                         type="button"
                         onClick={() => handleUpdateFeedbackStatus(selectedFeedback.id, st)}
                         className={`btn btn-sm ${selectedFeedback.status === st ? 'btn-primary' : 'btn-subtle'}`}
+                        style={{ fontSize: '0.8rem' }}
                       >
                         {st}
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Admin Reply Form */}
+                <div style={{ background: 'rgba(14, 165, 233, 0.05)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                  <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <CheckCircle2 size={16} style={{ color: 'var(--accent-emerald-dark)' }} />
+                    <span>ข้อความตอบกลับจากผู้บริหาร / เจ้าหน้าที่ (Official Reply):</span>
+                  </label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    value={replyInput}
+                    onChange={(e) => setReplyInput(e.target.value)}
+                    placeholder="พิมพ์คำชี้แจง แนวทางแก้ไข หรือผลการตรวจสอบเพื่อแจ้งให้สมาชิกทราบ..."
+                    style={{ fontSize: '0.85rem', marginBottom: '0.75rem' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveAdminReply(selectedFeedback.id, replyInput)}
+                      className="btn btn-primary btn-sm"
+                    >
+                      <Check size={14} />
+                      <span>บันทึกข้อความตอบกลับ</span>
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button onClick={() => setSelectedFeedback(null)} className="btn btn-primary">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteFeedback(selectedFeedback.id)}
+                  className="btn btn-outline btn-sm"
+                  style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)' }}
+                >
+                  <Trash2 size={14} />
+                  <span>ลบรายการนี้</span>
+                </button>
+                <button onClick={() => setSelectedFeedback(null)} className="btn btn-subtle btn-sm">
                   <span>ปิดหน้าต่าง</span>
                 </button>
               </div>

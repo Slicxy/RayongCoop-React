@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { 
   MapPin, Phone, Mail, Clock, MessageSquare, 
-  Send, CheckCircle2, ChevronDown, ChevronUp, Search, ShieldCheck 
+  Send, CheckCircle2, ChevronDown, ChevronUp, Search, ShieldCheck, AlertCircle 
 } from 'lucide-react';
-import { COOP_INFO, FAQS } from '../data/mockData';
+import { COOP_INFO, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
 
 export default function ContactPage() {
   const [activeTab, setActiveTab] = useState('contact');
   const [submitted, setSubmitted] = useState(false);
+  const [lastSubmittedId, setLastSubmittedId] = useState('');
   const [trackingId, setTrackingId] = useState('');
   const [trackingResult, setTrackingResult] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
@@ -22,18 +23,55 @@ export default function ContactPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const newId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newEntry = {
+      id: newId,
+      name: form.name,
+      phone: form.phone,
+      email: form.email || '-',
+      department: 'สมาชิกทั่วไป',
+      topic: form.topic,
+      message: form.message,
+      date: new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }),
+      status: 'รอดำเนินการ',
+      adminReply: '',
+      replyDate: ''
+    };
+
+    try {
+      const saved = localStorage.getItem('coop_member_complaints');
+      const list = saved ? JSON.parse(saved) : MEMBER_COMPLAINTS;
+      const updated = [newEntry, ...list];
+      localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+    } catch (err) {
+      // ignore
+    }
+
+    setLastSubmittedId(newId);
     setSubmitted(true);
   };
 
   const handleTrack = (e) => {
     e.preventDefault();
     if (!trackingId) return;
-    setTrackingResult({
-      id: trackingId,
-      status: 'อยู่ระหว่างการตรวจสอบข้อมูลโดยเจ้าหน้าที่งานบริหารทั่วไป',
-      date: '10 มี.ค. 2567',
-      expectedDate: '15 มี.ค. 2567'
-    });
+
+    let list = MEMBER_COMPLAINTS;
+    try {
+      const saved = localStorage.getItem('coop_member_complaints');
+      if (saved) list = JSON.parse(saved);
+    } catch (err) {
+      // ignore
+    }
+
+    const found = list.find(item => item.id.toLowerCase() === trackingId.trim().toLowerCase());
+    if (found) {
+      setTrackingResult(found);
+    } else {
+      setTrackingResult({
+        notFound: true,
+        id: trackingId
+      });
+    }
   };
 
   return (
@@ -145,9 +183,25 @@ export default function ContactPage() {
                   <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
                     <CheckCircle2 size={32} />
                   </div>
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>ได้รับข้อความของท่านแล้ว</h4>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                    รหัสติดตามเรื่องของคุณคือ: <strong>TKT-{Math.floor(100000 + Math.random() * 900000)}</strong> สหกรณ์จะดำเนินการติดต่อกลับโดยเร็วที่สุด
+                  <h4 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>ได้รับข้อความ/เรื่องร้องเรียนเรียบร้อยแล้ว</h4>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                    รหัสติดตามเรื่องของคุณคือ:
+                  </p>
+                  <div style={{
+                    fontSize: '1.4rem',
+                    fontWeight: 800,
+                    color: 'var(--primary-700)',
+                    background: 'var(--bg-subtle)',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    display: 'inline-block',
+                    marginBottom: '1.5rem',
+                    letterSpacing: '1px'
+                  }}>
+                    {lastSubmittedId}
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                    ท่านสามารถนำรหัสนี้มาตรวจสอบสถานะการดำเนินงานและคำตอบจากเจ้าหน้าที่ได้ที่แท็บ "ติดตามสถานะเรื่องร้องเรียน"
                   </p>
                   <button onClick={() => setSubmitted(false)} className="btn btn-primary btn-sm">
                     <span>ส่งข้อความอื่นเพิ่มเติม</span>
@@ -198,19 +252,19 @@ export default function ContactPage() {
           </div>
         ) : (
           /* Track Complaint */
-          <div className="glass-card" style={{ maxWidth: '600px', margin: '0 auto 4rem auto', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}>
+          <div className="glass-card" style={{ maxWidth: '640px', margin: '0 auto 4rem auto', padding: '2.5rem', borderRadius: 'var(--radius-xl)' }}>
             <h3 style={{ fontSize: '1.3rem', color: 'var(--primary-800)', marginBottom: '0.5rem', textAlign: 'center' }}>
               ติดตามสถานะเรื่องร้องเรียน / คำร้อง
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '2rem', textAlign: 'center' }}>
-              กรอกรหัสติดตามเรื่อง (Ticket ID) ที่ได้รับเพื่อตรวจสอบความคืบหน้า
+              กรอกรหัสติดตามเรื่อง (Ticket ID เช่น TKT-670301) ที่ได้รับเพื่อตรวจสอบความคืบหน้า
             </p>
 
             <form onSubmit={handleTrack} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
               <input 
                 type="text"
                 className="form-control"
-                placeholder="เช่น TKT-670392"
+                placeholder="เช่น TKT-670301, TKT-670303"
                 value={trackingId}
                 onChange={(e) => setTrackingId(e.target.value)}
                 required
@@ -221,19 +275,83 @@ export default function ContactPage() {
               </button>
             </form>
 
+            {/* Quick Demo Pill Codes */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              <span>ตัวอย่างรหัสทดสอบ:</span>
+              {['TKT-670301', 'TKT-670302', 'TKT-670303', 'TKT-670304'].map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => {
+                    setTrackingId(code);
+                    let list = MEMBER_COMPLAINTS;
+                    try {
+                      const saved = localStorage.getItem('coop_member_complaints');
+                      if (saved) list = JSON.parse(saved);
+                    } catch (e) {}
+                    const found = list.find(i => i.id.toLowerCase() === code.toLowerCase());
+                    if (found) setTrackingResult(found);
+                  }}
+                  className="badge badge-primary"
+                  style={{ cursor: 'pointer', border: 'none' }}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+
             {trackingResult && (
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <span style={{ fontWeight: 700 }}>รหัส: {trackingResult.id}</span>
-                  <span className="badge badge-gold">อยู่ระหว่างดำเนินการ</span>
+              trackingResult.notFound ? (
+                <div style={{ background: 'rgba(239, 68, 68, 0.08)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center', color: 'var(--accent-rose)' }}>
+                  <AlertCircle size={28} style={{ margin: '0 auto 0.5rem auto' }} />
+                  <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.25rem' }}>ไม่พบข้อมูลรหัส {trackingResult.id}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>กรุณาตรวจสอบความถูกต้องของรหัสติดตามเรื่องแล้วลองใหม่อีกครั้ง</div>
                 </div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>
-                  <strong>สถานะล่าสุด:</strong> {trackingResult.status}
+              ) : (
+                <div style={{ background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div>
+                      <span className="badge badge-primary">{trackingResult.id}</span>
+                      <span style={{ fontWeight: 700, fontSize: '1rem', marginLeft: '0.5rem', color: 'var(--text-main)' }}>{trackingResult.topic}</span>
+                    </div>
+                    <span className={`badge badge-${trackingResult.status === 'ตอบกลับแล้ว' ? 'emerald' : trackingResult.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
+                      {trackingResult.status}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'var(--bg-surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.35rem' }}>ข้อความของคุณ:</div>
+                    {trackingResult.message}
+                  </div>
+
+                  {trackingResult.adminReply ? (
+                    <div style={{ fontSize: '0.88rem', background: 'rgba(16, 185, 129, 0.08)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--accent-emerald-dark)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
+                        <CheckCircle2 size={16} />
+                        <span>ข้อความตอบกลับจากสหกรณ์:</span>
+                      </div>
+                      <p style={{ color: 'var(--text-main)', lineHeight: 1.6, margin: 0 }}>
+                        {trackingResult.adminReply}
+                      </p>
+                      {trackingResult.replyDate && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', textAlign: 'right' }}>
+                          ตอบกลับเมื่อ: {trackingResult.replyDate}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.82rem', color: 'var(--accent-gold-dark)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Clock size={15} />
+                      <span>เรื่องร้องเรียนอยู่ระหว่างการดำเนินการ เจ้าหน้าที่จะตอบกลับโดยเร็วที่สุด</span>
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>ผู้ยื่น: {trackingResult.name}</span>
+                    <span>วันที่รับเรื่อง: {trackingResult.date}</span>
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  วันที่รับเรื่อง: {trackingResult.date} • กำหนดการแจ้งผล: {trackingResult.expectedDate}
-                </div>
-              </div>
+              )
             )}
           </div>
         )}

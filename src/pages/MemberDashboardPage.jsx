@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   User, Coins, Landmark, ShieldCheck, TrendingUp, 
   FileText, Download, LogOut, CreditCard, Clock, 
   CheckCircle2, ShieldAlert, Users, Settings, Database, 
-  Activity, Check, X, Search, FileCheck, Eye 
+  Activity, Check, X, Search, FileCheck, Eye, MessageSquare,
+  AlertCircle, ExternalLink, Trash2, Send
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
-import { COOP_INFO, KEY_STATS } from '../data/mockData';
+import { COOP_INFO, KEY_STATS, MEMBER_COMPLAINTS } from '../data/mockData';
 import StaffReviewModal from '../components/staff/StaffReviewModal';
 
 export default function MemberDashboardPage() {
@@ -16,6 +17,18 @@ export default function MemberDashboardPage() {
   const [staffFilter, setStaffFilter] = useState('all');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
+
+  // Complaints & Feedback State for Super Admin
+  const [complaintsList, setComplaintsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('coop_member_complaints');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return MEMBER_COMPLAINTS;
+  });
+  const [complaintFilter, setComplaintFilter] = useState('all');
+  const [selectedAdminComplaint, setSelectedAdminComplaint] = useState(null);
+  const [adminReplyText, setAdminReplyText] = useState('');
 
   const [loanQueue, setLoanQueue] = useState(() => {
     try {
@@ -108,6 +121,53 @@ export default function MemberDashboardPage() {
       // ignore
     }
     alert(`บันทึกหมายเหตุสำหรับคำขอ ${id} เรียบร้อยแล้ว`);
+  };
+
+  const handleUpdateComplaintStatus = (id, newStatus) => {
+    const updated = complaintsList.map(c => c.id === id ? { ...c, status: newStatus } : c);
+    setComplaintsList(updated);
+    try {
+      localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+    } catch (e) {}
+    if (selectedAdminComplaint && selectedAdminComplaint.id === id) {
+      setSelectedAdminComplaint({ ...selectedAdminComplaint, status: newStatus });
+    }
+  };
+
+  const handleSaveAdminComplaintReply = (id, replyText) => {
+    const now = new Date().toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.';
+    const updated = complaintsList.map(c => c.id === id ? { 
+      ...c, 
+      adminReply: replyText, 
+      status: 'ตอบกลับแล้ว',
+      replyDate: now 
+    } : c);
+    setComplaintsList(updated);
+    try {
+      localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+    } catch (e) {}
+    if (selectedAdminComplaint && selectedAdminComplaint.id === id) {
+      setSelectedAdminComplaint({ 
+        ...selectedAdminComplaint, 
+        adminReply: replyText, 
+        status: 'ตอบกลับแล้ว',
+        replyDate: now 
+      });
+    }
+    alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว (สมาชิกสามารถตรวจสอบผลได้ทันที)`);
+  };
+
+  const handleDeleteComplaint = (id) => {
+    if (confirm(`ยืนยันการลบรายการ ${id}?`)) {
+      const updated = complaintsList.filter(c => c.id !== id);
+      setComplaintsList(updated);
+      try {
+        localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+      } catch (e) {}
+      if (selectedAdminComplaint && selectedAdminComplaint.id === id) {
+        setSelectedAdminComplaint(null);
+      }
+    }
   };
 
   const userRole = user.role || 'member';
@@ -299,6 +359,172 @@ export default function MemberDashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* Quick Access to Full CMS Admin Dashboard */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.08), rgba(244, 63, 94, 0.08))',
+              border: '1px solid rgba(30, 58, 138, 0.2)',
+              borderRadius: 'var(--radius-xl)',
+              padding: '1.25rem 1.75rem',
+              margin: '2rem 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'var(--primary-600)', color: '#ffffff' }}>
+                  <Settings size={24} />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary-900)', marginBottom: '0.2rem' }}>
+                    แผงควบคุมระบบเว็บไซต์แบบเต็มรูปแบบ (Super Admin Full CMS)
+                  </h4>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+                    จัดการประกาศ, ข่าวสาร, Hero Section, Pop-up แคมเปญ, และคำถาม FAQs 6 โมดูลครบวงจร
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/admin/dashboard')} 
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <span>เปิดแผงควบคุม CMS เต็มรูปแบบ</span>
+                <ExternalLink size={15} />
+              </button>
+            </div>
+
+            {/* =========================================================================
+                SUPER ADMIN: MEMBER COMPLAINTS & FEEDBACK INBOX
+                ========================================================================= */}
+            <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                    <MessageSquare size={22} style={{ color: 'var(--accent-rose)' }} />
+                    <span>กล่องข้อเสนอแนะและเรื่องร้องเรียนจากสมาชิก (Feedback & Complaints Management)</span>
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    ติดตามเรื่องร้องเรียน ตรวจสอบข้อเสนอแนะ และเขียนตอบกลับให้สมาชิกทราบแบบเรียลไทม์
+                  </p>
+                </div>
+
+                {/* Filter Pills */}
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {[
+                    { key: 'all', label: `ทั้งหมด (${complaintsList.length})` },
+                    { key: 'complaint', label: `เรื่องร้องเรียน (${complaintsList.filter(c => c.topic.includes('ร้องเรียน')).length})` },
+                    { key: 'feedback', label: `ข้อเสนอแนะ (${complaintsList.filter(c => c.topic.includes('ข้อเสนอแนะ')).length})` },
+                    { key: 'pending', label: `รอดำเนินการ (${complaintsList.filter(c => c.status === 'รอดำเนินการ').length})` },
+                    { key: 'replied', label: `ตอบกลับแล้ว (${complaintsList.filter(c => c.status === 'ตอบกลับแล้ว').length})` }
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setComplaintFilter(tab.key)}
+                      className={`btn btn-sm ${complaintFilter === tab.key ? 'btn-primary' : 'btn-subtle'}`}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Complaints List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {complaintsList
+                  .filter(item => {
+                    if (complaintFilter === 'complaint') return item.topic.includes('ร้องเรียน');
+                    if (complaintFilter === 'feedback') return item.topic.includes('ข้อเสนอแนะ');
+                    if (complaintFilter === 'pending') return item.status === 'รอดำเนินการ';
+                    if (complaintFilter === 'replied') return item.status === 'ตอบกลับแล้ว';
+                    return true;
+                  })
+                  .map((item) => {
+                    const isComplaint = item.topic.includes('ร้องเรียน');
+                    const isReplied = item.status === 'ตอบกลับแล้ว';
+                    const isPending = item.status === 'รอดำเนินการ';
+
+                    return (
+                      <div 
+                        key={item.id} 
+                        style={{ 
+                          background: 'var(--bg-subtle)', 
+                          padding: '1.25rem', 
+                          borderRadius: '12px', 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          flexWrap: 'wrap', 
+                          gap: '1rem',
+                          border: isComplaint ? '1px solid rgba(244, 63, 94, 0.3)' : isReplied ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-subtle)'
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: '260px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{item.name}</span>
+                            <span className={`badge ${isComplaint ? 'badge-rose' : 'badge-primary'}`}>{item.topic}</span>
+                            <span className="badge badge-subtle">{item.id}</span>
+                          </div>
+
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
+                            <span>โทร: <strong>{item.phone}</strong></span>
+                            <span>สังกัด: <strong>{item.department || 'สมาชิกสหกรณ์'}</strong></span>
+                            <span>วันที่ส่ง: <strong>{item.date}</strong></span>
+                          </div>
+
+                          <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', marginBottom: '0.35rem' }}>
+                            {item.message}
+                          </div>
+
+                          {item.adminReply && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--accent-emerald-dark)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <CheckCircle2 size={14} />
+                              <span>ข้อความตอบกลับ: {item.adminReply}</span>
+                            </div>
+                          )}
+
+                          <div style={{ 
+                            fontSize: '0.82rem', 
+                            color: isReplied ? 'var(--accent-emerald-dark)' : isPending ? 'var(--accent-rose)' : 'var(--accent-gold-dark)', 
+                            fontWeight: 700, 
+                            marginTop: '0.35rem'
+                          }}>
+                            สถานะ: {item.status}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => {
+                              setSelectedAdminComplaint(item);
+                              setAdminReplyText(item.adminReply || '');
+                            }} 
+                            className="btn btn-sm btn-primary"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                          >
+                            <Eye size={14} />
+                            <span>เปิดอ่าน & ตอบกลับ</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComplaint(item.id)}
+                            className="btn btn-outline btn-sm"
+                            style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)', padding: '0.4rem 0.6rem' }}
+                            title="ลบรายการ"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+            </div>
+
           </div>
         )}
 
@@ -660,6 +886,138 @@ export default function MemberDashboardPage() {
           onReject={handleRejectLoan}
           onAddNote={handleAddNote}
         />
+
+        {/* Super Admin Complaint Details & Reply Modal */}
+        {selectedAdminComplaint && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 2500,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            overflowY: 'auto'
+          }}>
+            <div className="surface-card animate-fade-in" style={{
+              width: '100%',
+              maxWidth: '620px',
+              borderRadius: 'var(--radius-xl)',
+              padding: '2rem',
+              position: 'relative',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              {/* Modal Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                    <span className="badge badge-primary">{selectedAdminComplaint.id}</span>
+                    <span className={`badge badge-${selectedAdminComplaint.status === 'ตอบกลับแล้ว' ? 'emerald' : selectedAdminComplaint.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
+                      {selectedAdminComplaint.status}
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-900)', fontWeight: 800, margin: 0 }}>
+                    {selectedAdminComplaint.topic}
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                    วันที่ส่ง: <strong>{selectedAdminComplaint.date}</strong> • ผู้ส่ง: <strong>{selectedAdminComplaint.name}</strong>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedAdminComplaint(null)} style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+              </div>
+
+              {/* Modal Body */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', fontSize: '0.82rem' }}>
+                  <div>📞 <strong>เบอร์โทร:</strong> {selectedAdminComplaint.phone}</div>
+                  <div>✉️ <strong>อีเมล:</strong> {selectedAdminComplaint.email || '-'}</div>
+                  <div style={{ gridColumn: 'span 2' }}>🏢 <strong>สังกัด/หน่วยงาน:</strong> {selectedAdminComplaint.department || 'สมาชิกทั่วไป'}</div>
+                </div>
+
+                {/* Member Message */}
+                <div style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <MessageSquare size={16} style={{ color: 'var(--accent-rose)' }} />
+                    <span>ข้อความเรื่องร้องเรียน / ข้อเสนอแนะ:</span>
+                  </div>
+                  <p style={{ color: 'var(--text-main)', lineHeight: 1.6, margin: 0 }}>
+                    {selectedAdminComplaint.message}
+                  </p>
+                </div>
+
+                {/* Status Switcher Buttons */}
+                <div>
+                  <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>
+                    ปรับเปลี่ยนสถานะการดำเนินการ (Update Status):
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {['รอดำเนินการ', 'กำลังตรวจสอบ', 'ตอบกลับแล้ว'].map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => handleUpdateComplaintStatus(selectedAdminComplaint.id, st)}
+                        className={`btn btn-sm ${selectedAdminComplaint.status === st ? 'btn-primary' : 'btn-subtle'}`}
+                        style={{ fontSize: '0.8rem' }}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Admin Reply Input */}
+                <div style={{ background: 'rgba(14, 165, 233, 0.05)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(14, 165, 233, 0.25)' }}>
+                  <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}>
+                    <CheckCircle2 size={16} style={{ color: 'var(--accent-emerald-dark)' }} />
+                    <span>พิมพ์ข้อความตอบกลับจากผู้บริหาร/เจ้าหน้าที่ (Official Reply):</span>
+                  </label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    value={adminReplyText}
+                    onChange={(e) => setAdminReplyText(e.target.value)}
+                    placeholder="ระบุคำชี้แจง มาตรการแก้ไข หรือผลการตรวจสอบเพื่อแจ้งแก่สมาชิก..."
+                    style={{ fontSize: '0.85rem', marginBottom: '0.75rem' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveAdminComplaintReply(selectedAdminComplaint.id, adminReplyText)}
+                      className="btn btn-primary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      <Send size={14} />
+                      <span>บันทึกและส่งข้อความตอบกลับ</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteComplaint(selectedAdminComplaint.id)}
+                  className="btn btn-outline btn-sm"
+                  style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  <Trash2 size={14} />
+                  <span>ลบรายการนี้</span>
+                </button>
+                <button onClick={() => setSelectedAdminComplaint(null)} className="btn btn-subtle btn-sm">
+                  <span>ปิดหน้าต่าง</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
