@@ -8,6 +8,7 @@ import Footer from './components/layout/Footer';
 import QuickActionDock from './components/layout/QuickActionDock';
 import AuthModal from './components/member/AuthModal';
 import CampaignModal from './components/common/CampaignModal';
+import AIChatWidget from './components/common/AIChatWidget';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -96,6 +97,7 @@ export default function App() {
 
       <Footer />
       <QuickActionDock />
+      <AIChatWidget />
       <AuthModal />
       <CampaignModal />
     </div>
