@@ -30,9 +30,9 @@ export default {
         }
       },
       fontFamily: {
-        heading: ['Prompt', 'sans-serif'],
-        body: ['Sarabun', 'Inter', 'sans-serif'],
-        display: ['Kanit', 'sans-serif'],
+        heading: ['"Google Sans"', 'Prompt', 'sans-serif'],
+        body: ['"Google Sans"', 'Prompt', 'Sarabun', 'Inter', 'sans-serif'],
+        display: ['"Google Sans"', 'Kanit', 'sans-serif'],
       },
       borderRadius: {
         'xl': '1rem',

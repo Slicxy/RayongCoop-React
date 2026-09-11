@@ -1,17 +1,17 @@
 import React from 'react';
-import { Phone, Clock, Sun, Moon, Type, Shield } from 'lucide-react';
+import { Phone, Clock, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { COOP_INFO, INTEREST_RATES } from '../../data/mockData';
 
 export default function TopBar() {
-  const { theme, toggleTheme, fontSize, changeFontSize } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div style={{
       background: 'var(--primary-950)',
       color: '#cbd5e1',
       fontSize: '0.82rem',
-      padding: '0.4rem 0',
+      padding: '0.45rem 0',
       borderBottom: '1px solid rgba(255,255,255,0.08)'
     }}>
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -38,36 +38,9 @@ export default function TopBar() {
           </span>
         </div>
 
-        {/* Right: Accessibility Controls & Theme */}
+        {/* Right: Theme Toggle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           
-          {/* Font Size Accessibility */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', background: 'rgba(255,255,255,0.06)', borderRadius: '6px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginRight: '2px' }}><Type size={12} /></span>
-            <button 
-              onClick={() => changeFontSize('sm')} 
-              style={{ padding: '2px 6px', fontSize: '0.75rem', color: fontSize === 'sm' ? '#fff' : '#94a3b8', fontWeight: fontSize === 'sm' ? '700' : '400', background: fontSize === 'sm' ? 'var(--primary-600)' : 'transparent', borderRadius: '4px' }}
-              title="ขนาดอักษรเล็ก"
-            >
-              ก-
-            </button>
-            <button 
-              onClick={() => changeFontSize('md')} 
-              style={{ padding: '2px 6px', fontSize: '0.8rem', color: fontSize === 'md' ? '#fff' : '#94a3b8', fontWeight: fontSize === 'md' ? '700' : '400', background: fontSize === 'md' ? 'var(--primary-600)' : 'transparent', borderRadius: '4px' }}
-              title="ขนาดอักษรปกติ"
-            >
-              ก
-            </button>
-            <button 
-              onClick={() => changeFontSize('lg')} 
-              style={{ padding: '2px 6px', fontSize: '0.9rem', color: fontSize === 'lg' ? '#fff' : '#94a3b8', fontWeight: fontSize === 'lg' ? '700' : '400', background: fontSize === 'lg' ? 'var(--primary-600)' : 'transparent', borderRadius: '4px' }}
-              title="ขนาดอักษรใหญ่"
-            >
-              ก+
-            </button>
-          </div>
-
-          {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
             style={{ 
@@ -76,14 +49,16 @@ export default function TopBar() {
               gap: '0.35rem', 
               background: 'rgba(255,255,255,0.08)', 
               color: '#e2e8f0', 
-              padding: '0.25rem 0.6rem', 
+              padding: '0.25rem 0.65rem', 
               borderRadius: '6px',
-              fontSize: '0.75rem'
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}
             title={theme === 'light' ? 'สลับเป็นโหมดกลางคืน' : 'สลับเป็นโหมดกลางวัน'}
           >
             {theme === 'light' ? <Moon size={14} style={{ color: '#fbbf24' }} /> : <Sun size={14} style={{ color: '#f59e0b' }} />}
-            <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
+            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
           </button>
 
         </div>
