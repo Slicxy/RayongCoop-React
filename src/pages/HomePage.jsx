@@ -46,7 +46,7 @@ export default function HomePage() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: '#ffffff',
-        padding: '5rem 0 4.5rem 0',
+        padding: '4.5rem 0 4rem 0',
         overflow: 'hidden',
         borderBottom: '1px solid rgba(255,255,255,0.1)'
       }}>
@@ -219,62 +219,62 @@ export default function HomePage() {
       </section>
 
       {/* =========================================================================
-          QUICK SERVICES GRID (บริการดิจิทัลด่วน)
+          QUICK SERVICES GRID (บริการดิจิทัลด่วน - Proper Spacing & Padding)
           ========================================================================= */}
-      <section className="section-sm" style={{ marginTop: '-2.5rem', position: 'relative', zIndex: 10 }}>
+      <section style={{ padding: '3.5rem 0 2.5rem 0', background: 'var(--bg-main)' }}>
         <div className="container">
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1rem'
+            gap: '1.25rem'
           }}>
             
             <Link to="/calculator" className="surface-card" style={quickServiceCardStyle}>
               <div style={{ ...quickServiceIconWrap, background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
                 <Calculator size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.2rem' }}>คำนวณเงินกู้</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>จำลองค่างวดและดอกเบี้ย</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>คำนวณเงินกู้</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>จำลองค่างวดและดอกเบี้ย</p>
             </Link>
 
             <Link to="/dividend-estimator" className="surface-card" style={quickServiceCardStyle}>
               <div style={{ ...quickServiceIconWrap, background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
                 <TrendingUp size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.2rem' }}>ประมาณการปันผล</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>ปันผลหุ้น & เฉลี่ยคืน</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>ประมาณการปันผล</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>ปันผลหุ้น & เฉลี่ยคืน</p>
             </Link>
 
             <Link to="/verify-receipt" className="surface-card" style={quickServiceCardStyle}>
               <div style={{ ...quickServiceIconWrap, background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
                 <FileText size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.2rem' }}>e-Receipt</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>ตรวจสอบใบเสร็จออนไลน์</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>e-Receipt</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>ตรวจสอบใบเสร็จออนไลน์</p>
             </Link>
 
             <Link to="/loan-checklist" className="surface-card" style={quickServiceCardStyle}>
               <div style={{ ...quickServiceIconWrap, background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
                 <CheckCircle2 size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.2rem' }}>เช็คความพร้อมกู้</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>ตรวจเอกสารและสิทธิ</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>เช็คความพร้อมกู้</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>ตรวจเอกสารและสิทธิ</p>
             </Link>
 
             <Link to="/welfare" className="surface-card" style={quickServiceCardStyle}>
               <div style={{ ...quickServiceIconWrap, background: 'var(--accent-rose-light)', color: 'var(--accent-rose)' }}>
                 <HeartHandshake size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.2rem' }}>สวัสดิการสมาชิก</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>ทุนการศึกษา & ช่วยเหลือ</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>สวัสดิการสมาชิก</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>ทุนการศึกษา & ช่วยเหลือ</p>
             </Link>
 
             <Link to="/documents" className="surface-card" style={quickServiceCardStyle}>
               <div style={{ ...quickServiceIconWrap, background: 'var(--bg-subtle)', color: 'var(--text-main)' }}>
                 <Download size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.2rem' }}>ดาวน์โหลดแบบฟอร์ม</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>เอกสารคำขอทุกประเภท</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>ดาวน์โหลดแบบฟอร์ม</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>เอกสารคำขอทุกประเภท</p>
             </Link>
 
           </div>
@@ -559,22 +559,26 @@ export default function HomePage() {
 }
 
 const quickServiceCardStyle = {
-  padding: '1.25rem 1rem',
+  padding: '1.6rem 1.25rem',
   textAlign: 'center',
   borderRadius: 'var(--radius-lg)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   textDecoration: 'none',
-  color: 'var(--text-main)'
+  color: 'var(--text-main)',
+  boxShadow: 'var(--shadow-sm)',
+  border: '1px solid var(--border-subtle)',
+  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
 };
 
 const quickServiceIconWrap = {
-  width: '52px',
-  height: '52px',
-  borderRadius: '14px',
+  width: '56px',
+  height: '56px',
+  borderRadius: '16px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  marginBottom: '0.75rem'
+  marginBottom: '0.85rem',
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
 };
