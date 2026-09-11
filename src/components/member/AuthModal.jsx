@@ -1,19 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Lock, User, KeyRound, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { X, Lock, User, KeyRound, ShieldAlert, Sparkles, CheckCircle2, Shield, UserCheck, Search, Briefcase } from 'lucide-react';
+import { useAuth, DEMO_USERS } from '../../context/AuthContext';
 import { COOP_INFO } from '../../data/mockData';
 
 export default function AuthModal() {
   const { showAuthModal, setShowAuthModal, login } = useAuth();
-  const [memberId, setMemberId] = useState('04892');
+  const [selectedRole, setSelectedRole] = useState('member');
+  const [username, setUsername] = useState('04892');
   const [password, setPassword] = useState('123456');
-  const [role, setRole] = useState('member');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   if (!showAuthModal) return null;
+
+  const handleRoleSelect = (roleKey) => {
+    setSelectedRole(roleKey);
+    const demo = DEMO_USERS[roleKey];
+    if (demo) {
+      setUsername(demo.username);
+      setPassword(demo.password);
+      setError('');
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -21,22 +31,16 @@ export default function AuthModal() {
     setLoading(true);
 
     setTimeout(() => {
-      if (!memberId || !password) {
-        setError('กรุณากรอกเลขสมาชิกและรหัสผ่านให้ครบถ้วน');
+      if (!username || !password) {
+        setError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
         setLoading(false);
         return;
       }
 
-      login(memberId, password);
+      login(username, password);
       setLoading(false);
       navigate('/member/dashboard');
-    }, 400);
-  };
-
-  const handleFillDemo = () => {
-    setMemberId('04892');
-    setPassword('123456');
-    setError('');
+    }, 300);
   };
 
   return (
@@ -58,7 +62,7 @@ export default function AuthModal() {
         className="glass-card animate-fade-in"
         style={{
           width: '100%',
-          maxWidth: '440px',
+          maxWidth: '480px',
           background: 'var(--bg-surface)',
           borderRadius: 'var(--radius-xl)',
           overflow: 'hidden',
@@ -71,7 +75,7 @@ export default function AuthModal() {
         <div style={{
           background: 'var(--gradient-primary)',
           color: '#ffffff',
-          padding: '1.75rem 1.5rem',
+          padding: '1.5rem 1.5rem',
           textAlign: 'center',
           position: 'relative'
         }}>
@@ -90,82 +94,82 @@ export default function AuthModal() {
             <X size={18} />
           </button>
 
-          <div style={{ width: '56px', height: '56px', margin: '0 auto 0.75rem auto', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)' }}>
+          <div style={{ width: '48px', height: '48px', margin: '0 auto 0.5rem auto', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)' }}>
             <img 
               src="/assets/img/logo.webp" 
               alt="Logo" 
-              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+              style={{ width: '34px', height: '34px', objectFit: 'contain' }}
               onError={(e) => { e.target.src = '/img/logo.webp'; }}
             />
           </div>
 
-          <h3 style={{ color: '#fff', fontSize: '1.25rem', marginBottom: '0.25rem' }}>ระบบบริการสมาชิกออนไลน์</h3>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem' }}>{COOP_INFO.nameTh}</p>
+          <h3 style={{ color: '#fff', fontSize: '1.15rem', marginBottom: '0.2rem' }}>ระบบเข้าสู่ระบบแบบแบ่งสิทธิ์ (Role-Based Access)</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem' }}>{COOP_INFO.nameTh}</p>
         </div>
 
-        {/* Tab Selection */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}>
-          <button
-            onClick={() => setRole('member')}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: role === 'member' ? 'var(--primary-600)' : 'var(--text-muted)',
-              borderBottom: role === 'member' ? '2px solid var(--primary-600)' : 'none',
-              background: role === 'member' ? 'var(--bg-surface)' : 'transparent'
-            }}
-          >
-            สมาชิกสหกรณ์
-          </button>
-          <button
-            onClick={() => setRole('staff')}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: role === 'staff' ? 'var(--primary-600)' : 'var(--text-muted)',
-              borderBottom: role === 'staff' ? '2px solid var(--primary-600)' : 'none',
-              background: role === 'staff' ? 'var(--bg-surface)' : 'transparent'
-            }}
-          >
-            เจ้าหน้าที่ / ผู้ดูแลระบบ
-          </button>
+        {/* 4 Roles Quick Selection Pills */}
+        <div style={{ padding: '0.85rem 1.25rem 0 1.25rem', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+            เลือกสิทธิ์การใช้งาน (Role) เพื่อทดสอบ:
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem', paddingBottom: '0.85rem' }}>
+            
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('super_admin')}
+              style={roleBtnStyle(selectedRole === 'super_admin')}
+            >
+              <span>👑 Super Admin</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('staff')}
+              style={roleBtnStyle(selectedRole === 'staff')}
+            >
+              <span>💼 เจ้าหน้าที่สินเชื่อ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('auditor')}
+              style={roleBtnStyle(selectedRole === 'auditor')}
+            >
+              <span>🔍 ผู้ตรวจสอบกิจการ</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('member')}
+              style={roleBtnStyle(selectedRole === 'member')}
+            >
+              <span>👤 สมาชิกสหกรณ์</span>
+            </button>
+
+          </div>
         </div>
 
         {/* Form Body */}
-        <div style={{ padding: '1.75rem' }}>
+        <div style={{ padding: '1.5rem' }}>
           
-          {/* Demo Login Hint Alert */}
+          {/* Active Role Info Badge */}
           <div style={{
-            background: 'var(--primary-50)',
-            border: '1px solid var(--primary-200)',
+            background: selectedRole === 'super_admin' ? 'var(--accent-rose-light)' : selectedRole === 'staff' ? 'var(--primary-50)' : selectedRole === 'auditor' ? 'var(--accent-gold-light)' : 'var(--accent-emerald-light)',
+            color: selectedRole === 'super_admin' ? 'var(--accent-rose)' : selectedRole === 'staff' ? 'var(--primary-700)' : selectedRole === 'auditor' ? 'var(--accent-gold-dark)' : 'var(--accent-emerald-dark)',
             borderRadius: 'var(--radius-md)',
-            padding: '0.75rem',
+            padding: '0.65rem 0.85rem',
             marginBottom: '1.25rem',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            fontSize: '0.82rem',
+            fontWeight: 600
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--primary-800)' }}>
-              <Sparkles size={16} style={{ color: 'var(--primary-600)', flexShrink: 0 }} />
-              <span>รหัสทดสอบ: <strong>04892</strong> / <strong>123456</strong></span>
+            <Sparkles size={16} style={{ flexShrink: 0 }} />
+            <div>
+              <div>สิทธิ์: <strong>{DEMO_USERS[selectedRole]?.roleName}</strong></div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 400, opacity: 0.9 }}>ชื่อ: {DEMO_USERS[selectedRole]?.name}</div>
             </div>
-            <button 
-              type="button"
-              onClick={handleFillDemo}
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--primary-700)',
-                fontWeight: 700,
-                textDecoration: 'underline'
-              }}
-            >
-              เติมอัตโนมัติ
-            </button>
           </div>
 
           {error && (
@@ -188,35 +192,28 @@ export default function AuthModal() {
           <form onSubmit={handleSubmit}>
             
             <div className="form-group">
-              <label className="form-label">เลขทะเบียนสมาชิก หรือ เลขประจำตัวประชาชน</label>
+              <label className="form-label">ชื่อผู้ใช้ / รหัสสมาชิก / อีเมล</label>
               <div style={{ position: 'relative' }}>
                 <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input 
                   type="text"
                   className="form-control"
                   style={{ paddingLeft: '2.5rem' }}
-                  placeholder="เช่น 04892 หรือ 1210100045892"
-                  value={memberId}
-                  onChange={(e) => setMemberId(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <label className="form-label" style={{ marginBottom: 0 }}>รหัสผ่าน (PIN 6 หลัก)</label>
-                <a href="#forgot" style={{ fontSize: '0.78rem', color: 'var(--primary-600)' }} onClick={(e) => { e.preventDefault(); alert('กรณีลืมรหัสผ่าน กรุณาติดต่อสำนักงานสหกรณ์ โทร. 038-611-199 เพื่อยืนยันตัวตน'); }}>
-                  ลืมรหัสผ่าน?
-                </a>
-              </div>
+              <label className="form-label">รหัสผ่าน (Password / PIN)</label>
               <div style={{ position: 'relative' }}>
                 <KeyRound size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input 
                   type="password"
                   className="form-control"
                   style={{ paddingLeft: '2.5rem' }}
-                  placeholder="รหัสผ่านของคุณ"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -227,23 +224,13 @@ export default function AuthModal() {
             <button 
               type="submit" 
               className="btn btn-primary"
-              style={{ width: '100%', padding: '0.8rem', fontSize: '1rem', marginTop: '0.5rem' }}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem', marginTop: '0.5rem' }}
               disabled={loading}
             >
-              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+              {loading ? 'กำลังเข้าสู่ระบบ...' : `เข้าสู่ระบบในฐานะ ${DEMO_USERS[selectedRole]?.roleBadge}`}
             </button>
 
           </form>
-
-          <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-            ยังไม่ได้ลงทะเบียนใช้งานออนไลน์?{' '}
-            <button 
-              onClick={() => { setShowAuthModal(false); navigate('/eservice'); }}
-              style={{ color: 'var(--primary-600)', fontWeight: 600, textDecoration: 'underline' }}
-            >
-              ลงทะเบียนเปิดใช้งานที่นี่
-            </button>
-          </div>
 
         </div>
 
@@ -251,3 +238,17 @@ export default function AuthModal() {
     </div>
   );
 }
+
+const roleBtnStyle = (active) => ({
+  padding: '0.45rem 0.6rem',
+  fontSize: '0.78rem',
+  fontWeight: active ? '700' : '500',
+  borderRadius: '6px',
+  background: active ? 'var(--primary-600)' : 'var(--bg-surface)',
+  color: active ? '#ffffff' : 'var(--text-main)',
+  border: active ? '1px solid var(--primary-600)' : '1px solid var(--border-subtle)',
+  boxShadow: active ? 'var(--shadow-sm)' : 'none',
+  transition: 'all 0.15s ease',
+  textAlign: 'center',
+  whiteSpace: 'nowrap'
+});
