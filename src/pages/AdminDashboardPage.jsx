@@ -1,43 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ShieldCheck, Users, Settings, Database, Activity, 
   UserPlus, KeyRound, RefreshCw, Download, Search, 
   Trash2, Edit, CheckCircle2, AlertTriangle, Lock, 
-  Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles, LogOut, ArrowRight, Eye
+  Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles, 
+  LogOut, ArrowRight, Eye, Bell, Newspaper, Image, 
+  Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
-import { COOP_INFO, KEY_STATS, INTEREST_RATES } from '../data/mockData';
+import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS } from '../data/mockData';
 
 export default function AdminDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('announcements');
   const navigate = useNavigate();
 
-  // User Management State
+  // 1. Announcements State
+  const [announcements, setAnnouncements] = useState(ANNOUNCEMENTS);
+  const [annModal, setAnnModal] = useState(false);
+  const [newAnn, setNewAnn] = useState({ title: '', date: '11 มี.ค. 2567', fileSize: '850 KB', important: true });
+
+  // 2. News State
+  const [news, setNews] = useState(NEWS_LIST);
+  const [newsModal, setNewsModal] = useState(false);
+  const [newNews, setNewNews] = useState({
+    title: '',
+    category: 'ข่าวประชาสัมพันธ์',
+    date: '11 มี.ค. 2567',
+    excerpt: '',
+    image: '/assets/img/news_placeholder.jpg'
+  });
+
+  // 3. Hero Section Settings State
+  const [heroSettings, setHeroSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('coop_hero_settings');
+      return saved ? JSON.parse(saved) : {
+        title: COOP_INFO.nameTh,
+        subtitle: `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
+        badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
+        bgImageUrl: '/assets/img/hero_bg_coop.jpg'
+      };
+    } catch (e) {
+      return {
+        title: COOP_INFO.nameTh,
+        subtitle: `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
+        badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
+        bgImageUrl: '/assets/img/hero_bg_coop.jpg'
+      };
+    }
+  });
+
+  // 4. Pop-up Campaign State
+  const [popupCampaign, setPopupCampaign] = useState(() => {
+    try {
+      const saved = localStorage.getItem('coop_popup_campaign');
+      return saved ? JSON.parse(saved) : {
+        enabled: true,
+        title: 'โครงการประมาณการเงินปันผลและเฉลี่ยคืน ประจำปี 2567',
+        subtitle: 'สมาชิกสามารถคำนวณและตรวจสอบสิทธิประโยชน์ได้แล้ววันนี้ผ่านระบบดิจิทัล',
+        imageUrl: '/assets/img/popup_dividend.jpg',
+        buttonText: 'ประมาณการเงินปันผลทันที',
+        linkUrl: '/dividend-estimator'
+      };
+    } catch (e) {
+      return {
+        enabled: true,
+        title: 'โครงการประมาณการเงินปันผลและเฉลี่ยคืน ประจำปี 2567',
+        subtitle: 'สมาชิกสามารถคำนวณและตรวจสอบสิทธิประโยชน์ได้แล้ววันนี้ผ่านระบบดิจิทัล',
+        imageUrl: '/assets/img/popup_dividend.jpg',
+        buttonText: 'ประมาณการเงินปันผลทันที',
+        linkUrl: '/dividend-estimator'
+      };
+    }
+  });
+
+  // 5. Member Feedback & Complaints State
+  const [feedbacks, setFeedbacks] = useState([
+    { id: 'FB-001', name: 'นายเกียรติศักดิ์ พูลเพิ่ม', phone: '081-234-5678', email: 'kiatisak@mail.com', topic: 'ข้อเสนอแนะการให้บริการ', message: 'อยากให้มีระบบส่งแจ้งเตือน SMS หรือ LINE ทันทีเมื่อเงินปันผลหรือเงินกู้โอนเข้าบัญชีครับ', date: '11 มี.ค. 2567', status: 'ตอบกลับแล้ว' },
+    { id: 'FB-002', name: 'นางสาวจารุณี รัตนโชติ', phone: '089-987-6543', email: 'jarunee@mail.com', topic: 'สอบถามข้อมูลทั่วไป', message: 'ต้องการขอหนังสือรับรองดอกเบี้ยเงินกู้ย้อนหลัง 2 ปี สามารถยื่นผ่าน e-Services ได้เลยไหมคะ', date: '10 มี.ค. 2567', status: 'รอดำเนินการ' },
+    { id: 'FB-003', name: 'นายอนุชา เจริญผล', phone: '086-555-4321', email: 'anucha@mail.com', topic: 'แจ้งปัญหาการใช้งานระบบออนไลน์', message: 'ขอสอบถามขั้นตอนการดาวน์โหลดใบเสร็จ e-Receipt ย้อนหลังปี 2566 ครับ', date: '09 มี.ค. 2567', status: 'กำลังตรวจสอบ' }
+  ]);
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+
+  // 6. FAQs State
+  const [faqsList, setFaqsList] = useState(FAQS);
+  const [faqModal, setFaqModal] = useState(false);
+  const [newFaq, setNewFaq] = useState({ q: '', a: '' });
+
+  // Users Management State
   const [usersList, setUsersList] = useState([
     { id: 1, name: 'นายธีระพงษ์ ผู้ดูแลระบบสูงสุด', username: 'admin', email: 'admin@rayongcoop.com', role: 'super_admin', roleName: 'Super Admin', status: 'active', lastLogin: '11 มี.ค. 14:15 น.' },
     { id: 2, name: 'นางสาวกานดา ใจดี', username: 'staff1', email: 'staff1@rayongcoop.com', role: 'staff', roleName: 'Loan & Finance Staff', status: 'active', lastLogin: '11 มี.ค. 13:45 น.' },
     { id: 3, name: 'นายวรวุฒิ สมบูรณ์ทรัพย์', username: 'rayongcoop1', email: 'rayongcoop1@rayongcoop.com', role: 'auditor', roleName: 'Auditor & Manager', status: 'active', lastLogin: '11 มี.ค. 11:20 น.' },
     { id: 4, name: 'นายสมชาย มีสุข', username: '04892', email: 'somchai.m@rayongcoop.com', role: 'member', roleName: 'Cooperative Member', status: 'active', lastLogin: '10 มี.ค. 18:30 น.' },
-    { id: 5, name: 'นางวันดี ศรีระยอง', username: '04893', email: 'wandee.s@rayongcoop.com', role: 'member', roleName: 'Cooperative Member', status: 'active', lastLogin: '09 มี.ค. 09:12 น.' },
   ]);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [newUserModal, setNewUserModal] = useState(false);
-  const [newUserData, setNewUserData] = useState({ name: '', username: '', email: '', role: 'staff' });
-  const [backupTriggered, setBackupTriggered] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-
-  // Financial rates local state for real-time adjustments
-  const [rates, setRates] = useState({
-    savingSpecial: '2.50',
-    fixed24Month: '3.10',
-    emergencyLoan: '5.50',
-    ordinaryLoan: '5.25',
-    dividendForecast: '5.25',
-    refundForecast: '12.50'
-  });
 
   const isSuperAdmin = user && user.role === 'super_admin';
 
@@ -60,72 +118,88 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const handleAddUser = (e) => {
+  // Handlers
+  const handleSaveHero = (e) => {
     e.preventDefault();
-    const newUser = {
-      id: usersList.length + 1,
-      name: newUserData.name,
-      username: newUserData.username,
-      email: newUserData.email,
-      role: newUserData.role,
-      roleName: newUserData.role === 'super_admin' ? 'Super Admin' : newUserData.role === 'staff' ? 'Loan Staff' : newUserData.role === 'auditor' ? 'Auditor' : 'Member',
-      status: 'active',
-      lastLogin: 'เพิ่งสร้างใหม่'
+    localStorage.setItem('coop_hero_settings', JSON.stringify(heroSettings));
+    alert('บันทึกการตั้งค่า Hero Section เรียบร้อยแล้ว! (แสดงผลที่หน้าแรกทันที)');
+  };
+
+  const handleSavePopup = (e) => {
+    e.preventDefault();
+    localStorage.setItem('coop_popup_campaign', JSON.stringify(popupCampaign));
+    sessionStorage.removeItem('coop_campaign_shown'); // reset so it shows on next homepage visit
+    alert('บันทึกการตั้งค่า Pop-up Campaign เรียบร้อยแล้ว! (เปิดหน้าเว็บเพื่อดูพรีวิวได้ทันที)');
+  };
+
+  const handleAddAnnouncement = (e) => {
+    e.preventDefault();
+    const item = {
+      id: `ann-${Date.now()}`,
+      title: newAnn.title,
+      date: newAnn.date,
+      fileSize: newAnn.fileSize,
+      important: newAnn.important
     };
-    setUsersList([...usersList, newUser]);
-    setNewUserModal(false);
-    setNewUserData({ name: '', username: '', email: '', role: 'staff' });
+    setAnnouncements([item, ...announcements]);
+    setAnnModal(false);
+    setNewAnn({ title: '', date: '11 มี.ค. 2567', fileSize: '850 KB', important: true });
   };
 
-  const handleToggleUserStatus = (id) => {
-    setUsersList(usersList.map(u => u.id === id ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' } : u));
+  const handleDeleteAnnouncement = (id) => {
+    if (confirm('ยืนยันการลบประกาศนี้?')) {
+      setAnnouncements(announcements.filter(a => a.id !== id));
+    }
   };
 
-  const handleTriggerBackup = () => {
-    setBackupTriggered(true);
-    setTimeout(() => {
-      setBackupTriggered(false);
-      alert('สำรองฐานข้อมูล MySQL และไฟล์ระบบ (rayongcoop_backup_2026.sql.gz) สำเร็จสมบูรณ์!');
-    }, 1000);
+  const handleAddNews = (e) => {
+    e.preventDefault();
+    const item = {
+      id: `news-${Date.now()}`,
+      title: newNews.title,
+      category: newNews.category,
+      date: newNews.date,
+      views: 0,
+      excerpt: newNews.excerpt,
+      image: newNews.image || '/assets/img/news_placeholder.jpg'
+    };
+    setNews([item, ...news]);
+    setNewsModal(false);
+    setNewNews({ title: '', category: 'ข่าวประชาสัมพันธ์', date: '11 มี.ค. 2567', excerpt: '', image: '/assets/img/news_placeholder.jpg' });
   };
 
-  const filteredUsers = usersList.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDeleteNews = (id) => {
+    if (confirm('ยืนยันการลบข่าวสารนี้?')) {
+      setNews(news.filter(n => n.id !== id));
+    }
+  };
+
+  const handleAddFaq = (e) => {
+    e.preventDefault();
+    setFaqsList([...faqsList, newFaq]);
+    setFaqModal(false);
+    setNewFaq({ q: '', a: '' });
+  };
+
+  const handleDeleteFaq = (index) => {
+    if (confirm('ยืนยันการลบคำถามนี้?')) {
+      setFaqsList(faqsList.filter((_, idx) => idx !== index));
+    }
+  };
+
+  const handleUpdateFeedbackStatus = (id, newStatus) => {
+    setFeedbacks(feedbacks.map(f => f.id === id ? { ...f, status: newStatus } : f));
+    if (selectedFeedback && selectedFeedback.id === id) {
+      setSelectedFeedback({ ...selectedFeedback, status: newStatus });
+    }
+  };
 
   return (
     <div className="section" style={{ background: 'var(--bg-main)', minHeight: '90vh' }}>
       <div className="container">
         
-        {/* Top Warning if logged in as another role */}
-        {!isSuperAdmin && (
-          <div style={{
-            background: 'var(--accent-rose-light)',
-            border: '1px solid var(--accent-rose)',
-            color: 'var(--accent-rose)',
-            padding: '0.85rem 1.25rem',
-            borderRadius: 'var(--radius-md)',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '0.5rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem' }}>
-              <AlertTriangle size={18} />
-              <span>คุณกำลังเข้าสู่ระบบในฐานะ <strong>{user?.roleName}</strong> (กดปุ่มสลับเป็น Super Admin เพื่อควบคุมระบบเต็มรูปแบบ)</span>
-            </div>
-            <button onClick={() => switchRole('super_admin')} className="btn btn-sm btn-primary" style={{ fontSize: '0.78rem' }}>
-              👑 สลับเป็น Super Admin
-            </button>
-          </div>
-        )}
-
-        {/* Super Admin Top Header */}
-        <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.9))', color: '#ffffff' }}>
+        {/* Top Header Banner */}
+        <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 58, 138, 0.92))', color: '#ffffff' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -146,32 +220,22 @@ export default function AdminDashboardPage() {
 
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.2rem' }}>
-                  <h1 style={{ fontSize: '1.45rem', color: '#ffffff', margin: 0 }}>ศูนย์ควบคุมและบริหารระบบ Super Admin</h1>
-                  <span className="badge badge-rose">Full Access Control</span>
+                  <h1 style={{ fontSize: '1.45rem', color: '#ffffff', margin: 0 }}>Super Admin Content & System Management</h1>
+                  <span className="badge badge-rose">Full Control</span>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
-                  ผู้ดูแลระบบ: <strong>{isSuperAdmin ? user.name : 'นายธีระพงษ์ ผู้ดูแลระบบสูงสุด (admin)'}</strong> • ระบบ: {COOP_INFO.nameTh}
+                  ผู้ดูแลระบบ: <strong>{user.name}</strong> • จัดการเนื้อหา ข่าว ประกาศ แบนเนอร์ ป็อปอัป ข้อเสนอแนะ และ FAQs
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button 
-                onClick={handleTriggerBackup} 
-                className="btn btn-sm"
-                style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}
-                disabled={backupTriggered}
-              >
-                <HardDrive size={15} />
-                <span>{backupTriggered ? 'กำลังสำรอง...' : 'สำรอง DB ด่วน'}</span>
-              </button>
-
-              <button 
-                onClick={() => logout()} 
-                className="btn btn-sm btn-outline"
-                style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.4)' }}
-              >
-                <LogOut size={15} />
+              <Link to="/" target="_blank" className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <ExternalLink size={14} />
+                <span>ดูหน้าเว็บหลัก</span>
+              </Link>
+              <button onClick={() => logout()} className="btn btn-sm btn-outline" style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.4)' }}>
+                <LogOut size={14} />
                 <span>ออกจากระบบ</span>
               </button>
             </div>
@@ -179,185 +243,367 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Real-time System Metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+        {/* Navigation Tabs for All 6 Modules + Users */}
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
           
-          <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-rose)' }}>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-              <Users size={16} style={{ color: 'var(--accent-rose)' }} />
-              <span>ผู้ใช้งานทั้งหมดในระบบ</span>
-            </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)' }}>
-              {usersList.length.toLocaleString()} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>/ 4,850 คน</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald-dark)', marginTop: '0.2rem' }}>Active 99.4%</div>
-          </div>
-
-          <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--primary-600)' }}>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-              <Cpu size={16} style={{ color: 'var(--primary-600)' }} />
-              <span>ประสิทธิภาพเซิร์ฟเวอร์ & RAM</span>
-            </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary-600)' }}>
-              CPU 18% <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/ RAM 42%</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald-dark)', marginTop: '0.2rem' }}>Node.js Vite 6 + PHP 8.2 FastCGI</div>
-          </div>
-
-          <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-teal)' }}>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-              <Database size={16} style={{ color: 'var(--accent-teal)' }} />
-              <span>ฐานข้อมูล MySQL (MariaDB)</span>
-            </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-teal-dark)' }}>
-              38 ตาราง
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>ขนาด: 45.2 MB • Replication OK</div>
-          </div>
-
-          <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-gold)' }}>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-              <ShieldCheck size={16} style={{ color: 'var(--accent-gold-dark)' }} />
-              <span>สถานะความปลอดภัย & PDPA</span>
-            </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-gold-dark)' }}>
-              เกรด A+
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald-dark)', marginTop: '0.2rem' }}>ไม่พบการบุกรุก (0 Threat detected)</div>
-          </div>
-
-        </div>
-
-        {/* Super Admin Module Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
-          <button 
-            onClick={() => setActiveTab('users')} 
-            className={`btn ${activeTab === 'users' ? 'btn-primary' : 'btn-subtle'}`}
-            style={{ borderRadius: '8px', fontSize: '0.88rem' }}
-          >
-            <Users size={16} />
-            <span>จัดการผู้ใช้งานและสิทธิ์ (Users & RBAC)</span>
+          <button onClick={() => setActiveTab('announcements')} className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <Bell size={15} />
+            <span>1. ประกาศสหกรณ์ ({announcements.length})</span>
           </button>
 
-          <button 
-            onClick={() => setActiveTab('financial')} 
-            className={`btn ${activeTab === 'financial' ? 'btn-primary' : 'btn-subtle'}`}
-            style={{ borderRadius: '8px', fontSize: '0.88rem' }}
-          >
-            <Sliders size={16} />
-            <span>กำหนดอัตราดอกเบี้ย & ปันผล (Master Rates)</span>
+          <button onClick={() => setActiveTab('news')} className={`btn ${activeTab === 'news' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <Newspaper size={15} />
+            <span>2. ข่าวสาร & กิจกรรม ({news.length})</span>
           </button>
 
-          <button 
-            onClick={() => setActiveTab('audit')} 
-            className={`btn ${activeTab === 'audit' ? 'btn-primary' : 'btn-subtle'}`}
-            style={{ borderRadius: '8px', fontSize: '0.88rem' }}
-          >
-            <Terminal size={16} />
-            <span>บันทึกความปลอดภัย (Audit Logs)</span>
+          <button onClick={() => setActiveTab('hero')} className={`btn ${activeTab === 'hero' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <Image size={15} />
+            <span>3. ปรับแต่ง Hero Section</span>
           </button>
 
-          <button 
-            onClick={() => setActiveTab('maintenance')} 
-            className={`btn ${activeTab === 'maintenance' ? 'btn-primary' : 'btn-subtle'}`}
-            style={{ borderRadius: '8px', fontSize: '0.88rem' }}
-          >
-            <Settings size={16} />
-            <span>ตั้งค่าระบบ & สำรองข้อมูล</span>
+          <button onClick={() => setActiveTab('popup')} className={`btn ${activeTab === 'popup' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <Megaphone size={15} />
+            <span>4. Pop-up Campaign</span>
           </button>
+
+          <button onClick={() => setActiveTab('feedback')} className={`btn ${activeTab === 'feedback' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <MessageSquare size={15} />
+            <span>5. กล่องข้อเสนอแนะ ({feedbacks.length})</span>
+          </button>
+
+          <button onClick={() => setActiveTab('faqs')} className={`btn ${activeTab === 'faqs' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <HelpCircle size={15} />
+            <span>6. จัดการคำถาม FAQs ({faqsList.length})</span>
+          </button>
+
         </div>
 
         {/* =========================================================================
-            TAB 1: USER & RBAC MANAGEMENT
+            MODULE 1: ANNOUNCEMENTS MANAGEMENT (จัดการประกาศ)
             ========================================================================= */}
-        {activeTab === 'users' && (
+        {activeTab === 'announcements' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>รายชื่อผู้ใช้งานและบทบาทในระบบ</h3>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>จัดการผู้ใช้ เพิ่ม/แก้ไขสิทธิ์ และระงับการใช้งาน</p>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ประกาศทางการของสหกรณ์ (Announcements)</h3>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>จัดการประกาศผลการคัดเลือก ระเบียบ และคำสั่งทางการ</p>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative' }}>
-                  <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <button onClick={() => setAnnModal(true)} className="btn btn-primary btn-sm">
+                <Plus size={15} />
+                <span>เพิ่มประกาศใหม่</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {announcements.map((ann) => (
+                <div key={ann.id} style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ padding: '0.65rem', borderRadius: '10px', background: ann.important ? 'var(--accent-rose-light)' : 'var(--primary-100)', color: ann.important ? 'var(--accent-rose)' : 'var(--primary-600)' }}>
+                      <Bell size={20} />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                        {ann.important && <span className="badge badge-rose">สำคัญ</span>}
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{ann.date} • ขนาดไฟล์ {ann.fileSize}</span>
+                      </div>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>{ann.title}</h4>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => handleDeleteAnnouncement(ann.id)} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)' }}>
+                      <Trash2 size={14} />
+                      <span>ลบ</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODULE 2: NEWS & ACTIVITIES (จัดการข่าวสารและกิจกรรม)
+            ========================================================================= */}
+        {activeTab === 'news' && (
+          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ข่าวสารประชาสัมพันธ์และกิจกรรม</h3>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>เพิ่ม/แก้ไขข่าวสาร พร้อมภาพประกอบและสรุปย่อ</p>
+              </div>
+
+              <button onClick={() => setNewsModal(true)} className="btn btn-primary btn-sm">
+                <Plus size={15} />
+                <span>เพิ่มข่าวสารใหม่</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+              {news.map((item) => (
+                <div key={item.id} style={{ background: 'var(--bg-subtle)', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ height: '140px', position: 'relative', background: 'var(--primary-100)' }}>
+                    <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <span style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(15,23,42,0.8)', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>
+                      {item.category}
+                    </span>
+                  </div>
+                  <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>{item.date}</div>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.35 }}>{item.title}</h4>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '1rem' }}>{item.excerpt?.slice(0, 80)}...</p>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <button onClick={() => handleDeleteNews(item.id)} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)' }}>
+                        <Trash2 size={13} />
+                        <span>ลบข่าว</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODULE 3: HERO SECTION SETTINGS (ปรับแต่งแบนเนอร์หลัก)
+            ========================================================================= */}
+        {activeTab === 'hero' && (
+          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ปรับแต่งแบนเนอร์หลักหน้าแรก (Hero Section Settings)</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>แก้ไขข้อความพาดหัว, คำโปรย, และเลือก/เปลี่ยนรูปภาพพื้นหลัง</p>
+            </div>
+
+            <form onSubmit={handleSaveHero}>
+              
+              <div className="form-group">
+                <label className="form-label">ข้อความ Badge เล็กด้านบน</label>
+                <input type="text" className="form-control" value={heroSettings.badgeText} onChange={(e) => setHeroSettings({ ...heroSettings, badgeText: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">หัวข้อหลัก (Main Heading H1)</label>
+                <input type="text" className="form-control" value={heroSettings.title} onChange={(e) => setHeroSettings({ ...heroSettings, title: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">คำโปรยและสโลแกน (Subtitle)</label>
+                <textarea className="form-control" rows={3} value={heroSettings.subtitle} onChange={(e) => setHeroSettings({ ...heroSettings, subtitle: e.target.value })} required />
+              </div>
+
+              {/* Background Image Selection & URL */}
+              <div className="form-group">
+                <label className="form-label">รูปภาพพื้นหลัง Hero Banner (URL หรือเลือกภาพที่มีในระบบ)</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
                   <input 
                     type="text" 
-                    className="form-control"
-                    style={{ paddingLeft: '2.2rem', paddingRight: '1rem', width: '220px', fontSize: '0.85rem' }}
-                    placeholder="ค้นหาชื่อ, username..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="form-control" 
+                    placeholder="เช่น /assets/img/hero_bg_coop.jpg หรือ https://..." 
+                    value={heroSettings.bgImageUrl} 
+                    onChange={(e) => setHeroSettings({ ...heroSettings, bgImageUrl: e.target.value })} 
                   />
                 </div>
 
-                <button onClick={() => setNewUserModal(true)} className="btn btn-primary btn-sm">
-                  <UserPlus size={15} />
-                  <span>เพิ่มผู้ใช้ใหม่</span>
+                {/* Preset Image Options */}
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'ธีมสหกรณ์มาตรฐาน', url: '/assets/img/hero_bg_coop.jpg' },
+                    { label: 'ธีมสาธารณสุขและการแพทย์', url: '/assets/img/hero_bg_health.jpg' },
+                    { label: 'ธีมธรรมชาติเมืองระยอง', url: '/assets/img/hero_bg_default.jpg' }
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setHeroSettings({ ...heroSettings, bgImageUrl: preset.url })}
+                      className="btn btn-subtle btn-sm"
+                      style={{
+                        border: heroSettings.bgImageUrl === preset.url ? '2px solid var(--primary-600)' : '1px solid var(--border-subtle)',
+                        fontWeight: heroSettings.bgImageUrl === preset.url ? 700 : 500
+                      }}
+                    >
+                      <span>{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              <div style={{ marginBottom: '1.5rem', background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                  พรีวิวภาพพื้นหลัง (Live Background Preview):
+                </div>
+                <div style={{
+                  height: '160px',
+                  borderRadius: '10px',
+                  backgroundImage: heroSettings.bgImageUrl ? `linear-gradient(135deg, rgba(15, 43, 92, 0.85), rgba(30, 64, 175, 0.8)), url(${heroSettings.bgImageUrl})` : 'var(--gradient-hero)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  color: '#fff',
+                  padding: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
+                }}>
+                  <div style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600 }}>{heroSettings.badgeText}</div>
+                  <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: '0.25rem 0' }}>{heroSettings.title}</h3>
+                  <p style={{ fontSize: '0.78rem', color: '#cbd5e1', maxWidth: '450px' }}>{heroSettings.subtitle}</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn btn-primary">
+                  <CheckCircle2 size={16} />
+                  <span>บันทึกการตั้งค่า Hero Section</span>
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODULE 4: POP-UP CAMPAIGN (จัดการป็อปอัปแคมเปญ)
+            ========================================================================= */}
+        {activeTab === 'popup' && (
+          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ป็อปอัปแคมเปญแจ้งเตือนหน้าแรก (Pop-up Campaign Modal)</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>เปิด/ปิด หรือปรับเปลี่ยนภาพและโปรโมชั่นเงินปันผล/เงินฝาก</p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>สถานะการแสดงผล:</span>
+                <button 
+                  onClick={() => setPopupCampaign({ ...popupCampaign, enabled: !popupCampaign.enabled })}
+                  className={`btn btn-sm ${popupCampaign.enabled ? 'btn-primary' : 'btn-subtle'}`}
+                >
+                  {popupCampaign.enabled ? 'เปิดใช้งานอยู่ (Active)' : 'ปิดการแสดงผล (Disabled)'}
                 </button>
               </div>
             </div>
 
+            <form onSubmit={handleSavePopup}>
+              
+              <div className="form-group">
+                <label className="form-label">หัวข้อป็อปอัป (Campaign Title)</label>
+                <input type="text" className="form-control" value={popupCampaign.title} onChange={(e) => setPopupCampaign({ ...popupCampaign, title: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">ข้อความรายละเอียด (Campaign Subtitle)</label>
+                <textarea className="form-control" rows={3} value={popupCampaign.subtitle} onChange={(e) => setPopupCampaign({ ...popupCampaign, subtitle: e.target.value })} required />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">ข้อความบนปุ่มกด (Button Text)</label>
+                  <input type="text" className="form-control" value={popupCampaign.buttonText} onChange={(e) => setPopupCampaign({ ...popupCampaign, buttonText: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">ลิงก์ปลายทาง (Link URL)</label>
+                  <input type="text" className="form-control" value={popupCampaign.linkUrl} onChange={(e) => setPopupCampaign({ ...popupCampaign, linkUrl: e.target.value })} required />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">รูปภาพแคมเปญ (Image URL)</label>
+                <input type="text" className="form-control" value={popupCampaign.imageUrl} onChange={(e) => setPopupCampaign({ ...popupCampaign, imageUrl: e.target.value })} placeholder="/assets/img/popup_dividend.jpg" />
+              </div>
+
+              {/* Preview */}
+              <div style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                  พรีวิวป็อปอัป (Popup Preview):
+                </div>
+                <div style={{ maxWidth: '420px', margin: '0 auto', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '16px', overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}>
+                  <div style={{ height: '140px', background: 'var(--gradient-hero)' }}>
+                    <img src={popupCampaign.imageUrl || '/assets/img/popup_dividend.jpg'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                  </div>
+                  <div style={{ padding: '1rem' }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.3rem' }}>{popupCampaign.title}</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>{popupCampaign.subtitle}</p>
+                    <div className="btn btn-primary btn-sm" style={{ width: '100%' }}>{popupCampaign.buttonText}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn btn-primary">
+                  <CheckCircle2 size={16} />
+                  <span>บันทึกการตั้งค่า Pop-up</span>
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODULE 5: MEMBER FEEDBACK & COMPLAINTS INBOX
+            ========================================================================= */}
+        {activeTab === 'feedback' && (
+          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>กล่องข้อเสนอแนะและเรื่องร้องเรียน (Feedback & Complaints Inbox)</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ตรวจสอบข้อความและข้อเสนอแนะที่สมาชิกส่งเข้ามาผ่านหน้าติดต่อเรา</p>
+              </div>
+              <span className="badge badge-primary">ทั้งหมด {feedbacks.length} รายการ</span>
+            </div>
+
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-subtle)', borderBottom: '2px solid var(--border-subtle)', textAlign: 'left' }}>
-                    <th style={{ padding: '0.85rem' }}>ผู้ใช้งาน / สังกัด</th>
-                    <th style={{ padding: '0.85rem' }}>Username / Email</th>
-                    <th style={{ padding: '0.85rem' }}>บทบาท (Role)</th>
-                    <th style={{ padding: '0.85rem' }}>เข้าสู่ระบบล่าสุด</th>
+                    <th style={{ padding: '0.85rem' }}>รหัส / วันที่</th>
+                    <th style={{ padding: '0.85rem' }}>ผู้ส่ง / เบอร์โทร</th>
+                    <th style={{ padding: '0.85rem' }}>หัวข้อเรื่อง</th>
+                    <th style={{ padding: '0.85rem' }}>ข้อความสรุป</th>
                     <th style={{ padding: '0.85rem', textAlign: 'center' }}>สถานะ</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'right' }}>การจัดการ</th>
+                    <th style={{ padding: '0.85rem', textAlign: 'right' }}>ดูรายละเอียด</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((u) => (
-                    <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '0.85rem', fontWeight: 600 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-100)', color: 'var(--primary-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 700 }}>
-                            {u.name.charAt(3)}
-                          </div>
-                          <span>{u.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.85rem', color: 'var(--text-muted)' }}>
-                        <div><strong>{u.username}</strong></div>
-                        <div style={{ fontSize: '0.78rem' }}>{u.email}</div>
+                  {feedbacks.map((f) => (
+                    <tr key={f.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '0.85rem' }}>
+                        <strong>{f.id}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.date}</div>
                       </td>
                       <td style={{ padding: '0.85rem' }}>
-                        <span className={`badge badge-${u.role === 'super_admin' ? 'rose' : u.role === 'staff' ? 'primary' : u.role === 'auditor' ? 'gold' : 'emerald'}`}>
-                          {u.roleName}
-                        </span>
+                        <div style={{ fontWeight: 600 }}>{f.name}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{f.phone}</div>
                       </td>
-                      <td style={{ padding: '0.85rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {u.lastLogin}
+                      <td style={{ padding: '0.85rem', fontWeight: 600, color: 'var(--primary-700)' }}>
+                        {f.topic}
+                      </td>
+                      <td style={{ padding: '0.85rem', color: 'var(--text-muted)' }}>
+                        {f.message.slice(0, 45)}...
                       </td>
                       <td style={{ padding: '0.85rem', textAlign: 'center' }}>
-                        <span className={`badge badge-${u.status === 'active' ? 'emerald' : 'rose'}`}>
-                          {u.status === 'active' ? 'เปิดใช้งาน' : 'ระงับชั่วคราว'}
+                        <span className={`badge badge-${f.status === 'ตอบกลับแล้ว' ? 'emerald' : f.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
+                          {f.status}
                         </span>
                       </td>
                       <td style={{ padding: '0.85rem', textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: '0.4rem' }}>
-                          <button 
-                            onClick={() => handleToggleUserStatus(u.id)}
-                            className="btn btn-subtle btn-sm"
-                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                            title="สลับสถานะเปิด/ระงับ"
-                          >
-                            {u.status === 'active' ? 'ระงับ' : 'ปลดล็อค'}
-                          </button>
-                          <button 
-                            onClick={() => alert(`รีเซ็ตรหัสผ่านสำหรับ: ${u.username} เป็น 123456 เรียบร้อย`)}
-                            className="btn btn-outline btn-sm"
-                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                            title="รีเซ็ตรหัสผ่าน"
-                          >
-                            <KeyRound size={12} />
-                          </button>
-                        </div>
+                        <button onClick={() => setSelectedFeedback(f)} className="btn btn-outline btn-sm">
+                          <Eye size={13} />
+                          <span>เปิดดู</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -369,229 +615,199 @@ export default function AdminDashboardPage() {
         )}
 
         {/* =========================================================================
-            TAB 2: MASTER FINANCIAL RATES
+            MODULE 6: FAQS MANAGEMENT (เพิ่มและลบ คำถาม FAQs)
             ========================================================================= */}
-        {activeTab === 'financial' && (
-          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>กำหนดอัตราดอกเบี้ยและปันผลกลาง (Master Cooperative Rates)</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>การเปลี่ยนแปลงนี้จะมีผลต่อโปรแกรมคำนวณและประกาศหน้าเว็บไซต์ทันที</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-              
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1rem', color: 'var(--primary-700)', marginBottom: '0.75rem' }}>อัตราดอกเบี้ยเงินฝาก</h4>
-                <div className="form-group">
-                  <label className="form-label">ออมทรัพย์พิเศษพลัส (% ต่อปี)</label>
-                  <input type="text" className="form-control" value={rates.savingSpecial} onChange={(e) => setRates({ ...rates, savingSpecial: e.target.value })} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">เงินฝากประจำ 24 เดือน (% ต่อปี)</label>
-                  <input type="text" className="form-control" value={rates.fixed24Month} onChange={(e) => setRates({ ...rates, fixed24Month: e.target.value })} />
-                </div>
-              </div>
-
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1rem', color: 'var(--accent-gold-dark)', marginBottom: '0.75rem' }}>อัตราดอกเบี้ยเงินกู้</h4>
-                <div className="form-group">
-                  <label className="form-label">เงินกู้ฉุกเฉิน (% ต่อปี)</label>
-                  <input type="text" className="form-control" value={rates.emergencyLoan} onChange={(e) => setRates({ ...rates, emergencyLoan: e.target.value })} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">เงินกู้สามัญสวัสดิการ (% ต่อปี)</label>
-                  <input type="text" className="form-control" value={rates.ordinaryLoan} onChange={(e) => setRates({ ...rates, ordinaryLoan: e.target.value })} />
-                </div>
-              </div>
-
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1rem', color: 'var(--accent-teal-dark)', marginBottom: '0.75rem' }}>ประมาณการปันผล - เฉลี่ยคืน</h4>
-                <div className="form-group">
-                  <label className="form-label">เงินปันผลตามหุ้น (% ต่อปี)</label>
-                  <input type="text" className="form-control" value={rates.dividendForecast} onChange={(e) => setRates({ ...rates, dividendForecast: e.target.value })} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">เงินเฉลี่ยคืนดอกเบี้ยเงินกู้ (%)</label>
-                  <input type="text" className="form-control" value={rates.refundForecast} onChange={(e) => setRates({ ...rates, refundForecast: e.target.value })} />
-                </div>
-              </div>
-
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => alert('บันทึกอัตราดอกเบี้ยและปันผลกลางสำเร็จเรียบร้อย')} className="btn btn-primary">
-                <CheckCircle2 size={16} />
-                <span>บันทึกการเปลี่ยนแปลงทั้งหมด</span>
-              </button>
-            </div>
-
-          </div>
-        )}
-
-        {/* =========================================================================
-            TAB 3: SYSTEM AUDIT TRAIL LOGS
-            ========================================================================= */}
-        {activeTab === 'audit' && (
+        {activeTab === 'faqs' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>บันทึกเหตุการณ์ความปลอดภัย (System Audit Trail)</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>บันทึกทุกกิจกรรมการเข้าสู่ระบบ การอนุมัติ และการปรับเปลี่ยนข้อมูลในระบบ</p>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>จัดการคำถามที่พบบ่อย (FAQs Management)</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>เพิ่ม ลบ และอัปเดตคำถาม-คำตอบที่แสดงในหน้าติดต่อเรา</p>
               </div>
 
-              <button onClick={() => alert('ส่งออก Audit Logs (CSV / Excel)')} className="btn btn-outline btn-sm">
-                <Download size={15} />
-                <span>ส่งออกรายงาน Logs (CSV)</span>
+              <button onClick={() => setFaqModal(true)} className="btn btn-primary btn-sm">
+                <Plus size={15} />
+                <span>เพิ่มคำถามใหม่</span>
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                <div>
-                  <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem' }}>14:15:22</span>
-                  <span>ผู้ใช้ <strong>admin</strong> เข้าสู่ระบบจาก IP <code>192.168.1.102</code> (Super Admin Dashboard)</span>
-                </div>
-                <span className="badge badge-emerald">Success</span>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {faqsList.map((faq, idx) => (
+                <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem' }}>
+                      ถาม: {faq.q}
+                    </h4>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                      ตอบ: {faq.a}
+                    </p>
+                  </div>
 
-              <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                <div>
-                  <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem' }}>13:45:10</span>
-                  <span>ผู้ใช้ <strong>staff1</strong> อนุมัติสัญญาสินเชื่อฉุกเฉิน LN-6703-01 ยอดเงิน 50,000 บาท</span>
+                  <button onClick={() => handleDeleteFaq(idx)} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)', flexShrink: 0 }}>
+                    <Trash2 size={13} />
+                    <span>ลบ</span>
+                  </button>
                 </div>
-                <span className="badge badge-primary">Approved</span>
-              </div>
-
-              <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                <div>
-                  <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem' }}>11:20:00</span>
-                  <span>ผู้ใช้ <strong>rayongcoop1</strong> ดึงรายงานกระทบยอดบัญชีเงินฝากและหุ้นประจำเดือน</span>
-                </div>
-                <span className="badge badge-gold">Audit Read</span>
-              </div>
-
-              <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                <div>
-                  <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem' }}>04:00:00</span>
-                  <span>ระบบ Cron Automated Task ดำเนินการสำรองฐานข้อมูลประจำวัน <code>db_backup.sql</code></span>
-                </div>
-                <span className="badge badge-teal">System Cron</span>
-              </div>
+              ))}
             </div>
 
           </div>
         )}
 
         {/* =========================================================================
-            TAB 4: SYSTEM SETTINGS & MAINTENANCE
+            MODALS
             ========================================================================= */}
-        {activeTab === 'maintenance' && (
-          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', marginBottom: '1.5rem' }}>
-              การบำรุงรักษาและการสำรองข้อมูลระบบ
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1.05rem', marginBottom: '0.5rem' }}>สำรองฐานข้อมูล (Manual Backup)</h4>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                  สร้างไฟล์สำรอง SQL และบีบอัดฐานข้อมูลระบบทั้งหมดเก็บไว้ในไดเรกทอรีที่ปลอดภัย
-                </p>
-                <button onClick={handleTriggerBackup} className="btn btn-primary btn-sm" disabled={backupTriggered}>
-                  <HardDrive size={15} />
-                  <span>{backupTriggered ? 'กำลังประมวลผล...' : 'กดสำรองข้อมูลทันที'}</span>
-                </button>
+        
+        {/* Modal: Add Announcement */}
+        {annModal && (
+          <div style={modalBackdropStyle}>
+            <div className="glass-card animate-fade-in" style={modalBoxStyle}>
+              <div style={modalHeaderStyle}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)' }}>เพิ่มประกาศทางการสหกรณ์</h3>
+                <button onClick={() => setAnnModal(false)}>✕</button>
               </div>
-
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1.05rem', marginBottom: '0.5rem' }}>ล้างแคชระบบ (Clear Cache)</h4>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                  ล้างไฟล์แคช View, Router และ Session ชั่วคราวเพื่อให้ระบบโหลดข้อมูลใหม่ล่าสุด
-                </p>
-                <button onClick={() => alert('ล้างแคชระบบเรียบร้อย (System Cache Cleared)')} className="btn btn-outline btn-sm">
-                  <RefreshCw size={15} />
-                  <span>ล้างแคชระบบ</span>
-                </button>
-              </div>
-
-              <div style={{ background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h4 style={{ fontSize: '1.05rem', marginBottom: '0.5rem' }}>โหมดปิดปรับปรุงชั่วคราว (Maintenance Mode)</h4>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                  สถานะปัจจุบัน: <strong>{maintenanceMode ? 'เปิดใช้งาน (ปิดปรับปรุง)' : 'ปิด (บริการปกติ)'}</strong>
-                </p>
-                <button 
-                  onClick={() => setMaintenanceMode(!maintenanceMode)} 
-                  className={`btn btn-sm ${maintenanceMode ? 'btn-primary' : 'btn-outline'}`}
-                >
-                  <Sliders size={15} />
-                  <span>{maintenanceMode ? 'ปิดโหมดปรับปรุง' : 'เปิดโหมดปิดปรับปรุง'}</span>
-                </button>
-              </div>
+              <form onSubmit={handleAddAnnouncement}>
+                <div className="form-group">
+                  <label className="form-label">หัวข้อประกาศ</label>
+                  <input type="text" className="form-control" required value={newAnn.title} onChange={(e) => setNewAnn({ ...newAnn, title: e.target.value })} placeholder="เช่น ประกาศกำหนดการประชุมใหญ่..." />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">วันที่</label>
+                    <input type="text" className="form-control" value={newAnn.date} onChange={(e) => setNewAnn({ ...newAnn, date: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">ขนาดไฟล์</label>
+                    <input type="text" className="form-control" value={newAnn.fileSize} onChange={(e) => setNewAnn({ ...newAnn, fileSize: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" id="impCheck" checked={newAnn.important} onChange={(e) => setNewAnn({ ...newAnn, important: e.target.checked })} />
+                  <label htmlFor="impCheck" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>กำหนดเป็นประกาศด่วน/สำคัญ (Highlight)</label>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                  <button type="button" onClick={() => setAnnModal(false)} className="btn btn-subtle" style={{ flex: 1 }}>ยกเลิก</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>เผยแพร่ประกาศ</button>
+                </div>
+              </form>
             </div>
-
           </div>
         )}
 
-        {/* Modal: Add New User */}
-        {newUserModal && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 2000,
-            background: 'rgba(15, 23, 42, 0.75)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem'
-          }}>
-            <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '480px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-xl)', padding: '2rem', position: 'relative' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)' }}>เพิ่มผู้ใช้งานใหม่เข้าระบบ</h3>
-                <button onClick={() => setNewUserModal(false)} style={{ color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+        {/* Modal: Add News */}
+        {newsModal && (
+          <div style={modalBackdropStyle}>
+            <div className="glass-card animate-fade-in" style={modalBoxStyle}>
+              <div style={modalHeaderStyle}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)' }}>เพิ่มข่าวสาร / กิจกรรมใหม่</h3>
+                <button onClick={() => setNewsModal(false)}>✕</button>
               </div>
-
-              <form onSubmit={handleAddUser}>
+              <form onSubmit={handleAddNews}>
                 <div className="form-group">
-                  <label className="form-label">ชื่อ - นามสกุล</label>
-                  <input type="text" className="form-control" required value={newUserData.name} onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })} placeholder="เช่น นายวรเทพ เจริญผล" />
+                  <label className="form-label">หัวข้อข่าวสาร</label>
+                  <input type="text" className="form-control" required value={newNews.title} onChange={(e) => setNewNews({ ...newNews, title: e.target.value })} placeholder="เช่น สหกรณ์มอบทุนการศึกษา..." />
                 </div>
-
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">หมวดหมู่</label>
+                    <select className="form-control" value={newNews.category} onChange={(e) => setNewNews({ ...newNews, category: e.target.value })}>
+                      <option value="ข่าวประชาสัมพันธ์">ข่าวประชาสัมพันธ์</option>
+                      <option value="กิจกรรม">กิจกรรม</option>
+                      <option value="บริการดิจิทัล">บริการดิจิทัล</option>
+                      <option value="รายงานประจำปี">รายงานประจำปี</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">วันที่</label>
+                    <input type="text" className="form-control" value={newNews.date} onChange={(e) => setNewNews({ ...newNews, date: e.target.value })} />
+                  </div>
+                </div>
                 <div className="form-group">
-                  <label className="form-label">Username</label>
-                  <input type="text" className="form-control" required value={newUserData.username} onChange={(e) => setNewUserData({ ...newUserData, username: e.target.value })} placeholder="เช่น staff2 หรือ 04895" />
+                  <label className="form-label">เนื้อหาข่าว / สรุปย่อ</label>
+                  <textarea className="form-control" rows={3} required value={newNews.excerpt} onChange={(e) => setNewNews({ ...newNews, excerpt: e.target.value })} />
                 </div>
-
                 <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input type="email" className="form-control" required value={newUserData.email} onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })} placeholder="example@rayongcoop.com" />
+                  <label className="form-label">รูปภาพประกอบ (URL)</label>
+                  <input type="text" className="form-control" value={newNews.image} onChange={(e) => setNewNews({ ...newNews, image: e.target.value })} placeholder="/assets/img/news_placeholder.jpg" />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">บทบาทและสิทธิ์ (Role)</label>
-                  <select className="form-control" value={newUserData.role} onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value })}>
-                    <option value="super_admin">Super Admin (ผู้ดูแลระบบสูงสุด)</option>
-                    <option value="staff">Loan & Finance Staff (เจ้าหน้าที่สินเชื่อ/การเงิน)</option>
-                    <option value="auditor">Auditor (ผู้ตรวจสอบกิจการ)</option>
-                    <option value="member">Member (สมาชิกสหกรณ์)</option>
-                  </select>
-                </div>
-
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                  <button type="button" onClick={() => setNewUserModal(false)} className="btn btn-subtle" style={{ flex: 1 }}>
-                    ยกเลิก
-                  </button>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                    <span>สร้างผู้ใช้</span>
-                  </button>
+                  <button type="button" onClick={() => setNewsModal(false)} className="btn btn-subtle" style={{ flex: 1 }}>ยกเลิก</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>โพสต์ข่าวสาร</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
 
+        {/* Modal: Add FAQ */}
+        {faqModal && (
+          <div style={modalBackdropStyle}>
+            <div className="glass-card animate-fade-in" style={modalBoxStyle}>
+              <div style={modalHeaderStyle}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)' }}>เพิ่มคำถามที่พบบ่อย (FAQ)</h3>
+                <button onClick={() => setFaqModal(false)}>✕</button>
+              </div>
+              <form onSubmit={handleAddFaq}>
+                <div className="form-group">
+                  <label className="form-label">คำถาม (Question)</label>
+                  <input type="text" className="form-control" required value={newFaq.q} onChange={(e) => setNewFaq({ ...newFaq, q: e.target.value })} placeholder="เช่น สมาชิกสามารถ..." />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">คำตอบ (Answer)</label>
+                  <textarea className="form-control" rows={4} required value={newFaq.a} onChange={(e) => setNewFaq({ ...newFaq, a: e.target.value })} placeholder="พิมพ์คำตอบอย่างละเอียด..." />
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                  <button type="button" onClick={() => setFaqModal(false)} className="btn btn-subtle" style={{ flex: 1 }}>ยกเลิก</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>บันทึก FAQ</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: View Feedback Details */}
+        {selectedFeedback && (
+          <div style={modalBackdropStyle}>
+            <div className="glass-card animate-fade-in" style={modalBoxStyle}>
+              <div style={modalHeaderStyle}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)' }}>รายละเอียดข้อเสนอแนะ {selectedFeedback.id}</h3>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>วันที่ส่ง: {selectedFeedback.date}</div>
+                </div>
+                <button onClick={() => setSelectedFeedback(null)}>✕</button>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                <div><strong>ผู้ส่ง:</strong> {selectedFeedback.name} (โทร: {selectedFeedback.phone})</div>
+                <div><strong>อีเมล:</strong> {selectedFeedback.email}</div>
+                <div><strong>หัวข้อ:</strong> {selectedFeedback.topic}</div>
+                <div style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '8px', lineHeight: 1.6 }}>
+                  <strong>ข้อความ:</strong><br />
+                  {selectedFeedback.message}
+                </div>
+                <div>
+                  <label className="form-label">ปรับเปลี่ยนสถานะการดำเนินการ:</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {['รอดำเนินการ', 'กำลังตรวจสอบ', 'ตอบกลับแล้ว'].map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => handleUpdateFeedbackStatus(selectedFeedback.id, st)}
+                        className={`btn btn-sm ${selectedFeedback.status === st ? 'btn-primary' : 'btn-subtle'}`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setSelectedFeedback(null)} className="btn btn-primary">
+                  <span>ปิดหน้าต่าง</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -600,3 +816,38 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+const modalBackdropStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 2000,
+  background: 'rgba(15, 23, 42, 0.75)',
+  backdropFilter: 'blur(8px)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '1rem'
+};
+
+const modalBoxStyle = {
+  width: '100%',
+  maxWidth: '520px',
+  background: 'var(--bg-surface)',
+  borderRadius: 'var(--radius-xl)',
+  padding: '2rem',
+  position: 'relative',
+  maxHeight: '90vh',
+  overflowY: 'auto'
+};
+
+const modalHeaderStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '1.25rem',
+  borderBottom: '1px solid var(--border-subtle)',
+  paddingBottom: '0.75rem'
+};

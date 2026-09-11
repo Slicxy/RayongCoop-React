@@ -7,6 +7,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import QuickActionDock from './components/layout/QuickActionDock';
 import AuthModal from './components/member/AuthModal';
+import CampaignModal from './components/common/CampaignModal';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -92,6 +93,7 @@ export default function App() {
       <Footer />
       <QuickActionDock />
       <AuthModal />
+      <CampaignModal />
     </div>
   );
 }

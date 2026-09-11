@@ -15,6 +15,25 @@ export default function HomePage() {
   const [activeRateTab, setActiveRateTab] = useState('deposits');
   const [activeNewsTab, setActiveNewsTab] = useState('news');
 
+  const [heroSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('coop_hero_settings');
+      return saved ? JSON.parse(saved) : {
+        title: COOP_INFO.nameTh,
+        subtitle: `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
+        badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
+        bgImageUrl: '/assets/img/hero_bg_coop.jpg'
+      };
+    } catch (e) {
+      return {
+        title: COOP_INFO.nameTh,
+        subtitle: `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
+        badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
+        bgImageUrl: '/assets/img/hero_bg_coop.jpg'
+      };
+    }
+  });
+
   return (
     <div>
       
@@ -23,7 +42,9 @@ export default function HomePage() {
           ========================================================================= */}
       <section style={{
         position: 'relative',
-        background: 'var(--gradient-hero)',
+        backgroundImage: heroSettings.bgImageUrl ? `linear-gradient(135deg, rgba(15, 43, 92, 0.92) 0%, rgba(30, 64, 175, 0.88) 100%), url(${heroSettings.bgImageUrl})` : 'var(--gradient-hero)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         color: '#ffffff',
         padding: '5rem 0 4.5rem 0',
         overflow: 'hidden',
@@ -73,7 +94,7 @@ export default function HomePage() {
                 border: '1px solid rgba(251, 191, 36, 0.3)'
               }}>
                 <Sparkles size={16} />
-                <span>ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล</span>
+                <span>{heroSettings.badgeText || 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล'}</span>
               </div>
 
               <h1 style={{
@@ -84,7 +105,7 @@ export default function HomePage() {
                 marginBottom: '1rem',
                 letterSpacing: '-0.02em'
               }}>
-                {COOP_INFO.nameTh}
+                {heroSettings.title || COOP_INFO.nameTh}
               </h1>
 
               <p style={{
@@ -94,7 +115,7 @@ export default function HomePage() {
                 marginBottom: '2rem',
                 maxWidth: '560px'
               }}>
-                {COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต
+                {heroSettings.subtitle || `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`}
               </p>
 
               {/* Action Buttons */}
