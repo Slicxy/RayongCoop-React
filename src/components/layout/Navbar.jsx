@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, X, ChevronDown, Landmark, ShieldCheck, HeartHandshake, 
   FileText, Bell, PhoneCall, LayoutDashboard, LogIn, Award,
@@ -8,19 +8,23 @@ import {
   Medal, Shield, Users, Newspaper, Megaphone, Calendar,
   Download, Globe, QrCode, HelpCircle, Coins, CreditCard,
   Receipt, FilePlus2, Briefcase, FileSpreadsheet, Lock,
-  ArrowRight, CheckCircle2, ChevronRight, UserCheck
+  ArrowRight, CheckCircle2, ChevronRight, User, Power, Gauge, Wallet
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { COOP_INFO, INTEREST_RATES } from '../../data/mockData';
+import { COOP_INFO } from '../../data/mockData';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMegaMenu, setActiveMegaMenu] = useState(null);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  
   const navRef = useRef(null);
+  const userMenuRef = useRef(null);
   const location = useLocation();
-  const { user, isLoggedIn, setShowAuthModal } = useAuth();
+  const navigate = useNavigate();
+  const { user, isLoggedIn, logout, setShowAuthModal } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,14 +38,18 @@ export default function Navbar() {
   useEffect(() => {
     setMobileMenuOpen(false);
     setActiveMegaMenu(null);
+    setUserDropdownOpen(false);
     setMobileAccordion(null);
   }, [location.pathname]);
 
-  // Click outside to close mega menu
+  // Click outside to close menus
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target)) {
         setActiveMegaMenu(null);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -49,6 +57,7 @@ export default function Navbar() {
   }, []);
 
   const toggleMegaMenu = (menuName) => {
+    setUserDropdownOpen(false);
     setActiveMegaMenu(activeMegaMenu === menuName ? null : menuName);
   };
 
@@ -56,8 +65,32 @@ export default function Navbar() {
     setMobileAccordion(mobileAccordion === menuName ? null : menuName);
   };
 
+  const handleLogout = () => {
+    logout();
+    setUserDropdownOpen(false);
+    navigate('/');
+  };
+
   const isActive = (path) => location.pathname === path;
   const isCategoryActive = (paths) => paths.some(p => location.pathname.startsWith(p));
+
+  // Determine avatar initial letter
+  const getAvatarInitial = () => {
+    if (!user || !user.name) return 'U';
+    const cleanName = user.name.replace(/^(นาย|นางสาว|นาง|ดร\.|นพ\.|พญ\.)/, '').trim();
+    return cleanName.charAt(0) || user.name.charAt(0) || 'U';
+  };
+
+  // Determine role English label
+  const getRoleLabel = () => {
+    if (!user) return 'Member';
+    switch (user.role) {
+      case 'super_admin': return 'Super Admin';
+      case 'auditor': return 'Auditor';
+      case 'staff': return 'Staff';
+      default: return 'Member';
+    }
+  };
 
   return (
     <header 
@@ -73,28 +106,28 @@ export default function Navbar() {
         transition: 'all 0.3s ease'
       }}
     >
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', gap: '1rem', position: 'relative' }}>
+      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 1.5rem', gap: '1rem', position: 'relative' }}>
         
         {/* Logo & Brand */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', flexShrink: 0 }}>
           <img 
             src="/assets/img/logo.webp" 
             alt="Logo" 
-            style={{ width: '44px', height: '44px', objectFit: 'contain', flexShrink: 0 }}
+            style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }}
             onError={(e) => { e.target.src = '/img/logo.webp'; }}
           />
           <div style={{ whiteSpace: 'nowrap' }}>
             <div style={{ 
               fontFamily: 'var(--font-heading)', 
               fontWeight: 800, 
-              fontSize: '1.1rem', 
+              fontSize: '1.05rem', 
               color: 'var(--primary-700)', 
               lineHeight: 1.25 
             }}>
               {COOP_INFO.nameTh}
             </div>
             <div style={{ 
-              fontSize: '0.72rem', 
+              fontSize: '0.7rem', 
               color: 'var(--text-muted)', 
               fontWeight: 500,
               letterSpacing: '0.01em' 
@@ -104,8 +137,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Navigation - EXACT 6 ITEMS REQUIRED */}
-        <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'nowrap' }}>
+        {/* Desktop Navigation - 5 MAIN CATEGORIES */}
+        <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap' }}>
           
           {/* 1. หน้าแรก */}
           <Link 
@@ -185,49 +218,121 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* 6. Member Portal (Mega Menu) */}
-          <div style={{ position: 'static' }}>
-            <button 
-              onClick={() => toggleMegaMenu('member_portal')}
-              onMouseEnter={() => setActiveMegaMenu('member_portal')}
-              style={{
-                ...navLinkStyle(isCategoryActive(['/member', '/admin', '/login']) || activeMegaMenu === 'member_portal'),
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.3rem'
-              }}
-            >
-              <span>Member Portal</span>
-              <ChevronDown size={14} style={{ transform: activeMegaMenu === 'member_portal' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
-            </button>
-          </div>
-
         </nav>
 
-        {/* Right CTA Actions */}
+        {/* Right Action: User Profile Pill / Login */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           
-          <Link to="/calculator" className="btn btn-gold btn-sm hide-mobile" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-            <Calculator size={15} />
-            <span>คำนวณเงินกู้</span>
-          </Link>
-
           {isLoggedIn ? (
-            user?.role === 'super_admin' ? (
-              <Link to="/admin/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #ef4444, #991b1b)' }}>
-                <span>👑 Super Admin</span>
-              </Link>
-            ) : (
-              <Link to="/member/dashboard" className="btn btn-primary btn-sm" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-                <LayoutDashboard size={15} />
-                <span>{user?.role === 'staff' ? 'เจ้าหน้าที่' : user?.role === 'auditor' ? 'ผู้ตรวจสอบ' : 'ระบบสมาชิก'}</span>
-              </Link>
-            )
+            /* Logged-In User Pill with Dropdown matching user screenshot */
+            <div ref={userMenuRef} style={{ position: 'relative' }}>
+              <button 
+                onClick={() => {
+                  setActiveMegaMenu(null);
+                  setUserDropdownOpen(!userDropdownOpen);
+                }}
+                className="user-pill-btn"
+                aria-label="User Account Menu"
+              >
+                <div className="user-pill-avatar">
+                  {getAvatarInitial()}
+                </div>
+                <div className="user-pill-info hide-mobile">
+                  <div className="user-pill-name">
+                    {user.name} {user.roleBadge ? `(${user.roleBadge})` : ''}
+                  </div>
+                  <div className="user-pill-subtitle">
+                    {user.role === 'super_admin' ? 'Super Admin' : 'พอร์ทัลสมาชิก'}
+                  </div>
+                </div>
+                <ChevronDown size={14} style={{ color: 'var(--text-muted)', transform: userDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+              </button>
+
+              {/* User Account Dropdown Menu (Exact match to screenshot) */}
+              {userDropdownOpen && (
+                <div className="user-dropdown-panel animate-fade-in">
+                  
+                  {/* Header */}
+                  <div className="user-dropdown-header">
+                    <div className="user-dropdown-header-name">
+                      {user.name} {user.roleBadge ? `(${user.roleBadge})` : ''}
+                    </div>
+                    <div className="user-dropdown-header-role">
+                      บทบาท: <strong>{getRoleLabel()}</strong>
+                    </div>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    
+                    <Link 
+                      to={user.role === 'super_admin' ? '/admin/dashboard' : '/member/dashboard'} 
+                      className="user-dropdown-item"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <Gauge size={18} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                      <span>{user.role === 'super_admin' ? 'ไปที่ แผงควบคุมระบบ (Admin)' : 'ไปที่ พอร์ทัลสมาชิก'}</span>
+                    </Link>
+
+                    <Link 
+                      to="/member/dashboard" 
+                      className="user-dropdown-item"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <User size={18} style={{ color: '#0ea5e9', flexShrink: 0 }} />
+                      <span>ข้อมูลสมาชิก</span>
+                    </Link>
+
+                    <Link 
+                      to="/member/dashboard" 
+                      className="user-dropdown-item"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <Wallet size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+                      <span>บัญชีเงินฝาก</span>
+                    </Link>
+
+                    <Link 
+                      to="/member/dashboard" 
+                      className="user-dropdown-item"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <Banknote size={18} style={{ color: '#f59e0b', flexShrink: 0 }} />
+                      <span>สัญญาเงินกู้</span>
+                    </Link>
+
+                    {user.role === 'super_admin' && (
+                      <Link 
+                        to="/admin/dashboard" 
+                        className="user-dropdown-item"
+                        onClick={() => setUserDropdownOpen(false)}
+                      >
+                        <ShieldCheck size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
+                        <span>จัดการระบบ (CMS 6 โมดูล)</span>
+                      </Link>
+                    )}
+
+                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0.35rem 0' }} />
+
+                    <button 
+                      onClick={handleLogout}
+                      className="user-dropdown-item logout"
+                    >
+                      <Power size={18} style={{ color: '#ef4444', flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600 }}>ออกจากระบบ (Logout)</span>
+                    </button>
+
+                  </div>
+
+                </div>
+              )}
+            </div>
           ) : (
+            /* Logged-Out State: Login CTA */
             <button 
               onClick={() => setShowAuthModal(true)} 
               className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+              style={{ fontSize: '0.88rem', whiteSpace: 'nowrap', padding: '0.45rem 1rem' }}
             >
               <LogIn size={15} />
               <span>เข้าสู่ระบบ</span>
@@ -727,146 +832,11 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* MEGA MENU 5: Member Portal */}
-          {activeMegaMenu === 'member_portal' && (
-            <div className="mega-menu-grid">
-              <div className="mega-menu-col-main">
-                <div>
-                  <div className="mega-menu-category-title">
-                    <Coins size={14} style={{ color: 'var(--primary-600)' }} />
-                    <span>บริการสำหรับสมาชิกสหกรณ์</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <Link to="/member/dashboard" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
-                        <Coins size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">
-                          <span>ตรวจสอบทุนเรือนหุ้น & เงินฝาก</span>
-                          <span className="badge badge-emerald" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>24 ชม.</span>
-                        </div>
-                        <div className="mega-menu-item-desc">ดูยอดสะสมหุ้น บัญชีเงินฝาก และประวัติรายการเคลื่อนไหว</div>
-                      </div>
-                    </Link>
-
-                    <Link to="/member/dashboard" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
-                        <CreditCard size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">ภาระหนี้สิน & ตารางผ่อนชำระ</div>
-                        <div className="mega-menu-item-desc">ตรวจยอดหนี้คงเหลือ ยอดชำระรายเดือน และประวัติค่างวด</div>
-                      </div>
-                    </Link>
-
-                    <Link to="/member/dashboard" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
-                        <Receipt size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">ใบเสร็จรับเงินออนไลน์ e-Receipt</div>
-                        <div className="mega-menu-item-desc">ดาวน์โหลดใบเสร็จประจำเดือนพร้อมลายเซ็นดิจิทัล</div>
-                      </div>
-                    </Link>
-
-                    <Link to="/eservice" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-rose-light)', color: 'var(--accent-rose)' }}>
-                        <FilePlus2 size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">ยื่นกู้ฉุกเฉินออนไลน์ (e-Loan)</div>
-                        <div className="mega-menu-item-desc">ยื่นขอสินเชื่อฉุกเฉินด่วน อนุมัติรวดเร็วไม่ต้องมาสำนักงาน</div>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mega-menu-category-title">
-                    <ShieldCheck size={14} style={{ color: 'var(--accent-gold-dark)' }} />
-                    <span>สำหรับเจ้าหน้าที่และผู้บริหาร</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <Link to="/member/dashboard" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
-                        <Briefcase size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">แดชบอร์ดเจ้าหน้าที่สินเชื่อ</div>
-                        <div className="mega-menu-item-desc">ระบบตรวจสอบคำขอ e-Services และบริการสมาชิก</div>
-                      </div>
-                    </Link>
-
-                    <Link to="/member/dashboard" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
-                        <FileSpreadsheet size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">แดชบอร์ดผู้ตรวจสอบกิจการ</div>
-                        <div className="mega-menu-item-desc">ตรวจสอบรายงานบัญชี สถิติ และ Audit Trail</div>
-                      </div>
-                    </Link>
-
-                    <Link to="/admin/dashboard" className="mega-menu-card-item">
-                      <div className="mega-menu-icon-wrap" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}>
-                        <ShieldCheck size={18} />
-                      </div>
-                      <div>
-                        <div className="mega-menu-item-title">
-                          <span>แผงควบคุมระบบ Super Admin</span>
-                          <span className="badge badge-rose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>Admin</span>
-                        </div>
-                        <div className="mega-menu-item-desc">จัดการ 6 โมดูล CMS, ประกาศ, ข่าว, ป๊อปอัป, ข้อเสนอแนะ</div>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Side Login Action Banner */}
-              <div className="mega-menu-col-side">
-                <div className="mega-menu-feature-banner" style={{ background: 'linear-gradient(135deg, #1e1b4b, #312e81)' }}>
-                  <div>
-                    <span className="badge badge-gold" style={{ background: 'rgba(245, 158, 11, 0.25)', color: '#fde047', marginBottom: '0.75rem' }}>
-                      เข้าถึงข้อมูล 24 ชม.
-                    </span>
-                    <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.5rem' }}>
-                      ระบบสมาชิกดิจิทัล
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: '#c7d2fe', lineHeight: 1.45, marginBottom: '1rem' }}>
-                      ตรวจสอบข้อมูลทางการเงิน ใบเสร็จรับเงิน และสิทธิประโยชน์ได้ง่ายๆ ปลอดภัยด้วยการเข้ารหัส 256-bit
-                    </p>
-                  </div>
-                  {isLoggedIn ? (
-                    <Link 
-                      to={user?.role === 'super_admin' ? '/admin/dashboard' : '/member/dashboard'}
-                      className="btn btn-gold btn-sm"
-                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
-                    >
-                      <LayoutDashboard size={15} />
-                      <span>เข้าสู่แดชบอร์ดของคุณ</span>
-                    </Link>
-                  ) : (
-                    <Link 
-                      to="/login"
-                      className="btn btn-gold btn-sm"
-                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
-                    >
-                      <LogIn size={15} />
-                      <span>เข้าสู่ระบบสมาชิก</span>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* MOBILE DRAWER NAVIGATION (Clean Accordion for all 6 Categories)            */}
+      {/* MOBILE DRAWER NAVIGATION                                                 */}
       {/* ========================================================================= */}
       {mobileMenuOpen && (
         <div className="animate-fade-in" style={{
@@ -880,6 +850,37 @@ export default function Navbar() {
           maxHeight: '80vh',
           overflowY: 'auto'
         }}>
+          {/* If Logged In, Show User Card in Mobile Drawer */}
+          {isLoggedIn && (
+            <div style={{
+              background: 'var(--bg-subtle)',
+              padding: '0.85rem',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.5rem',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div className="user-pill-avatar" style={{ width: '32px', height: '32px', fontSize: '0.85rem' }}>
+                  {getAvatarInitial()}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>{user.name}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getRoleLabel()}</div>
+                </div>
+              </div>
+              <button 
+                onClick={handleLogout}
+                style={{ background: 'none', border: 'none', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+              >
+                <Power size={14} />
+                <span>ออก</span>
+              </button>
+            </div>
+          )}
+
           {/* 1. หน้าแรก */}
           <Link to="/" style={mobileItemStyle} onClick={() => setMobileMenuOpen(false)}>
             <span>หน้าแรก</span>
@@ -962,25 +963,6 @@ export default function Navbar() {
                 <Link to="/documents" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ดาวน์โหลดแบบฟอร์ม & รายงาน</Link>
                 <Link to="/eservice" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ศูนย์บริการออนไลน์ e-Services</Link>
                 <Link to="/verify-receipt" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ตรวจสอบใบเสร็จ e-Receipt</Link>
-              </div>
-            )}
-          </div>
-
-          {/* 6. Member Portal Accordion */}
-          <div>
-            <button 
-              onClick={() => toggleMobileAccordion('member_portal')}
-              style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-            >
-              <span>Member Portal</span>
-              <ChevronDown size={16} style={{ transform: mobileAccordion === 'member_portal' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
-            </button>
-            {mobileAccordion === 'member_portal' && (
-              <div style={mobileSubMenuStyle}>
-                <Link to="/login" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• เข้าสู่ระบบสมาชิก</Link>
-                <Link to="/member/dashboard" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ตรวจสอบหุ้น เงินฝาก หนี้สิน</Link>
-                <Link to="/member/dashboard" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ใบเสร็จรับเงินออนไลน์</Link>
-                <Link to="/admin/dashboard" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• แผงควบคุม Super Admin</Link>
               </div>
             )}
           </div>
