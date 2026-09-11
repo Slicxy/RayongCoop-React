@@ -8,15 +8,31 @@ import {
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS } from '../data/mockData';
+import StaffReviewModal from '../components/staff/StaffReviewModal';
 
 export default function MemberDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [loanQueue, setLoanQueue] = useState([
-    { id: 'LN-6703-01', memberName: 'นายประสิทธิ์ พูลสวัสดิ์', type: 'กู้ฉุกเฉิน', amount: '50,000 บาท', date: '11 มี.ค. 2567', status: 'รออนุมัติโอนเงิน' },
-    { id: 'LN-6703-02', memberName: 'นางสาววิมลรัตน์ จันทร์เพ็ญ', type: 'กู้สามัญ', amount: '400,000 บาท', date: '10 มี.ค. 2567', status: 'รอตรวจเอกสารผู้ค้ำ' },
-    { id: 'REQ-6703-09', memberName: 'นายเอกชัย บุญรอด', type: 'ขอปรับค่าหุ้น', amount: '4,000 บ./ด.', date: '10 มี.ค. 2567', status: 'รอดำเนินการ' }
-  ]);
+  const [staffFilter, setStaffFilter] = useState('all');
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
+
+  const [loanQueue, setLoanQueue] = useState(() => {
+    try {
+      const saved = localStorage.getItem('coop_service_requests');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      // ignore
+    }
+    return [
+      { id: 'LN-6703-01', memberName: 'นายสมชาย มีสุข', memberId: '04892', department: 'โรงพยาบาลระยอง', phone: '081-234-5678', type: 'คำขอกู้เงินฉุกเฉินออนไลน์', amount: '50,000 บาท', date: '11 มี.ค. 2567', status: 'รอดำเนินการ', currentStep: 2, note: 'รอการตรวจสอบเอกสารและอนุมัติจากเจ้าหน้าที่สินเชื่อ' },
+      { id: 'LN-6703-02', memberName: 'นางสาววิมลรัตน์ จันทร์เพ็ญ', memberId: '05120', department: 'สสจ.ระยอง', phone: '089-987-6543', type: 'เงินกู้สามัญเพื่อสวัสดิการ', amount: '400,000 บาท', date: '10 มี.ค. 2567', status: 'รอตรวจเอกสารผู้ค้ำ', currentStep: 2, note: 'ตรวจสอบเอกสารผู้ค้ำประกัน 2 ท่าน' },
+      { id: 'REQ-6703-09', memberName: 'นายเอกชัย บุญรอด', memberId: '03411', department: 'รพ.สต.บ้านแลง', phone: '086-555-4321', type: 'ขอเปลี่ยนแปลงค่าหุ้นรายเดือน', amount: '4,000 บ./ด.', date: '10 มี.ค. 2567', status: 'รอดำเนินการ', currentStep: 2, note: 'ขอปรับเพิ่มค่าหุ้นรายเดือนเป็น 4,000 บาท' },
+      { id: 'WF-6703-05', memberName: 'นางสาวจารุณี รัตนโชติ', memberId: '06214', department: 'รพ.แกลง', phone: '082-111-2233', type: 'ขอรับสวัสดิการคลอดบุตร', amount: '3,000 บาท', date: '09 มี.ค. 2567', status: 'อนุมัติเรียบร้อยแล้ว', currentStep: 4, note: 'โอนเงินสวัสดิการเข้าบัญชีเรียบร้อย' }
+    ];
+  });
   const navigate = useNavigate();
 
   if (!isLoggedIn || !user) {
@@ -43,8 +59,55 @@ export default function MemberDashboardPage() {
     navigate('/');
   };
 
-  const handleApproveLoan = (id) => {
-    setLoanQueue(prev => prev.map(item => item.id === id ? { ...item, status: 'อนุมัติเรียบร้อยแล้ว' } : item));
+  const handleApproveLoan = (id, remarks) => {
+    const updated = loanQueue.map(item => item.id === id ? { 
+      ...item, 
+      status: 'อนุมัติเรียบร้อยแล้ว (Approved)', 
+      statusColor: 'emerald',
+      currentStep: 3,
+      note: remarks || 'ผ่านการตรวจสอบและอนุมัติจากเจ้าหน้าที่สินเชื่อเรียบร้อยแล้ว',
+      lastUpdated: '11 มี.ค. 2567 14:55 น.'
+    } : item);
+    setLoanQueue(updated);
+    try {
+      localStorage.setItem('coop_service_requests', JSON.stringify(updated));
+    } catch (e) {
+      // ignore
+    }
+    alert(`อนุมัติคำขอ ${id} เรียบร้อยแล้ว! (ข้อมูลซิงก์ไปยัง e-Tracking และระบบสมาชิกทันที)`);
+  };
+
+  const handleRejectLoan = (id, remarks) => {
+    const updated = loanQueue.map(item => item.id === id ? { 
+      ...item, 
+      status: 'ส่งกลับแก้ไข (Revision Required)', 
+      statusColor: 'rose',
+      currentStep: 2,
+      note: remarks || 'เอกสารไม่สมบูรณ์ กรุณาแนบหลักฐานเพิ่มเติม',
+      lastUpdated: '11 มี.ค. 2567 14:55 น.'
+    } : item);
+    setLoanQueue(updated);
+    try {
+      localStorage.setItem('coop_service_requests', JSON.stringify(updated));
+    } catch (e) {
+      // ignore
+    }
+    alert(`ส่งกลับคำขอ ${id} ให้สมาชิกแก้ไขเรียบร้อยแล้ว!`);
+  };
+
+  const handleAddNote = (id, remarks) => {
+    const updated = loanQueue.map(item => item.id === id ? { 
+      ...item, 
+      note: remarks,
+      lastUpdated: '11 มี.ค. 2567 14:55 น.'
+    } : item);
+    setLoanQueue(updated);
+    try {
+      localStorage.setItem('coop_service_requests', JSON.stringify(updated));
+    } catch (e) {
+      // ignore
+    }
+    alert(`บันทึกหมายเหตุสำหรับคำขอ ${id} เรียบร้อยแล้ว`);
   };
 
   const userRole = user.role || 'member';
@@ -240,57 +303,161 @@ export default function MemberDashboardPage() {
         )}
 
         {/* =========================================================================
-            ROLE 2: STAFF (LOAN & FINANCE OFFICER)
+            ROLE 2: STAFF (LOAN & FINANCE OFFICER WORKFLOW)
             ========================================================================= */}
         {userRole === 'staff' && (
           <div className="animate-fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileCheck size={20} />
-                <span>คิวคำขอกู้เงินและบริการที่รอดำเนินการ (Queue Management)</span>
-              </h3>
-              <span className="badge badge-primary">รอดำเนินการ {loanQueue.filter(i => !i.status.includes('เรียบร้อย')).length} รายการ</span>
+            
+            {/* KPI Summary Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-gold)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>คำขอรอดำเนินการ (Pending)</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-gold-dark)' }}>
+                  {loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length} รายการ
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>คำขอกู้ฉุกเฉินและบริการสมาชิก</div>
+              </div>
+
+              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--primary-600)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>วงเงินรอเบิกจ่ายรวม</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-700)' }}>450,000 ฿</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>พร้อมโอนเข้าบัญชีสมาชิก</div>
+              </div>
+
+              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-emerald)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>อนุมัติแล้ววันนี้ (Completed)</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-emerald-dark)' }}>
+                  {loanQueue.filter(i => i.status.includes('เรียบร้อย') || i.status.includes('Approved')).length} รายการ
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald-dark)' }}>ดำเนินการเสร็จสมบูรณ์</div>
+              </div>
+
+              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-rose)' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ส่งกลับแก้ไข (Revisions)</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-rose)' }}>
+                  {loanQueue.filter(i => i.status.includes('แก้ไข')).length} รายการ
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>รอสมาชิกส่งเอกสารเพิ่มเติม</div>
+              </div>
             </div>
 
-            <div className="surface-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {loanQueue.map((item) => (
-                  <div key={item.id} style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{item.memberName}</span>
-                        <span className="badge badge-primary">{item.type}</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({item.id})</span>
-                      </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        วงเงินที่ขอ: <strong style={{ color: 'var(--primary-700)' }}>{item.amount}</strong> • วันที่ยื่น: {item.date}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: item.status.includes('เรียบร้อย') ? 'var(--accent-emerald-dark)' : 'var(--accent-gold-dark)', fontWeight: 600, marginTop: '0.2rem' }}>
-                        สถานะ: {item.status}
-                      </div>
-                    </div>
+            {/* Worklist Section */}
+            <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <FileCheck size={22} style={{ color: 'var(--primary-600)' }} />
+                    <span>ระบบจัดการและพิจารณาคำขอสมาชิก (Staff Approval Workflow)</span>
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                    ตรวจสอบคุณสมบัติ อนุมัติวงเงิน หรือส่งกลับแก้ไขแบบเรียลไทม์
+                  </p>
+                </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {!item.status.includes('เรียบร้อย') ? (
-                        <>
-                          <button onClick={() => handleApproveLoan(item.id)} className="btn btn-teal btn-sm">
-                            <Check size={14} />
-                            <span>อนุมัติคำขอ</span>
-                          </button>
-                          <button onClick={() => alert(`ดูเอกสารคำขอ: ${item.id}`)} className="btn btn-outline btn-sm">
-                            <Eye size={14} />
-                            <span>ตรวจเอกสาร</span>
-                          </button>
-                        </>
-                      ) : (
-                        <span className="badge badge-emerald" style={{ padding: '0.4rem 0.8rem' }}>
-                          <CheckCircle2 size={14} /> ดำเนินการแล้ว
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                {/* Filter Pills */}
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={() => setStaffFilter('all')} 
+                    className={`btn btn-sm ${staffFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    ทั้งหมด ({loanQueue.length})
+                  </button>
+                  <button 
+                    onClick={() => setStaffFilter('pending')} 
+                    className={`btn btn-sm ${staffFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    รอดำเนินการ ({loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length})
+                  </button>
+                  <button 
+                    onClick={() => setStaffFilter('approved')} 
+                    className={`btn btn-sm ${staffFilter === 'approved' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    อนุมัติแล้ว ({loanQueue.filter(i => i.status.includes('เรียบร้อย') || i.status.includes('Approved')).length})
+                  </button>
+                </div>
               </div>
+
+              {/* Worklist Items */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {loanQueue
+                  .filter(item => {
+                    if (staffFilter === 'pending') return !item.status.includes('เรียบร้อย') && !item.status.includes('Approved');
+                    if (staffFilter === 'approved') return item.status.includes('เรียบร้อย') || item.status.includes('Approved');
+                    return true;
+                  })
+                  .map((item) => {
+                    const isApproved = item.status.includes('เรียบร้อย') || item.status.includes('Approved');
+                    const isRevision = item.status.includes('แก้ไข');
+
+                    return (
+                      <div 
+                        key={item.id} 
+                        style={{ 
+                          background: 'var(--bg-subtle)', 
+                          padding: '1.25rem', 
+                          borderRadius: '12px', 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          flexWrap: 'wrap', 
+                          gap: '1rem',
+                          border: isApproved ? '1px solid rgba(16, 185, 129, 0.3)' : isRevision ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid var(--border-subtle)'
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: '260px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{item.memberName}</span>
+                            <span className="badge badge-primary">{item.type}</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({item.id})</span>
+                          </div>
+
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                            <span>วงเงินที่ขอ: <strong style={{ color: 'var(--primary-700)' }}>{item.amount}</strong></span>
+                            <span>วันที่ยื่น: <strong>{item.date || item.submitDate}</strong></span>
+                            <span>สังกัด: <strong>{item.department || 'โรงพยาบาลระยอง'}</strong></span>
+                          </div>
+
+                          {item.note && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
+                              📝 หมายเหตุ: {item.note}
+                            </div>
+                          )}
+
+                          <div style={{ 
+                            fontSize: '0.82rem', 
+                            color: isApproved ? 'var(--accent-emerald-dark)' : isRevision ? 'var(--accent-rose)' : 'var(--accent-gold-dark)', 
+                            fontWeight: 700, 
+                            marginTop: '0.35rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem'
+                          }}>
+                            <span>สถานะ: {item.status}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => {
+                              setSelectedReviewRequest(item);
+                              setReviewModalOpen(true);
+                            }} 
+                            className={`btn btn-sm ${isApproved ? 'btn-outline' : 'btn-teal'}`}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                          >
+                            <ShieldCheck size={15} />
+                            <span>{isApproved ? 'ดูผลการอนุมัติ' : '🔍 ตรวจสอบ & พิจารณา'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
             </div>
           </div>
         )}
@@ -483,6 +650,16 @@ export default function MemberDashboardPage() {
             )}
           </div>
         )}
+
+        {/* Staff Review Modal */}
+        <StaffReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          request={selectedReviewRequest}
+          onApprove={handleApproveLoan}
+          onReject={handleRejectLoan}
+          onAddNote={handleAddNote}
+        />
 
       </div>
     </div>
