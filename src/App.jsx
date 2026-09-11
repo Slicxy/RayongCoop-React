@@ -27,6 +27,7 @@ import ContactPage from './pages/ContactPage';
 import VerifyReceiptPage from './pages/VerifyReceiptPage';
 import MemberDashboardPage from './pages/MemberDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -52,6 +53,8 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/assets" element={<StatisticsPage />} />
+          <Route path="/financial-assets" element={<StatisticsPage />} />
           
           <Route path="/deposits" element={<DepositsPage />} />
           <Route path="/rates" element={<DepositsPage />} />
@@ -79,7 +82,10 @@ export default function App() {
           <Route path="/dashboard" element={<MemberDashboardPage />} />
           <Route path="/member" element={<MemberDashboardPage />} />
           <Route path="/member/dashboard" element={<MemberDashboardPage />} />
-          <Route path="/member/profile" element={<MemberDashboardPage />} />
+          <Route path="/member/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<ProfilePage />} />
+          <Route path="/edit-profile" element={<ProfilePage />} />
           <Route path="/member/shares" element={<MemberDashboardPage />} />
           <Route path="/member/deposits" element={<MemberDashboardPage />} />
           <Route path="/member/loans" element={<MemberDashboardPage />} />

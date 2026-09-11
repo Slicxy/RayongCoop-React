@@ -7,14 +7,16 @@ import {
   Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles, 
   LogOut, ArrowRight, Eye, Bell, Newspaper, Image, 
   Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink,
-  UploadCloud, FileImage, ImagePlus
+  UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
+import EditProfileModal from '../components/member/EditProfileModal';
 
 export default function AdminDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState('announcements');
+  const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // 1. Announcements State
@@ -322,8 +324,8 @@ export default function AdminDashboardPage() {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '68px',
+                height: '68px',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #ef4444, #991b1b)',
                 color: '#ffffff',
@@ -331,23 +333,40 @@ export default function AdminDashboardPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '1.75rem',
-                boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4)'
+                boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4)',
+                overflow: 'hidden',
+                position: 'relative',
+                border: '2px solid rgba(255, 255, 255, 0.6)',
+                flexShrink: 0
               }}>
-                👑
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  '👑'
+                )}
               </div>
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
                   <h1 style={{ fontSize: '1.45rem', color: '#ffffff', margin: 0 }}>Super Admin Content & System Management</h1>
                   <span className="badge badge-rose">Full Control</span>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
-                  ผู้ดูแลระบบ: <strong>{user.name}</strong> • จัดการเนื้อหา ข่าว ประกาศ แบนเนอร์ ป็อปอัป ข้อเสนอแนะ และ FAQs
+                  ผู้ดูแลระบบ: <strong>{user.name}</strong> • เบอร์โทร: <strong>{user.phone || '081-999-8888'}</strong>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button 
+                onClick={() => setEditProfileModalOpen(true)}
+                className="btn btn-sm"
+                style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                title="แก้ไขรูปภาพโปรไฟล์และเบอร์โทรศัพท์"
+              >
+                <Edit3 size={14} />
+                <span>แก้ไขรูป / เบอร์โทร</span>
+              </button>
               <Link to="/" target="_blank" className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
                 <ExternalLink size={14} />
                 <span>ดูหน้าเว็บหลัก</span>
@@ -1191,6 +1210,12 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Edit Profile Modal (Avatar & Phone) */}
+        <EditProfileModal 
+          isOpen={editProfileModalOpen} 
+          onClose={() => setEditProfileModalOpen(false)} 
+        />
 
       </div>
     </div>

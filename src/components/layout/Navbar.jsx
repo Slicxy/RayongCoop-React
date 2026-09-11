@@ -234,8 +234,12 @@ export default function Navbar() {
                 className="user-pill-btn"
                 aria-label="User Account Menu"
               >
-                <div className="user-pill-avatar">
-                  {getAvatarInitial()}
+                <div className="user-pill-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    getAvatarInitial()
+                  )}
                 </div>
                 <div className="user-pill-info hide-mobile">
                   <div className="user-pill-name">
@@ -275,12 +279,12 @@ export default function Navbar() {
                     </Link>
 
                     <Link 
-                      to="/member/dashboard" 
+                      to="/profile" 
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
                       <User size={18} style={{ color: '#0ea5e9', flexShrink: 0 }} />
-                      <span>ข้อมูลสมาชิก</span>
+                      <span>แก้ไขข้อมูลส่วนตัว (รูปภาพ / เบอร์โทร)</span>
                     </Link>
 
                     <Link 
@@ -862,15 +866,23 @@ export default function Navbar() {
               marginBottom: '0.5rem',
               border: '1px solid var(--border-subtle)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <div className="user-pill-avatar" style={{ width: '32px', height: '32px', fontSize: '0.85rem' }}>
-                  {getAvatarInitial()}
+              <Link 
+                to="/profile" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', color: 'inherit' }}
+              >
+                <div className="user-pill-avatar" style={{ width: '36px', height: '36px', fontSize: '0.85rem', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    getAvatarInitial()
+                  )}
                 </div>
                 <div>
                   <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>{user.name}</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getRoleLabel()}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--primary-600)', fontWeight: 600 }}>✏️ แก้ไขข้อมูลส่วนตัว</div>
                 </div>
-              </div>
+              </Link>
               <button 
                 onClick={handleLogout}
                 style={{ background: 'none', border: 'none', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}

@@ -13,6 +13,8 @@ export const DEMO_USERS = {
     badgeColor: 'rose',
     department: 'ศูนย์เทคโนโลยีสารสนเทศและระบบกลาง',
     position: 'Chief Information Officer (CIO)',
+    phone: '081-999-0001',
+    avatar: '',
     permissions: ['all_access', 'user_management', 'system_config', 'audit_logs', 'financial_control', 'reports'],
     adminStats: {
       totalUsers: 4850,
@@ -31,6 +33,8 @@ export const DEMO_USERS = {
     badgeColor: 'primary',
     department: 'ฝ่ายสินเชื่อและการเงิน สหกรณ์ฯ',
     position: 'เจ้าหน้าที่ปฏิบัติการระดับชำนาญการ',
+    phone: '089-888-0002',
+    avatar: '',
     permissions: ['member_view', 'member_edit', 'loan_process', 'deposit_process', 'documents_manage'],
     staffQueue: [
       { id: 'LN-6703-01', memberName: 'นายประสิทธิ์ พูลสวัสดิ์', type: 'กู้ฉุกเฉิน', amount: '50,000 บาท', status: 'รออนุมัติโอนเงิน' },
@@ -48,6 +52,8 @@ export const DEMO_USERS = {
     badgeColor: 'gold',
     department: 'คณะกรรมการฝ่ายตรวจสอบกิจการ สหกรณ์ฯ',
     position: 'หัวหน้าผู้ตรวจสอบกิจการประจำปี 2567',
+    phone: '086-777-0003',
+    avatar: '',
     permissions: ['financial_audit', 'logs_view', 'reports_export', 'dividend_verify', 'read_only_access'],
     auditSummary: {
       lastAuditDate: '10 มี.ค. 2567',
@@ -68,6 +74,8 @@ export const DEMO_USERS = {
     badgeColor: 'emerald',
     department: 'กลุ่มงานการพยาบาล โรงพยาบาลระยอง',
     position: 'พยาบาลวิชาชีพชำนาญการ',
+    phone: '081-234-5678',
+    avatar: '',
     memberSince: '15 พ.ค. 2554 (13 ปี 8 เดือน)',
     monthlyShare: 3000,
     shares: 485000,
@@ -136,6 +144,20 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateProfile = ({ avatar, phone }) => {
+    if (!user) return false;
+    const updated = {
+      ...user,
+      avatar: avatar !== undefined ? avatar : (user.avatar || ''),
+      phone: phone !== undefined ? phone : (user.phone || '')
+    };
+    setUser(updated);
+    try {
+      localStorage.setItem('coop_auth_user', JSON.stringify(updated));
+    } catch (e) {}
+    return true;
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -147,6 +169,7 @@ export function AuthProvider({ children }) {
       login,
       logout,
       switchRole,
+      updateProfile,
       showAuthModal,
       setShowAuthModal,
       demoUsers: DEMO_USERS

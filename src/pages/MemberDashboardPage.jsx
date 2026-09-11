@@ -5,11 +5,12 @@ import {
   FileText, Download, LogOut, CreditCard, Clock, 
   CheckCircle2, ShieldAlert, Users, Settings, Database, 
   Activity, Check, X, Search, FileCheck, Eye, MessageSquare,
-  AlertCircle, ExternalLink, Trash2, Send, PlusCircle
+  AlertCircle, ExternalLink, Trash2, Send, PlusCircle, Edit3, Phone, Camera
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, MEMBER_COMPLAINTS } from '../data/mockData';
 import StaffReviewModal from '../components/staff/StaffReviewModal';
+import EditProfileModal from '../components/member/EditProfileModal';
 
 export default function MemberDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
@@ -17,6 +18,7 @@ export default function MemberDashboardPage() {
   const [staffFilter, setStaffFilter] = useState('all');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
+  const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
 
   // Complaints & Feedback State
   const [complaintsList, setComplaintsList] = useState(() => {
@@ -309,19 +311,27 @@ export default function MemberDashboardPage() {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '68px',
+                height: '68px',
                 borderRadius: '50%',
                 background: userRole === 'super_admin' ? 'linear-gradient(135deg, #ef4444, #991b1b)' : userRole === 'staff' ? 'var(--gradient-primary)' : userRole === 'auditor' ? 'var(--gradient-gold)' : 'var(--gradient-teal)',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.5rem',
+                fontSize: '1.6rem',
                 fontWeight: 800,
-                boxShadow: 'var(--shadow-md)'
+                boxShadow: 'var(--shadow-md)',
+                overflow: 'hidden',
+                position: 'relative',
+                border: '2px solid #ffffff',
+                flexShrink: 0
               }}>
-                {userRole === 'super_admin' ? '👑' : userRole === 'staff' ? '💼' : userRole === 'auditor' ? '🔍' : '👤'}
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  userRole === 'super_admin' ? '👑' : userRole === 'staff' ? '💼' : userRole === 'auditor' ? '🔍' : '👤'
+                )}
               </div>
 
               <div>
@@ -332,16 +342,30 @@ export default function MemberDashboardPage() {
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   สังกัด: <strong>{user.department}</strong> ({user.position})
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                  Username / รหัส: <strong>{user.username || user.memberId}</strong> • สิทธิ์: {user.roleName}
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span>Username / รหัส: <strong>{user.username || user.memberId}</strong> • สิทธิ์: {user.roleName}</span>
+                  <span style={{ color: 'var(--border-subtle)' }}>|</span>
+                  <span style={{ color: 'var(--primary-700)', fontWeight: 600 }}>📞 {user.phone || '081-234-5678'}</span>
                 </div>
               </div>
             </div>
 
-            <button onClick={handleLogout} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)' }}>
-              <LogOut size={16} />
-              <span>ออกจากระบบ</span>
-            </button>
+            <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => setEditProfileModalOpen(true)} 
+                className="btn btn-subtle btn-sm" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+                title="แก้ไขรูปภาพโปรไฟล์และเบอร์โทรศัพท์"
+              >
+                <Edit3 size={15} style={{ color: 'var(--primary-600)' }} />
+                <span>แก้ไขรูปภาพ / เบอร์โทร</span>
+              </button>
+
+              <button onClick={handleLogout} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)' }}>
+                <LogOut size={16} />
+                <span>ออกจากระบบ</span>
+              </button>
+            </div>
 
           </div>
         </div>
@@ -1366,6 +1390,12 @@ export default function MemberDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Edit Profile Modal (Avatar & Phone) */}
+        <EditProfileModal 
+          isOpen={editProfileModalOpen} 
+          onClose={() => setEditProfileModalOpen(false)} 
+        />
 
       </div>
     </div>
