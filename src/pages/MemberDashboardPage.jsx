@@ -240,6 +240,17 @@ export default function MemberDashboardPage() {
 
   const userRole = user.role || 'member';
 
+  // Filter complaints strictly belonging to this logged-in member (Privacy Protection)
+  const myComplaints = complaintsList.filter(item => {
+    if (user?.memberId && item?.memberId) {
+      return String(item.memberId).trim() === String(user.memberId).trim();
+    }
+    if (user?.name && item?.name) {
+      return item.name.trim() === user.name.trim();
+    }
+    return false;
+  });
+
   return (
     <div className="section" style={{ background: 'var(--bg-main)' }}>
       <div className="container">
@@ -863,7 +874,7 @@ export default function MemberDashboardPage() {
               <button onClick={() => setActiveTab('overview')} style={tabNavBtn(activeTab === 'overview')}>บัญชีเงินฝาก & หนี้</button>
               <button onClick={() => setActiveTab('receipts')} style={tabNavBtn(activeTab === 'receipts')}>ใบเสร็จรับเงิน (e-Receipt)</button>
               <button onClick={() => setActiveTab('complaints')} style={tabNavBtn(activeTab === 'complaints')}>
-                📬 เรื่องร้องเรียน & ข้อเสนอแนะ ({complaintsList.length})
+                📬 เรื่องร้องเรียน & ข้อเสนอแนะ ({myComplaints.length})
               </button>
             </div>
 
@@ -958,7 +969,7 @@ export default function MemberDashboardPage() {
                       <span>เรื่องร้องเรียน & ข้อเสนอแนะของฉัน (My Complaints & Feedback)</span>
                     </h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem', margin: 0 }}>
-                      ติดตามสถานะคำร้องและตรวจสอบข้อความตอบกลับ/การแก้ไขปัญหาจากสหกรณ์
+                      ติดตามสถานะคำร้องและตรวจสอบข้อความตอบกลับ/การแก้ไขปัญหาจากสหกรณ์ (แสดงเฉพาะรายการของคุณ)
                     </p>
                   </div>
 
@@ -979,34 +990,34 @@ export default function MemberDashboardPage() {
                     className={`btn btn-sm ${memberComplaintFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
                     style={{ fontSize: '0.78rem' }}
                   >
-                    ทั้งหมด ({complaintsList.length})
+                    ทั้งหมด ({myComplaints.length})
                   </button>
                   <button 
                     onClick={() => setMemberComplaintFilter('pending')} 
                     className={`btn btn-sm ${memberComplaintFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
                     style={{ fontSize: '0.78rem' }}
                   >
-                    รอดำเนินการ ({complaintsList.filter(c => c.status === 'รอดำเนินการ').length})
+                    รอดำเนินการ ({myComplaints.filter(c => c.status === 'รอดำเนินการ').length})
                   </button>
                   <button 
                     onClick={() => setMemberComplaintFilter('reviewing')} 
                     className={`btn btn-sm ${memberComplaintFilter === 'reviewing' ? 'btn-primary' : 'btn-subtle'}`}
                     style={{ fontSize: '0.78rem' }}
                   >
-                    กำลังตรวจสอบ ({complaintsList.filter(c => c.status === 'กำลังตรวจสอบ').length})
+                    กำลังตรวจสอบ ({myComplaints.filter(c => c.status === 'กำลังตรวจสอบ').length})
                   </button>
                   <button 
                     onClick={() => setMemberComplaintFilter('replied')} 
                     className={`btn btn-sm ${memberComplaintFilter === 'replied' ? 'btn-primary' : 'btn-subtle'}`}
                     style={{ fontSize: '0.78rem' }}
                   >
-                    ตอบกลับแล้ว ({complaintsList.filter(c => c.status === 'ตอบกลับแล้ว').length})
+                    ตอบกลับแล้ว ({myComplaints.filter(c => c.status === 'ตอบกลับแล้ว').length})
                   </button>
                 </div>
 
                 {/* Complaints List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {complaintsList
+                  {myComplaints
                     .filter(item => {
                       if (memberComplaintFilter === 'pending') return item.status === 'รอดำเนินการ';
                       if (memberComplaintFilter === 'reviewing') return item.status === 'กำลังตรวจสอบ';
@@ -1096,14 +1107,14 @@ export default function MemberDashboardPage() {
                       );
                     })}
 
-                  {complaintsList.length === 0 && (
+                  {myComplaints.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
                       <MessageSquare size={48} style={{ opacity: 0.3, margin: '0 auto 1rem auto' }} />
-                      <p style={{ fontSize: '1rem', fontWeight: 600 }}>ยังไม่มีประวัติการส่งเรื่องร้องเรียนหรือข้อเสนอแนะ</p>
+                      <p style={{ fontSize: '1rem', fontWeight: 600 }}>ยังไม่มีประวัติการส่งเรื่องร้องเรียนหรือข้อเสนอแนะของคุณ</p>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 1rem 0' }}>ระบบจะแสดงเฉพาะเรื่องร้องเรียนและข้อเสนอแนะที่ส่งด้วยบัญชีของคุณเพื่อความเป็นส่วนตัว</p>
                       <button 
                         onClick={() => setMemberComplaintModalOpen(true)}
                         className="btn btn-primary btn-sm"
-                        style={{ marginTop: '0.5rem' }}
                       >
                         ส่งเรื่องร้องเรียนข้อแรก
                       </button>

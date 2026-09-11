@@ -276,10 +276,11 @@ export const FAQS = [
 export const MEMBER_COMPLAINTS = [
   {
     id: 'TKT-670301',
-    name: 'นายเกียรติศักดิ์ พูลเพิ่ม',
+    name: 'นายสมชาย มีสุข',
+    memberId: '04892',
     phone: '081-234-5678',
-    email: 'kiatisak@mail.com',
-    department: 'โรงพยาบาลระยอง',
+    email: 'somchai.m@rayongcoop.com',
+    department: 'กลุ่มงานการพยาบาล โรงพยาบาลระยอง',
     topic: 'ข้อเสนอแนะการให้บริการ',
     message: 'อยากให้มีระบบส่งแจ้งเตือน SMS หรือ LINE ทันทีเมื่อเงินปันผลหรือเงินกู้โอนเข้าบัญชีครับ เพื่อความสะดวกของสมาชิก',
     date: '11 มี.ค. 2567',
@@ -290,6 +291,7 @@ export const MEMBER_COMPLAINTS = [
   {
     id: 'TKT-670302',
     name: 'นางสาวจารุณี รัตนโชติ',
+    memberId: '06214',
     phone: '089-987-6543',
     email: 'jarunee@mail.com',
     department: 'รพ.แกลง',
@@ -303,6 +305,7 @@ export const MEMBER_COMPLAINTS = [
   {
     id: 'TKT-670303',
     name: 'นายอนุชา เจริญผล',
+    memberId: '03411',
     phone: '086-555-4321',
     email: 'anucha@mail.com',
     department: 'สสจ.ระยอง',
@@ -316,6 +319,7 @@ export const MEMBER_COMPLAINTS = [
   {
     id: 'TKT-670304',
     name: 'นางสมศรี ใจผ่อง',
+    memberId: '05120',
     phone: '082-333-4455',
     email: 'somsri@mail.com',
     department: 'รพ.บ้านฉาง',
