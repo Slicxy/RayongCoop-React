@@ -1,6 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ==========================================================================
    Rayong Public Health Savings and Credit Cooperative Limited
-   Modern Design System & Styling (Vanilla CSS)
+   Modern Design System & Styling (Vanilla CSS & Tailwind)
    ========================================================================== */
 
 :root {
