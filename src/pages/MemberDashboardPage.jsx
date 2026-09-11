@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   User, Coins, Landmark, ShieldCheck, TrendingUp, 
@@ -29,6 +29,26 @@ export default function MemberDashboardPage() {
   const [complaintFilter, setComplaintFilter] = useState('all');
   const [selectedAdminComplaint, setSelectedAdminComplaint] = useState(null);
   const [adminReplyText, setAdminReplyText] = useState('');
+
+  // Auto-sync complaints from localStorage whenever updated
+  useEffect(() => {
+    const syncData = () => {
+      try {
+        const saved = localStorage.getItem('coop_member_complaints');
+        if (saved) {
+          setComplaintsList(JSON.parse(saved));
+        }
+      } catch (e) {}
+    };
+
+    syncData();
+    window.addEventListener('storage', syncData);
+    window.addEventListener('focus', syncData);
+    return () => {
+      window.removeEventListener('storage', syncData);
+      window.removeEventListener('focus', syncData);
+    };
+  }, []);
 
   const [loanQueue, setLoanQueue] = useState(() => {
     try {

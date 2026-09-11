@@ -89,6 +89,33 @@ export default function AdminDashboardPage() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [replyInput, setReplyInput] = useState('');
 
+  // Auto-sync complaints from localStorage and check URL tab
+  useEffect(() => {
+    const syncData = () => {
+      try {
+        const saved = localStorage.getItem('coop_member_complaints');
+        if (saved) {
+          setFeedbacks(JSON.parse(saved));
+        }
+      } catch (e) {}
+    };
+
+    syncData();
+    window.addEventListener('storage', syncData);
+    window.addEventListener('focus', syncData);
+
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+
+    return () => {
+      window.removeEventListener('storage', syncData);
+      window.removeEventListener('focus', syncData);
+    };
+  }, []);
+
   // 6. FAQs State
   const [faqsList, setFaqsList] = useState(FAQS);
   const [faqModal, setFaqModal] = useState(false);

@@ -43,6 +43,7 @@ export default function ContactPage() {
       const list = saved ? JSON.parse(saved) : MEMBER_COMPLAINTS;
       const updated = [newEntry, ...list];
       localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
     } catch (err) {
       // ignore
     }
