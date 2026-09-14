@@ -8,37 +8,114 @@ import { useAuth } from '../../context/AuthContext';
 
 const LOAN_TYPES = [
   {
+    id: 'ordinary',
+    name: 'เงินกู้สามัญ',
+    shortName: 'กู้สามัญ',
+    maxAmount: 3000000,
+    rate: 6.15,
+    maxTerm: 180,
+    guarantorReq: 'ใช้สมาชิกค้ำประกัน 1-3 คน หรือใช้มูลค่าหุ้นค้ำ',
+    badge: 'ยอดนิยม',
+    badgeColor: 'gold'
+  },
+  {
     id: 'emergency',
-    name: 'เงินกู้เพื่อเหตุฉุกเฉิน (Emergency Loan)',
+    name: 'เงินกู้ฉุกเฉิน',
     shortName: 'กู้ฉุกเฉิน',
     maxAmount: 100000,
-    rate: 5.75,
+    rate: 4.75,
     maxTerm: 12,
-    guarantorReq: 'ไม่ต้องใช้ผู้ค้ำประกัน (ใช้วงเงินหุ้นค้ำ)',
+    guarantorReq: 'ไม่ต้องใช้บุคคลค้ำประกัน (ใช้วงเงินหุ้นหรือเงินได้ค้ำ)',
     badge: 'อนุมัติไว 24 ชม.',
     badgeColor: 'emerald'
   },
   {
-    id: 'ordinary',
-    name: 'เงินกู้สามัญเพื่อสวัสดิการ (Ordinary Loan)',
-    shortName: 'กู้สามัญ',
-    maxAmount: 1500000,
+    id: 'special',
+    name: 'เงินกู้พิเศษ',
+    shortName: 'กู้พิเศษ',
+    maxAmount: 5000000,
     rate: 5.25,
-    maxTerm: 84,
-    guarantorReq: 'ใช้ผู้ค้ำประกัน 1 - 2 ท่าน',
-    badge: 'ดอกเบี้ยต่ำ',
+    maxTerm: 360,
+    guarantorReq: 'จดทะเบียนจำนองอสังหาริมทรัพย์เป็นประกัน',
+    badge: 'วงเงินสูง',
+    badgeColor: 'teal'
+  },
+  {
+    id: 'goods_installment',
+    name: 'เงินกู้ผ่อนชำระสินค้า ฯ',
+    shortName: 'กู้ผ่อนสินค้า',
+    maxAmount: 200000,
+    rate: 5.50,
+    maxTerm: 36,
+    guarantorReq: 'สมาชิกค้ำประกัน 1 คน หรือหลักฐานการซื้อสินค้า',
+    badge: 'ผ่อนสบาย',
     badgeColor: 'primary'
   },
   {
-    id: 'special-housing',
-    name: 'เงินกู้พิเศษเพื่อที่อยู่อาศัย (Housing Loan)',
-    shortName: 'กู้ซื้อ/สร้างบ้าน',
+    id: 'education',
+    name: 'เงินกู้เพื่อการศึกษา',
+    shortName: 'กู้เพื่อการศึกษา',
+    maxAmount: 500000,
+    rate: 2.00,
+    maxTerm: 60,
+    guarantorReq: 'สมาชิกค้ำประกัน / หุ้นค้ำประกัน',
+    badge: 'ดอกเบี้ยพิเศษ',
+    badgeColor: 'indigo'
+  },
+  {
+    id: 'life_development',
+    name: 'เงินกู้เพื่อพัฒนาคุณภาพชีวิต',
+    shortName: 'กู้พัฒนาคุณภาพชีวิต',
+    maxAmount: 1000000,
+    rate: 5.50,
+    maxTerm: 120,
+    guarantorReq: 'สมาชิกค้ำประกัน 1-2 คน',
+    badge: 'เพื่อครอบครัว',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'car_purchase',
+    name: 'เงินกู้เพื่อจัดซื้อรถยนต์',
+    shortName: 'กู้ซื้อรถยนต์',
+    maxAmount: 1500000,
+    rate: 4.00,
+    maxTerm: 84,
+    guarantorReq: 'โอนสิทธิทะเบียนรถยนต์ หรือสมาชิกค้ำประกัน',
+    badge: 'ดอกเบี้ยต่ำ',
+    badgeColor: 'cyan'
+  },
+  {
+    id: 'life_security',
+    name: 'เงินกู้พิเศษเพื่อความมั่นคงในชีวิต',
+    shortName: 'กู้ความมั่นคงชีวิต',
     maxAmount: 3000000,
-    rate: 4.75,
+    rate: 5.25,
     maxTerm: 240,
-    guarantorReq: 'จำนองอสังหาริมทรัพย์เป็นประกัน',
-    badge: 'ผ่อนยาวสูงสุด 20 ปี',
-    badgeColor: 'gold'
+    guarantorReq: 'อสังหาริมทรัพย์ / สมาชิกค้ำประกัน',
+    badge: 'มั่นคงระยะยาว',
+    badgeColor: 'rose'
+  },
+  {
+    id: 'debt_restructure',
+    name: 'เงินกู้เพื่อปรับปรุงโครงสร้างหนี้',
+    shortName: 'กู้ปรับโครงสร้างหนี้',
+    maxAmount: 2500000,
+    rate: 4.75,
+    maxTerm: 180,
+    guarantorReq: 'สมาชิกค้ำประกัน / หุ้นค้ำประกัน',
+    badge: 'รวมหนี้ดอกเบี้ยต่ำ',
+    badgeColor: 'blue'
+  },
+  {
+    id: 'guaranteed_loan',
+    name: 'เงินกู้รับการค้ำประกัน',
+    shortName: 'กู้รับการค้ำประกัน',
+    maxAmount: 1000000,
+    rate: 2.00,
+    maxTerm: 60,
+    guarantorReq: 'เงินฝากหรือสิทธิเรียกร้องเป็นประกัน',
+    badge: 'ดอกเบี้ยพิเศษสุด',
+    badgeColor: 'emerald'
   }
 ];
 

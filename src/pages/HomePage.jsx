@@ -193,11 +193,11 @@ export default function HomePage() {
 
                 <div style={{ background: 'rgba(255,255,255,0.08)', padding: '0.85rem 1rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>เงินกู้สามัญเพื่อสวัสดิการ</div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>เงินกู้สามัญ</div>
                     <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>ผ่อนสูงสุด 180 งวด</div>
                   </div>
                   <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#4ade80', fontFamily: 'var(--font-display)' }}>
-                    5.25% <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>ต่อปี</span>
+                    6.15% <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>ต่อปี</span>
                   </div>
                 </div>
 

@@ -34,7 +34,7 @@ export default function TopBar() {
             fontSize: '0.75rem',
             fontWeight: '600'
           }} className="hide-mobile">
-            ✨ ดอกเบี้ยเงินฝากสูงสุด {INTEREST_RATES.deposits[4].rate} | กู้ฉุกเฉิน {INTEREST_RATES.loans[0].rate}
+            ✨ ดอกเบี้ยเงินฝากสูงสุด {INTEREST_RATES.deposits[4]?.rate || '3.10%'} | กู้ฉุกเฉิน {INTEREST_RATES.loans.find(l => l.type === 'เงินกู้ฉุกเฉิน')?.rate || '4.75%'}
           </span>
         </div>
 
