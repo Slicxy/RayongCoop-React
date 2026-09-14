@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   User, Coins, Landmark, ShieldCheck, TrendingUp, 
   FileText, Download, LogOut, CreditCard, Clock, 
@@ -15,11 +15,33 @@ import NewLoanRequestModal from '../components/member/NewLoanRequestModal';
 
 export default function MemberDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [staffFilter, setStaffFilter] = useState('all');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
+
+  // Sync activeTab based on pathname and search parameters
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+
+    if (tabParam) {
+      setActiveTab(tabParam);
+    } else if (path.includes('/loans') || path.includes('/loan-requests') || path.includes('/tracking') || path.includes('/e-tracking')) {
+      setActiveTab('loans');
+    } else if (path.includes('/receipts')) {
+      setActiveTab('receipts');
+    } else if (path.includes('/complaints')) {
+      setActiveTab('complaints');
+    } else if (path.includes('/shares') || path.includes('/deposits')) {
+      setActiveTab('overview');
+    }
+  }, [location.pathname, location.search]);
 
   // Member Loan Request State
   const [memberLoanModalOpen, setMemberLoanModalOpen] = useState(false);
@@ -85,7 +107,6 @@ export default function MemberDashboardPage() {
       { id: 'WF-6703-05', memberName: 'นางสาวจารุณี รัตนโชติ', memberId: '06214', department: 'รพ.แกลง', phone: '082-111-2233', type: 'ขอรับสวัสดิการคลอดบุตร', amount: '3,000 บาท', date: '09 มี.ค. 2567', status: 'อนุมัติเรียบร้อยแล้ว', currentStep: 4, note: 'โอนเงินสวัสดิการเข้าบัญชีเรียบร้อย' }
     ];
   });
-  const navigate = useNavigate();
 
   if (!isLoggedIn || !user) {
     return (
