@@ -11,6 +11,7 @@ import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, MEMBER_COMPLAINTS } from '../data/mockData';
 import StaffReviewModal from '../components/staff/StaffReviewModal';
 import EditProfileModal from '../components/member/EditProfileModal';
+import NewLoanRequestModal from '../components/member/NewLoanRequestModal';
 
 export default function MemberDashboardPage() {
   const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
@@ -19,6 +20,10 @@ export default function MemberDashboardPage() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
+
+  // Member Loan Request State
+  const [memberLoanModalOpen, setMemberLoanModalOpen] = useState(false);
+  const [memberLoanFilter, setMemberLoanFilter] = useState('all');
 
   // Complaints & Feedback State
   const [complaintsList, setComplaintsList] = useState(() => {
@@ -40,13 +45,17 @@ export default function MemberDashboardPage() {
     message: ''
   });
 
-  // Auto-sync complaints from localStorage whenever updated
+  // Auto-sync complaints and loan requests from localStorage whenever updated
   useEffect(() => {
     const syncData = () => {
       try {
-        const saved = localStorage.getItem('coop_member_complaints');
-        if (saved) {
-          setComplaintsList(JSON.parse(saved));
+        const savedComplaints = localStorage.getItem('coop_member_complaints');
+        if (savedComplaints) {
+          setComplaintsList(JSON.parse(savedComplaints));
+        }
+        const savedLoans = localStorage.getItem('coop_service_requests');
+        if (savedLoans) {
+          setLoanQueue(JSON.parse(savedLoans));
         }
       } catch (e) {}
     };
@@ -240,6 +249,17 @@ export default function MemberDashboardPage() {
     alert(`ส่งเรื่องร้องเรียน / ข้อเสนอแนะเรียบร้อยแล้ว!\nรหัสติดตามเรื่อง: ${newId}\n(ข้อมูลเชื่อมโยงไปยังระบบ Super Admin ทันที)`);
   };
 
+  const handleMemberSubmitLoan = (newLoanItem) => {
+    const updated = [newLoanItem, ...loanQueue];
+    setLoanQueue(updated);
+    try {
+      localStorage.setItem('coop_service_requests', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {}
+    setActiveTab('loans');
+    alert(`ยื่นคำขอกู้เงินออนไลน์เรียบร้อยแล้ว!\nรหัสคำขอ: ${newLoanItem.id}\nวงเงิน: ${newLoanItem.amount}\n(ส่งต่อไปยังคิวการพิจารณาของเจ้าหน้าที่สินเชื่อเรียบร้อยแล้ว)`);
+  };
+
   const userRole = user.role || 'member';
 
   // Filter complaints strictly belonging to this logged-in member (Privacy Protection)
@@ -249,6 +269,17 @@ export default function MemberDashboardPage() {
     }
     if (user?.name && item?.name) {
       return item.name.trim() === user.name.trim();
+    }
+    return false;
+  });
+
+  // Filter loan requests strictly belonging to this logged-in member
+  const myLoanRequests = loanQueue.filter(item => {
+    if (user?.memberId && item?.memberId) {
+      return String(item.memberId).trim() === String(user.memberId).trim();
+    }
+    if (user?.name && item?.memberName) {
+      return item.memberName.trim() === user.name.trim();
     }
     return false;
   });
@@ -896,6 +927,9 @@ export default function MemberDashboardPage() {
             {/* Tab Navigation */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
               <button onClick={() => setActiveTab('overview')} style={tabNavBtn(activeTab === 'overview')}>บัญชีเงินฝาก & หนี้</button>
+              <button onClick={() => setActiveTab('loans')} style={tabNavBtn(activeTab === 'loans')}>
+                📝 คำขอกู้เงิน & ติดตามสถานะ ({myLoanRequests.length})
+              </button>
               <button onClick={() => setActiveTab('receipts')} style={tabNavBtn(activeTab === 'receipts')}>ใบเสร็จรับเงิน (e-Receipt)</button>
               <button onClick={() => setActiveTab('complaints')} style={tabNavBtn(activeTab === 'complaints')}>
                 📬 เรื่องร้องเรียน & ข้อเสนอแนะ ({myComplaints.length})
@@ -943,6 +977,310 @@ export default function MemberDashboardPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* =========================================================================
+                MEMBER: LOAN APPLICATIONS & STATUS TRACKER (คำขอกู้เงินของฉัน)
+                ========================================================================= */}
+            {activeTab === 'loans' && (
+              <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+                {/* Section Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                      <CreditCard size={22} style={{ color: 'var(--primary-600)' }} />
+                      <span>รายการคำขอกู้เงินออนไลน์และสถานะการพิจารณา (My Loan Applications)</span>
+                    </h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem', margin: 0 }}>
+                      ติดตามไทม์ไลน์ขั้นตอนการตรวจสอบ อนุมัติสินเชื่อ และการทำนิติกรรมสัญญาแบบ Real-time
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setMemberLoanModalOpen(true)}
+                    className="btn btn-primary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.15rem' }}
+                  >
+                    <PlusCircle size={16} />
+                    <span>+ ยื่นคำขอกู้เงินออนไลน์ใหม่</span>
+                  </button>
+                </div>
+
+                {/* Filter Pills */}
+                <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                  <button 
+                    onClick={() => setMemberLoanFilter('all')} 
+                    className={`btn btn-sm ${memberLoanFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    ทั้งหมด ({myLoanRequests.length})
+                  </button>
+                  <button 
+                    onClick={() => setMemberLoanFilter('pending')} 
+                    className={`btn btn-sm ${memberLoanFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    รอดำเนินการ ({myLoanRequests.filter(l => l.status.includes('รอดำเนินการ') || l.status.includes('รอ') || l.status.includes('Pending')).length})
+                  </button>
+                  <button 
+                    onClick={() => setMemberLoanFilter('approved')} 
+                    className={`btn btn-sm ${memberLoanFilter === 'approved' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    อนุมัติเรียบร้อย ({myLoanRequests.filter(l => l.status.includes('อนุมัติ') || l.status.includes('Approved')).length})
+                  </button>
+                  <button 
+                    onClick={() => setMemberLoanFilter('revision')} 
+                    className={`btn btn-sm ${memberLoanFilter === 'revision' ? 'btn-primary' : 'btn-subtle'}`}
+                    style={{ fontSize: '0.78rem' }}
+                  >
+                    ส่งกลับแก้ไข ({myLoanRequests.filter(l => l.status.includes('ส่งกลับ') || l.status.includes('Revision')).length})
+                  </button>
+                </div>
+
+                {/* Loan Requests List */}
+                {myLoanRequests.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'var(--bg-subtle)', borderRadius: '12px' }}>
+                    <CreditCard size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem auto' }} />
+                    <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '0.35rem' }}>ยังไม่มีประวัติการยื่นคำขอกู้เงิน</h4>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                      ท่านสามารถยื่นคำขอกู้เงินฉุกเฉิน หรือกู้สามัญออนไลน์ได้สะดวกรวดเร็วตลอด 24 ชั่วโมง
+                    </p>
+                    <button 
+                      onClick={() => setMemberLoanModalOpen(true)}
+                      className="btn btn-primary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <PlusCircle size={16} />
+                      <span>ยื่นคำขอกู้เงินออนไลน์ตอนนี้</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {myLoanRequests
+                      .filter(item => {
+                        if (memberLoanFilter === 'pending') return item.status.includes('รอดำเนินการ') || item.status.includes('รอ') || item.status.includes('Pending');
+                        if (memberLoanFilter === 'approved') return item.status.includes('อนุมัติ') || item.status.includes('Approved');
+                        if (memberLoanFilter === 'revision') return item.status.includes('ส่งกลับ') || item.status.includes('Revision');
+                        return true;
+                      })
+                      .map(item => {
+                        const isApproved = item.status.includes('อนุมัติ') || item.status.includes('Approved');
+                        const isRevision = item.status.includes('ส่งกลับ') || item.status.includes('Revision');
+                        const isPending = !isApproved && !isRevision;
+                        const currentStep = item.currentStep || (isApproved ? 4 : isRevision ? 2 : 2);
+
+                        const steps = [
+                          { step: 1, title: 'ยื่นคำขอดิจิทัล' },
+                          { step: 2, title: 'เจ้าหน้าที่ตรวจเอกสาร' },
+                          { step: 3, title: 'พิจารณาอนุมัติสินเชื่อ' },
+                          { step: 4, title: 'ทำสัญญา & โอนเงิน' }
+                        ];
+
+                        return (
+                          <div 
+                            key={item.id}
+                            style={{
+                              background: 'var(--bg-subtle)',
+                              borderRadius: '16px',
+                              padding: '1.5rem',
+                              border: isApproved 
+                                ? '1px solid rgba(16, 185, 129, 0.4)' 
+                                : isRevision 
+                                ? '1px solid rgba(244, 63, 94, 0.4)' 
+                                : '1px solid var(--border-subtle)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '1.25rem'
+                            }}
+                          >
+                            {/* Card Header Row */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                                  <span className="badge badge-primary">{item.id}</span>
+                                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)' }}>
+                                    {item.type || item.name}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                  วันที่ยื่นคำขอ: <strong>{item.date || '11 มี.ค. 2567'}</strong> {item.lastUpdated ? `• อัปเดตล่าสุด: ${item.lastUpdated}` : ''}
+                                </div>
+                              </div>
+
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary-700)', fontFamily: 'var(--font-display)' }}>
+                                  {item.amount}
+                                </div>
+                                <span className={`badge badge-${isApproved ? 'emerald' : isRevision ? 'rose' : 'gold'}`}>
+                                  {item.status}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div style={{
+                              background: 'var(--bg-surface)',
+                              borderRadius: '12px',
+                              padding: '1rem 1.25rem',
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                              gap: '0.75rem 1rem',
+                              fontSize: '0.85rem',
+                              border: '1px solid var(--border-subtle)'
+                            }}>
+                              {item.term && (
+                                <div>
+                                  <span style={{ color: 'var(--text-muted)' }}>ระยะเวลาผ่อน:</span>{' '}
+                                  <strong>{item.term}</strong>
+                                </div>
+                              )}
+                              {item.monthlyEstimate && (
+                                <div>
+                                  <span style={{ color: 'var(--text-muted)' }}>ประมาณการค่างวด:</span>{' '}
+                                  <strong style={{ color: 'var(--accent-teal-dark)' }}>{item.monthlyEstimate}</strong>
+                                </div>
+                              )}
+                              {item.interestRate && (
+                                <div>
+                                  <span style={{ color: 'var(--text-muted)' }}>อัตราดอกเบี้ย:</span>{' '}
+                                  <strong style={{ color: 'var(--accent-gold-dark)' }}>{item.interestRate}</strong>
+                                </div>
+                              )}
+                              <div>
+                                <span style={{ color: 'var(--text-muted)' }}>หลักประกัน / ผู้ค้ำ:</span>{' '}
+                                <strong>{item.guarantor || 'ใช้วงเงินหุ้นสะสมค้ำประกัน'}</strong>
+                              </div>
+                              {item.purpose && (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>วัตถุประสงค์:</span>{' '}
+                                  <strong style={{ color: 'var(--text-main)' }}>{item.purpose}</strong>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* 4-Step Visual Timeline */}
+                            <div>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                                📌 ลำดับขั้นตอนการพิจารณาสินเชื่อ (Workflow Progress):
+                              </div>
+                              
+                              <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(4, 1fr)',
+                                gap: '0.5rem',
+                                position: 'relative'
+                              }}>
+                                {steps.map((s, sidx) => {
+                                  const isDone = s.step < currentStep || (s.step === 4 && isApproved);
+                                  const isCurrent = s.step === currentStep && !isApproved && !isRevision;
+                                  const isStepRevision = s.step === 2 && isRevision;
+
+                                  return (
+                                    <div 
+                                      key={s.step} 
+                                      style={{ 
+                                        textAlign: 'center', 
+                                        padding: '0.65rem 0.35rem', 
+                                        borderRadius: '8px',
+                                        background: isDone 
+                                          ? 'rgba(16, 185, 129, 0.12)' 
+                                          : isStepRevision 
+                                          ? 'rgba(244, 63, 94, 0.12)' 
+                                          : isCurrent 
+                                          ? 'rgba(37, 99, 235, 0.12)' 
+                                          : 'var(--bg-surface)',
+                                        border: isDone 
+                                          ? '1px solid rgba(16, 185, 129, 0.35)' 
+                                          : isStepRevision 
+                                          ? '1px solid rgba(244, 63, 94, 0.4)' 
+                                          : isCurrent 
+                                          ? '1px solid var(--primary-600)' 
+                                          : '1px solid var(--border-subtle)',
+                                        transition: 'all 0.15s ease'
+                                      }}
+                                    >
+                                      <div style={{ 
+                                        display: 'inline-flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        width: '24px', 
+                                        height: '24px', 
+                                        borderRadius: '50%',
+                                        background: isDone ? 'var(--accent-emerald)' : isStepRevision ? 'var(--accent-rose)' : isCurrent ? 'var(--primary-600)' : 'var(--bg-subtle)',
+                                        color: '#ffffff',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        marginBottom: '0.25rem'
+                                      }}>
+                                        {isDone ? <Check size={14} /> : isStepRevision ? '!' : s.step}
+                                      </div>
+                                      <div style={{ 
+                                        fontSize: '0.75rem', 
+                                        fontWeight: isCurrent || isDone ? 700 : 500, 
+                                        color: isDone ? 'var(--accent-emerald-dark)' : isStepRevision ? 'var(--accent-rose)' : isCurrent ? 'var(--primary-600)' : 'var(--text-muted)' 
+                                      }}>
+                                        {s.title}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Officer Feedback Note Banner */}
+                            {item.note && (
+                              <div style={{ 
+                                background: isApproved 
+                                  ? 'rgba(16, 185, 129, 0.08)' 
+                                  : isRevision 
+                                  ? 'rgba(244, 63, 94, 0.08)' 
+                                  : 'rgba(245, 158, 11, 0.08)',
+                                borderLeft: `4px solid ${isApproved ? 'var(--accent-emerald)' : isRevision ? 'var(--accent-rose)' : 'var(--accent-gold)'}`,
+                                padding: '0.85rem 1.15rem',
+                                borderRadius: '0 8px 8px 0',
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                              }}>
+                                <Info size={16} style={{ color: isApproved ? 'var(--accent-emerald)' : isRevision ? 'var(--accent-rose)' : 'var(--accent-gold-dark)', flexShrink: 0 }} />
+                                <div>
+                                  <strong style={{ color: 'var(--text-main)' }}>ความเห็น/หมายเหตุจากเจ้าหน้าที่สินเชื่อ:</strong>{' '}
+                                  <span style={{ color: 'var(--text-main)' }}>{item.note}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Card Footer Actions */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.85rem' }}>
+                              <button 
+                                onClick={() => alert(`พิมพ์เอกสารใบคำขอกู้เงินดิจิทัล รหัส: ${item.id} (PDF)`)}
+                                className="btn btn-outline btn-sm"
+                                style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                              >
+                                <Download size={14} />
+                                <span>ดาวน์โหลดใบคำขอ (PDF)</span>
+                              </button>
+                              
+                              {isRevision && (
+                                <button 
+                                  onClick={() => setMemberLoanModalOpen(true)}
+                                  className="btn btn-rose btn-sm"
+                                  style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                                >
+                                  <Edit3 size={14} />
+                                  <span>แก้ไขและส่งเอกสารใหม่</span>
+                                </button>
+                              )}
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1395,6 +1733,13 @@ export default function MemberDashboardPage() {
         <EditProfileModal 
           isOpen={editProfileModalOpen} 
           onClose={() => setEditProfileModalOpen(false)} 
+        />
+
+        {/* New Online Loan Request Modal */}
+        <NewLoanRequestModal
+          isOpen={memberLoanModalOpen}
+          onClose={() => setMemberLoanModalOpen(false)}
+          onSubmitLoan={handleMemberSubmitLoan}
         />
 
       </div>

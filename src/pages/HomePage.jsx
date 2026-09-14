@@ -269,12 +269,12 @@ export default function HomePage() {
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>ทุนการศึกษา & ช่วยเหลือ</p>
             </Link>
 
-            <Link to="/documents" className="surface-card" style={quickServiceCardStyle}>
-              <div style={{ ...quickServiceIconWrap, background: 'var(--bg-subtle)', color: 'var(--text-main)' }}>
-                <Download size={24} />
+            <Link to="/member/shares" className="surface-card" style={quickServiceCardStyle}>
+              <div style={{ ...quickServiceIconWrap, background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                <Coins size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>ดาวน์โหลดแบบฟอร์ม</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>เอกสารคำขอทุกประเภท</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>ตรวจสอบเงินปันผล</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>เงินปันผล & เฉลี่ยคืนสะสม</p>
             </Link>
 
           </div>
