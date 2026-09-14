@@ -333,7 +333,7 @@ export default function NewLoanRequestModal({ isOpen, onClose, onSubmitLoan }) {
                   value={amount}
                   min={1000}
                   max={selectedType.maxAmount}
-                  step={5000}
+                  step={1000}
                   onChange={(e) => setAmount(Number(e.target.value))}
                   style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--primary-700)', paddingRight: '3rem' }}
                   required
