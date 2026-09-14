@@ -5,7 +5,7 @@ import {
   FileText, Download, LogOut, CreditCard, Clock, 
   CheckCircle2, ShieldAlert, Users, Settings, Database, 
   Activity, Check, X, Search, FileCheck, Eye, MessageSquare,
-  AlertCircle, ExternalLink, Trash2, Send, PlusCircle, Edit3, Phone, Camera
+  AlertCircle, ExternalLink, Trash2, Send, PlusCircle, Edit3, Phone, Camera, Info
 } from 'lucide-react';
 import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, MEMBER_COMPLAINTS } from '../data/mockData';
