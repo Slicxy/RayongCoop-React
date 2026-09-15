@@ -24,13 +24,17 @@ export default function MemberDashboardPage() {
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
 
-  // Sync activeTab based on pathname and search parameters
+  // Sync activeTab and role based on pathname and search parameters
   useEffect(() => {
     const path = location.pathname.toLowerCase();
     const searchParams = new URLSearchParams(location.search);
     const tabParam = searchParams.get('tab');
 
-    if (tabParam) {
+    if (path.includes('/staff')) {
+      if (user?.role !== 'staff') {
+        switchRole('staff');
+      }
+    } else if (tabParam) {
       setActiveTab(tabParam);
     } else if (path.includes('/loans') || path.includes('/loan-requests') || path.includes('/tracking') || path.includes('/e-tracking')) {
       setActiveTab('loans');
@@ -41,7 +45,7 @@ export default function MemberDashboardPage() {
     } else if (path.includes('/shares') || path.includes('/deposits')) {
       setActiveTab('overview');
     }
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, user?.role, switchRole]);
 
   // Member Loan Request State
   const [memberLoanModalOpen, setMemberLoanModalOpen] = useState(false);
@@ -137,9 +141,9 @@ export default function MemberDashboardPage() {
       ...item, 
       status: 'อนุมัติเรียบร้อยแล้ว (Approved)', 
       statusColor: 'emerald',
-      currentStep: 3,
+      currentStep: 4,
       note: remarks || 'ผ่านการตรวจสอบและอนุมัติจากเจ้าหน้าที่สินเชื่อเรียบร้อยแล้ว',
-      lastUpdated: '11 มี.ค. 2567 14:55 น.'
+      lastUpdated: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
     } : item);
     setLoanQueue(updated);
     try {
@@ -1090,7 +1094,7 @@ export default function MemberDashboardPage() {
                         const isApproved = item.status.includes('อนุมัติ') || item.status.includes('Approved');
                         const isRevision = item.status.includes('ส่งกลับ') || item.status.includes('Revision');
                         const isPending = !isApproved && !isRevision;
-                        const currentStep = item.currentStep || (isApproved ? 4 : isRevision ? 2 : 2);
+                        const effectiveStep = isApproved ? 4 : (item.currentStep || 2);
 
                         const steps = [
                           { step: 1, title: 'ยื่นคำขอดิจิทัล' },
@@ -1194,9 +1198,9 @@ export default function MemberDashboardPage() {
                                 position: 'relative'
                               }}>
                                 {steps.map((s, sidx) => {
-                                  const isDone = s.step < currentStep || (s.step === 4 && isApproved);
-                                  const isCurrent = s.step === currentStep && !isApproved && !isRevision;
-                                  const isStepRevision = s.step === 2 && isRevision;
+                                  const isDone = isApproved ? true : s.step < effectiveStep;
+                                  const isCurrent = !isApproved && !isRevision && s.step === effectiveStep;
+                                  const isStepRevision = isRevision && s.step === effectiveStep;
 
                                   return (
                                     <div 
