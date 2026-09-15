@@ -22,7 +22,7 @@ class HomeController extends Controller
         $loanRates = [];
         try {
             $depositRates = Database::query("SELECT * FROM interest_rates WHERE product_type = 'deposit' AND status = 'active' ORDER BY sort_order ASC LIMIT 4");
-            $loanRates = Database::query("SELECT * FROM interest_rates WHERE product_type = 'loan' AND status = 'active' ORDER BY sort_order ASC LIMIT 4");
+            $loanRates = Database::query("SELECT * FROM interest_rates WHERE product_type = 'loan' AND status = 'active' ORDER BY sort_order ASC");
         } catch (\Throwable $e) {}
 
         // 3. Featured News & Announcements
@@ -31,12 +31,14 @@ class HomeController extends Controller
             $latestNews = Database::query("SELECT n.*, c.name as category_name FROM news n JOIN news_categories c ON n.category_id = c.id WHERE n.workflow_status = 'published' AND (n.publish_at IS NULL OR n.publish_at <= NOW()) ORDER BY n.is_pinned DESC, n.publish_at DESC LIMIT 6");
         } catch (\Throwable $e) {}
 
-        // 4. Featured Deposit & Loan Products
+        // 4. Featured Deposit & Loan Products & Calculator Loan Products
         $featuredDeposits = [];
         $featuredLoans = [];
+        $calcLoanProducts = [];
         try {
             $featuredDeposits = Database::query("SELECT * FROM deposit_products WHERE is_featured = 1 AND status = 'active' ORDER BY sort_order ASC LIMIT 3");
             $featuredLoans = Database::query("SELECT * FROM loan_products WHERE is_featured = 1 AND status = 'active' ORDER BY sort_order ASC LIMIT 3");
+            $calcLoanProducts = Database::query("SELECT * FROM loan_products WHERE is_calculator_enabled = 1 AND status = 'active' ORDER BY sort_order ASC");
         } catch (\Throwable $e) {}
 
         // 5. Executive Statistics (Latest)
@@ -71,6 +73,7 @@ class HomeController extends Controller
             'latestNews' => $latestNews,
             'featuredDeposits' => $featuredDeposits,
             'featuredLoans' => $featuredLoans,
+            'calcLoanProducts' => $calcLoanProducts,
             'latestStats' => $latestStats,
             'eservices' => $eservices,
             'importantAnnouncements' => $importantAnnouncements,

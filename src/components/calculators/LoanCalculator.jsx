@@ -1,33 +1,40 @@
 import React, { useState, useMemo } from 'react';
-import { Calculator, DollarSign, Calendar, Percent, FileText, CheckCircle, RefreshCw, Printer } from 'lucide-react';
-import { INTEREST_RATES } from '../../data/mockData';
+import { Calculator, DollarSign, Calendar, Percent, FileText, CheckCircle, RefreshCw, Printer, Sparkles } from 'lucide-react';
+import { LOAN_PRODUCTS } from '../../data/mockData';
 
 export default function LoanCalculator() {
-  const [loanType, setLoanType] = useState('ordinary');
+  const [selectedProductId, setSelectedProductId] = useState('ordinary');
   const [principal, setPrincipal] = useState(300000);
-  const [rate, setRate] = useState(5.25);
+  const [rate, setRate] = useState(6.15);
   const [months, setMonths] = useState(60);
   const [showAmortization, setShowAmortization] = useState(false);
 
-  // Preset loan type changes
-  const handleTypeChange = (type) => {
-    setLoanType(type);
-    if (type === 'emergency') {
-      setPrincipal(50000);
-      setRate(5.50);
-      setMonths(12);
-    } else if (type === 'ordinary') {
-      setPrincipal(300000);
-      setRate(5.25);
-      setMonths(60);
-    } else if (type === 'housing') {
-      setPrincipal(1500000);
-      setRate(4.75);
-      setMonths(240);
+  // Active product details
+  const activeProduct = useMemo(() => {
+    return LOAN_PRODUCTS.find(p => p.id === selectedProductId) || LOAN_PRODUCTS[0];
+  }, [selectedProductId]);
+
+  // Handle loan type selection - strictly sets matching Master Data rate
+  const handleTypeChange = (productId) => {
+    const prod = LOAN_PRODUCTS.find(p => p.id === productId);
+    if (!prod) return;
+
+    setSelectedProductId(prod.id);
+    setRate(prod.rateValue);
+
+    // Adjust principal and term within product limits
+    if (principal > prod.maxLimit) {
+      setPrincipal(Math.min(300000, prod.maxLimit));
+    } else if (principal < 10000) {
+      setPrincipal(Math.min(50000, prod.maxLimit));
+    }
+
+    if (months > prod.maxTerm) {
+      setMonths(prod.maxTerm);
     }
   };
 
-  // Calculate monthly payment (PMT)
+  // Calculate monthly payment (PMT) - Effective Rate (Amortization)
   const calculation = useMemo(() => {
     const p = parseFloat(principal) || 0;
     const r = (parseFloat(rate) || 0) / 100 / 12;
@@ -42,7 +49,7 @@ export default function LoanCalculator() {
       monthly = p / n;
     }
 
-    // Generate schedule
+    // Generate amortization schedule preview
     let balance = p;
     let totalInterest = 0;
     const schedule = [];
@@ -83,30 +90,64 @@ export default function LoanCalculator() {
             <span>โปรแกรมคำนวณเงินกู้สหกรณ์</span>
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            คำนวณค่างวดรายเดือนและดอกเบี้ยแบบลดต้นลดดอก (Effective Rate)
+            คำนวณค่างวดรายเดือนและดอกเบี้ยแบบลดต้นลดดอก (Effective Rate) ตรงตามประกาศอัตราดอกเบี้ยจริง
           </p>
         </div>
 
-        {/* Loan Type Selector Buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-subtle)', padding: '4px', borderRadius: 'var(--radius-md)' }}>
-          <button
-            onClick={() => handleTypeChange('emergency')}
-            style={tabBtnStyle(loanType === 'emergency')}
-          >
-            กู้ฉุกเฉิน
-          </button>
-          <button
-            onClick={() => handleTypeChange('ordinary')}
-            style={tabBtnStyle(loanType === 'ordinary')}
-          >
-            กู้สามัญ
-          </button>
-          <button
-            onClick={() => handleTypeChange('housing')}
-            style={tabBtnStyle(loanType === 'housing')}
-          >
-            กู้พิเศษเคหะ
-          </button>
+        {/* Selected Product Rate Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="badge badge-gold" style={{ fontSize: '0.85rem', padding: '0.4rem 0.75rem' }}>
+            ดอกเบี้ย {activeProduct.title}: <strong>{activeProduct.interestRate}</strong>
+          </span>
+        </div>
+      </div>
+
+      {/* Loan Type Selector */}
+      <div style={{ marginBottom: '1.75rem' }}>
+        <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.6rem', display: 'block' }}>
+          เลือกประเภทสินเชื่อ (10 ประเภทตามประกาศสหกรณ์):
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
+          {LOAN_PRODUCTS.map((p) => {
+            const isSelected = selectedProductId === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => handleTypeChange(p.id)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '10px',
+                  border: isSelected ? '2px solid var(--primary-600)' : '1px solid var(--border-subtle)',
+                  background: isSelected ? 'var(--primary-50, rgba(37, 99, 235, 0.08))' : 'var(--bg-surface)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? 'var(--shadow-sm)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                  <span style={{ fontWeight: isSelected ? 700 : 600, fontSize: '0.88rem', color: isSelected ? 'var(--primary-700)' : 'var(--text-main)' }}>
+                    {p.title}
+                  </span>
+                  <span style={{ 
+                    fontSize: '0.8rem', 
+                    fontWeight: 800, 
+                    color: isSelected ? 'var(--primary-700)' : 'var(--accent-gold-dark)',
+                    fontFamily: 'var(--font-display)'
+                  }}>
+                    {p.rateValue.toFixed(2)}%
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                  ผ่อนสูงสุด {p.maxTerm} งวด
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -127,31 +168,35 @@ export default function LoanCalculator() {
             <input 
               type="range"
               min="10000"
-              max={loanType === 'emergency' ? 100000 : loanType === 'ordinary' ? 3000000 : 5000000}
+              max={activeProduct.maxLimit}
               step="5000"
               value={principal}
               onChange={(e) => setPrincipal(Number(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--primary-600)', height: '6px', cursor: 'pointer' }}
             />
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-              {[50000, 100000, 300000, 500000, 1000000].filter(a => a <= (loanType === 'emergency' ? 100000 : 5000000)).map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => setPrincipal(amt)}
-                  className="btn btn-subtle btn-sm"
-                  style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
-                >
-                  {amt >= 1000000 ? `${amt / 1000000}M` : `${amt / 1000}k`}
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+              {[50000, 100000, 300000, 500000, 1000000, 2000000, 3000000]
+                .filter(a => a <= activeProduct.maxLimit)
+                .map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setPrincipal(amt)}
+                    className="btn btn-subtle btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                  >
+                    {amt >= 1000000 ? `${amt / 1000000}M` : `${amt / 1000}k`}
+                  </button>
+                ))}
             </div>
           </div>
 
           {/* Interest Rate */}
           <div className="form-group" style={{ marginBottom: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>อัตราดอกเบี้ย (% ต่อปี)</label>
+              <label className="form-label" style={{ marginBottom: 0 }}>
+                อัตราดอกเบี้ย (% ต่อปี) - <small className="text-muted">{activeProduct.title}</small>
+              </label>
               <span style={{ fontWeight: 700, color: 'var(--accent-gold-dark)' }}>{rate}% ต่อปี</span>
             </div>
             <input 
@@ -174,24 +219,26 @@ export default function LoanCalculator() {
             <input 
               type="range"
               min="6"
-              max={loanType === 'emergency' ? 12 : loanType === 'ordinary' ? 180 : 360}
+              max={activeProduct.maxTerm}
               step="6"
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--accent-teal)', height: '6px', cursor: 'pointer' }}
             />
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-              {[12, 36, 60, 120, 180, 240, 360].filter(m => m <= (loanType === 'emergency' ? 12 : loanType === 'ordinary' ? 180 : 360)).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMonths(m)}
-                  className="btn btn-subtle btn-sm"
-                  style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
-                >
-                  {m} งวด
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+              {[12, 36, 60, 120, 180, 240, 360]
+                .filter(m => m <= activeProduct.maxTerm)
+                .map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMonths(m)}
+                    className="btn btn-subtle btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                  >
+                    {m} งวด
+                  </button>
+                ))}
             </div>
           </div>
 
@@ -216,7 +263,7 @@ export default function LoanCalculator() {
               fontSize: '0.78rem',
               fontWeight: 600 
             }}>
-              ผลการคำนวณประมาณการ
+              ผลการคำนวณประมาณการ: {activeProduct.title}
             </span>
 
             <div style={{ marginTop: '1.25rem', marginBottom: '1.5rem' }}>
@@ -230,6 +277,10 @@ export default function LoanCalculator() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#cbd5e1' }}>วงเงินกู้ต้น:</span>
                 <strong>{Number(principal).toLocaleString()} บาท</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#cbd5e1' }}>อัตราดอกเบี้ย:</span>
+                <strong style={{ color: '#fbbf24' }}>{rate}% ต่อปี</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#cbd5e1' }}>ดอกเบี้ยรวมตลอดสัญญา:</span>
@@ -269,7 +320,7 @@ export default function LoanCalculator() {
       {showAmortization && (
         <div className="animate-fade-in" style={{ marginTop: '2rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
           <h4 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-main)' }}>
-            ตารางจำลองการผ่อนชำระรายงวด (Sample Amortization Table)
+            ตารางจำลองการผ่อนชำระรายงวด ({activeProduct.title} - ดอกเบี้ย {rate}%)
           </h4>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'right' }}>
@@ -304,14 +355,3 @@ export default function LoanCalculator() {
     </div>
   );
 }
-
-const tabBtnStyle = (active) => ({
-  padding: '0.4rem 0.85rem',
-  fontSize: '0.85rem',
-  fontWeight: active ? '700' : '500',
-  borderRadius: '6px',
-  background: active ? 'var(--bg-surface)' : 'transparent',
-  color: active ? 'var(--primary-600)' : 'var(--text-muted)',
-  boxShadow: active ? 'var(--shadow-sm)' : 'none',
-  transition: 'all 0.15s ease'
-});

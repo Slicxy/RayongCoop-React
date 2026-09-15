@@ -279,30 +279,39 @@ export default function Navbar() {
                     </Link>
 
                     <Link 
-                      to="/profile" 
+                      to="/member/loans" 
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
-                      <User size={18} style={{ color: '#0ea5e9', flexShrink: 0 }} />
-                      <span>แก้ไขข้อมูลส่วนตัว (รูปภาพ / เบอร์โทร)</span>
+                      <CreditCard size={18} style={{ color: '#0ea5e9', flexShrink: 0 }} />
+                      <span>คำขอกู้เงิน & ติดตามสถานะ</span>
                     </Link>
 
                     <Link 
-                      to="/member/dashboard" 
+                      to="/member/shares" 
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
                       <Wallet size={18} style={{ color: '#10b981', flexShrink: 0 }} />
-                      <span>บัญชีเงินฝาก</span>
+                      <span>บัญชีเงินฝาก & หุ้น</span>
                     </Link>
 
                     <Link 
-                      to="/member/dashboard" 
+                      to="/profile" 
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
-                      <Banknote size={18} style={{ color: '#f59e0b', flexShrink: 0 }} />
-                      <span>สัญญาเงินกู้</span>
+                      <User size={18} style={{ color: '#8b5cf6', flexShrink: 0 }} />
+                      <span>แก้ไขข้อมูลส่วนตัว (รูปภาพ / เบอร์โทร)</span>
+                    </Link>
+
+                    <Link 
+                      to="/member/receipts" 
+                      className="user-dropdown-item"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <FileText size={18} style={{ color: '#06b6d4', flexShrink: 0 }} />
+                      <span>ใบเสร็จรับเงิน (e-Receipt)</span>
                     </Link>
 
                     {user.role === 'super_admin' && (
@@ -571,8 +580,21 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/loan-checklist" className="mega-menu-card-item">
+                    <Link to="/member/loans" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
+                        <CreditCard size={18} />
+                      </div>
+                      <div>
+                        <div className="mega-menu-item-title">
+                          <span>ยื่นคำขอกู้เงินออนไลน์ & ติดตามสถานะ</span>
+                          <span className="badge badge-teal" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>ออนไลน์ 24 ชม.</span>
+                        </div>
+                        <div className="mega-menu-item-desc">ยื่นกู้ฉุกเฉิน กู้สามัญ และติดตามผลการอนุมัติแบบเรียลไทม์</div>
+                      </div>
+                    </Link>
+
+                    <Link to="/loan-checklist" className="mega-menu-card-item">
+                      <div className="mega-menu-icon-wrap" style={{ background: 'var(--bg-subtle)', color: 'var(--text-main)' }}>
                         <CheckSquare size={18} />
                       </div>
                       <div>
@@ -932,6 +954,7 @@ export default function Navbar() {
                 <Link to="/deposits" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• เงินฝากออมทรัพย์ & ประจำ</Link>
                 <Link to="/deposits" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ตารางอัตราดอกเบี้ยเงินฝาก</Link>
                 <Link to="/loans" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ผลิตภัณฑ์สินเชื่อทุกประเภท</Link>
+                <Link to="/member/loans" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ยื่นคำขอกู้เงิน & ติดตามสถานะ</Link>
                 <Link to="/calculator" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• โปรแกรมคำนวณเงินกู้</Link>
                 <Link to="/loan-checklist" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• เช็คความพร้อมการกู้</Link>
                 <Link to="/dividend-estimator" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ประมาณการเงินปันผล-เฉลี่ยคืน</Link>

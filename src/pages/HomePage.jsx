@@ -193,11 +193,11 @@ export default function HomePage() {
 
                 <div style={{ background: 'rgba(255,255,255,0.08)', padding: '0.85rem 1rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>เงินกู้สามัญเพื่อสวัสดิการ</div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>เงินกู้สามัญ</div>
                     <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>ผ่อนสูงสุด 180 งวด</div>
                   </div>
                   <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#4ade80', fontFamily: 'var(--font-display)' }}>
-                    5.25% <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>ต่อปี</span>
+                    6.15% <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>ต่อปี</span>
                   </div>
                 </div>
 
@@ -269,12 +269,12 @@ export default function HomePage() {
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>ทุนการศึกษา & ช่วยเหลือ</p>
             </Link>
 
-            <Link to="/documents" className="surface-card" style={quickServiceCardStyle}>
-              <div style={{ ...quickServiceIconWrap, background: 'var(--bg-subtle)', color: 'var(--text-main)' }}>
-                <Download size={24} />
+            <Link to="/member/shares" className="surface-card" style={quickServiceCardStyle}>
+              <div style={{ ...quickServiceIconWrap, background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
+                <Coins size={24} />
               </div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>ดาวน์โหลดแบบฟอร์ม</h4>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>เอกสารคำขอทุกประเภท</p>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>ตรวจสอบเงินปันผล</h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>เงินปันผล & เฉลี่ยคืนสะสม</p>
             </Link>
 
           </div>
