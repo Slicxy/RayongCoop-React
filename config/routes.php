@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\CsrfMiddleware;
+use App\Middlewares\RoleMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,7 +80,7 @@ $router->get('/login', 'Admin\\AuthController@showLogin');
 $router->post('/login', 'Admin\\AuthController@login', [CsrfMiddleware::class]);
 $router->get('/logout', 'Admin\\AuthController@logout');
 $router->post('/logout', 'Admin\\AuthController@logout');
-$router->get('/dashboard', 'Admin\\DashboardController@index', [AuthMiddleware::class]);
+$router->get('/dashboard', 'Admin\\DashboardController@index', [AuthMiddleware::class, new RoleMiddleware(['super_admin'])]);
 
 $router->get('/portal', 'Member\\MemberPortalController@dashboard', [AuthMiddleware::class]);
 
@@ -91,7 +92,7 @@ $router->get('/verify-receipt/{token}', 'PublicReceiptController@verify');
 | Protected Member Portal Routes
 |--------------------------------------------------------------------------
 */
-$router->group(['prefix' => 'member', 'middleware' => [AuthMiddleware::class]], function (\App\Core\Router $r) {
+$router->group(['prefix' => 'member', 'middleware' => [AuthMiddleware::class, new RoleMiddleware(['member'])]], function (\App\Core\Router $r) {
     $r->get('/dashboard', 'Member\\MemberPortalController@dashboard');
     $r->get('/profile', 'Member\\MemberPortalController@profile');
     $r->post('/profile/update', 'Member\\MemberPortalController@updateProfile', [CsrfMiddleware::class]);
@@ -139,7 +140,7 @@ $router->group(['prefix' => 'member', 'middleware' => [AuthMiddleware::class]], 
 | Protected Staff Operations Routes
 |--------------------------------------------------------------------------
 */
-$router->group(['prefix' => 'staff', 'middleware' => [AuthMiddleware::class]], function (\App\Core\Router $r) {
+$router->group(['prefix' => 'staff', 'middleware' => [AuthMiddleware::class, new RoleMiddleware(['staff'])]], function (\App\Core\Router $r) {
     $r->get('/dashboard', 'Staff\\StaffController@dashboard');
     $r->get('/members', 'Staff\\StaffController@members');
     $r->get('/members/detail', 'Staff\\StaffController@memberDetail');
@@ -162,7 +163,7 @@ $router->group(['prefix' => 'staff', 'middleware' => [AuthMiddleware::class]], f
 | Protected Admin Routes
 |--------------------------------------------------------------------------
 */
-$router->group(['prefix' => 'admin', 'middleware' => [AuthMiddleware::class]], function (\App\Core\Router $r) {
+$router->group(['prefix' => 'admin', 'middleware' => [AuthMiddleware::class, new RoleMiddleware(['super_admin'])]], function (\App\Core\Router $r) {
     // Dashboard
     $r->get('/dashboard', 'Admin\\DashboardController@index');
     $r->get('/executive', 'Admin\\DashboardController@executive');

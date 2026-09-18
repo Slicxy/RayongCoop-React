@@ -10,19 +10,15 @@ use App\Core\Logger;
 class MemberPortalService
 {
     /**
-     * Get member record by user ID or fallback to primary test member
+     * Get the member record linked to the authenticated user.
      */
     public static function getMemberByUserId(?int $userId): ?array
     {
-        if ($userId) {
-            $member = Database::first("SELECT * FROM members WHERE user_id = ? LIMIT 1", [$userId]);
-            if ($member) {
-                return $member;
-            }
+        if (!$userId) {
+            return null;
         }
-        // Default to main member MEM-2024-0001
-        return Database::first("SELECT * FROM members WHERE member_no = 'MEM-2024-0001' LIMIT 1") 
-            ?? Database::first("SELECT * FROM members ORDER BY id ASC LIMIT 1");
+
+        return Database::first("SELECT * FROM members WHERE user_id = ? LIMIT 1", [$userId]);
     }
 
     /**
