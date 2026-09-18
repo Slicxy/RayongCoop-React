@@ -5,13 +5,19 @@ on:
   push:
     branches:
       - main
+      - 'codex/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Security, syntax, and frontend build
+  php-quality:
+    name: PHP quality and security checks
     runs-on: ubuntu-latest
 
     steps:
@@ -27,11 +33,22 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Validate Composer manifest
+        run: composer validate --no-check-publish
+
       - name: Check PHP syntax
         run: php bin/test_lint.php
 
       - name: Run security regression tests
         run: php tests/SecurityRegressionTest.php
+
+  frontend-build:
+    name: React production build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -44,3 +61,11 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+      - name: Upload production build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rayongcoop-react-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7

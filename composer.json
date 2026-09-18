@@ -2,7 +2,7 @@
     "name": "rayongcoop/digital-portal",
     "description": "Rayong Public Health Savings and Credit Cooperative Limited - Modern Financial Portal & CMS",
     "type": "project",
-    "license": "Proprietary",
+    "license": "proprietary",
     "require": {
         "php": ">=8.2"
     },
