@@ -18,6 +18,7 @@ final class SecurityRegressionTest
         self::assertRouteRoleGuards();
         self::assertRateLimitUsesSharedStorage();
         self::assertLoginKeepsCsrfProtection();
+        self::assertMigrationsAreRecorded();
 
         if (self::$failures === 0) {
             echo "Security regression tests passed.\n";
@@ -70,6 +71,13 @@ final class SecurityRegressionTest
     {
         $source = file_get_contents(__DIR__ . '/../app/Middlewares/CsrfMiddleware.php');
         self::assert($source !== false && !str_contains($source, 'Allow initial Ajax login request from SPA'), 'CSRF protection is not bypassed for AJAX login');
+    }
+
+    private static function assertMigrationsAreRecorded(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../bin/console');
+        self::assert($source !== false && str_contains($source, 'schema_migrations'), 'migration runner records applied migrations');
+        self::assert($source !== false && str_contains($source, 'Skipping applied migration'), 'migration runner skips migrations that were already applied');
     }
 
     private static function assertRouteHasRoles(array $routes, string $path, array $expectedRoles): void

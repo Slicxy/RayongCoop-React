@@ -37,14 +37,34 @@ switch ($command) {
             $pdoInit->exec("CREATE DATABASE IF NOT EXISTS `{$config['database']}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
 
             $pdo = Database::connect();
+            $pdo->exec(
+                'CREATE TABLE IF NOT EXISTS schema_migrations ('
+                . 'migration VARCHAR(255) NOT NULL PRIMARY KEY, '
+                . 'applied_at DATETIME NOT NULL'
+                . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+            );
+
+            $appliedMigrations = $pdo->query('SELECT migration FROM schema_migrations')
+                ->fetchAll(PDO::FETCH_COLUMN);
+            $appliedLookup = array_fill_keys($appliedMigrations, true);
             $migrationFiles = glob(__DIR__ . '/../database/migrations/*.sql');
             sort($migrationFiles);
 
             foreach ($migrationFiles as $file) {
-                echo "Running migration: " . basename($file) . "...\n";
+                $migration = basename($file);
+                if (isset($appliedLookup[$migration])) {
+                    echo "Skipping applied migration: {$migration}\n";
+                    continue;
+                }
+
+                echo "Running migration: {$migration}...\n";
                 $sql = file_get_contents($file);
                 $pdo->exec($sql);
-                echo "✓ Applied " . basename($file) . "\n";
+                $statement = $pdo->prepare(
+                    'INSERT INTO schema_migrations (migration, applied_at) VALUES (:migration, NOW())'
+                );
+                $statement->execute(['migration' => $migration]);
+                echo "✓ Applied {$migration}\n";
             }
             echo "All migrations applied successfully!\n";
         } catch (Exception $e) {
