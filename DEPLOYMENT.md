@@ -31,6 +31,8 @@ sudo apt install -y nginx mysql-server composer \
 server {
     listen 80;
     server_name portal.rayongcoop.com www.portal.rayongcoop.com;
+    # Release 1 serves the PHP MVC application. Do not point this server at
+    # Vite's dist/ directory: the React application currently uses demo data.
     root /var/www/rayongcoop/public;
 
     index index.php index.html;
@@ -58,11 +60,17 @@ server {
         deny all;
     }
 
-    # Block direct execution of PHP files in uploads
-    location /storage/uploads {
-        location ~ \.php$ {
-            deny all;
-        }
+    # Serve uploads stored outside the public document root. The alias must end
+    # with a slash so /storage/uploads/a.jpg maps to storage/uploads/a.jpg.
+    location /storage/uploads/ {
+        alias /var/www/rayongcoop/storage/uploads/;
+        try_files $uri =404;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # Never execute uploaded files as PHP.
+    location ~* ^/storage/uploads/.*\.php$ {
+        deny all;
     }
 
     # Static asset caching
@@ -101,7 +109,26 @@ sudo chmod -R 775 /var/www/rayongcoop/storage
 
 ---
 
-## 5. การตั้งค่า Cron Jobs สำหรับงานอัตโนมัติ
+## 5. ค่า Environment สำหรับ Production
+
+สร้าง `.env` บนเซิร์ฟเวอร์จากค่า secrets ของระบบเท่านั้น ห้ามคัดลอก `.env.example`
+ไปใช้โดยตรง และต้องกำหนดอย่างน้อย:
+
+```ini
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://portal.rayongcoop.com
+APP_KEY=<unique-secret>
+SESSION_SECURE=true
+INITIAL_ADMIN_PASSWORD=<unique-password-at-least-16-characters>
+```
+
+ให้รัน `php bin/console db:migrate` ก่อน `php bin/console db:seed` เพื่อสร้างตาราง
+rate limit และโครงสร้างข้อมูลที่จำเป็นทั้งหมด
+
+---
+
+## 6. การตั้งค่า Cron Jobs สำหรับงานอัตโนมัติ
 เปิด Crontab ของผู้ใช้ `www-data`:
 ```bash
 sudo crontab -u www-data -e
@@ -118,7 +145,7 @@ sudo crontab -u www-data -e
 
 ---
 
-## 6. แผนการ Rollback (Rollback Protocol)
+## 7. แผนการ Rollback (Rollback Protocol)
 1. สลับ Git Branch / Commit กลับไปยังเวอร์ชันก่อนหน้า:
    ```bash
    git reset --hard <PREVIOUS_TAG>
