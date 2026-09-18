@@ -356,6 +356,18 @@ input, select, textarea {
   box-shadow: 0 6px 16px rgba(13, 148, 136, 0.45);
 }
 
+.btn-rose {
+  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 50%, #fb7185 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+}
+
+.btn-rose:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.5);
+  color: #ffffff;
+}
+
 .btn-outline {
   background: transparent;
   color: var(--primary-600);

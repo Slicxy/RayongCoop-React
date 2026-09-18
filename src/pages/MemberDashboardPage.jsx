@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { COOP_INFO, MEMBER_COMPLAINTS } from '../data/mockData';
 import StaffReviewModal from '../components/staff/StaffReviewModal';
 import EditProfileModal from '../components/member/EditProfileModal';
+import NewLoanRequestModal from '../components/member/NewLoanRequestModal';
 
 // Reusable Dashboard UI Components
 import DashboardHeader from '../components/dashboard/DashboardHeader';
@@ -28,6 +29,33 @@ export default function MemberDashboardPage() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
+
+  // Sync activeTab and role based on pathname and search parameters
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+
+    if (path.includes('/staff')) {
+      if (user?.role !== 'staff') {
+        switchRole('staff');
+      }
+    } else if (tabParam) {
+      setActiveTab(tabParam);
+    } else if (path.includes('/loans') || path.includes('/loan-requests') || path.includes('/tracking') || path.includes('/e-tracking')) {
+      setActiveTab('loans');
+    } else if (path.includes('/receipts')) {
+      setActiveTab('receipts');
+    } else if (path.includes('/complaints')) {
+      setActiveTab('complaints');
+    } else if (path.includes('/shares') || path.includes('/deposits')) {
+      setActiveTab('overview');
+    }
+  }, [location.pathname, location.search, user?.role, switchRole]);
+
+  // Member Loan Request State
+  const [memberLoanModalOpen, setMemberLoanModalOpen] = useState(false);
+  const [memberLoanFilter, setMemberLoanFilter] = useState('all');
 
   // Complaints & Feedback State
   const [complaintsList, setComplaintsList] = useState(() => {
@@ -49,13 +77,17 @@ export default function MemberDashboardPage() {
     message: ''
   });
 
-  // Auto-sync complaints from localStorage whenever updated
+  // Auto-sync complaints and loan requests from localStorage whenever updated
   useEffect(() => {
     const syncData = () => {
       try {
-        const saved = localStorage.getItem('coop_member_complaints');
-        if (saved) {
-          setComplaintsList(JSON.parse(saved));
+        const savedComplaints = localStorage.getItem('coop_member_complaints');
+        if (savedComplaints) {
+          setComplaintsList(JSON.parse(savedComplaints));
+        }
+        const savedLoans = localStorage.getItem('coop_service_requests');
+        if (savedLoans) {
+          setLoanQueue(JSON.parse(savedLoans));
         }
       } catch (e) {}
     };
@@ -84,7 +116,6 @@ export default function MemberDashboardPage() {
       { id: 'WF-6703-05', memberName: 'นางสาวจารุณี รัตนโชติ', memberId: '06214', department: 'รพ.แกลง', phone: '082-111-2233', type: 'ขอรับสวัสดิการคลอดบุตร', amount: '3,000 บาท', date: '09 มี.ค. 2567', status: 'อนุมัติเรียบร้อยแล้ว', currentStep: 4, note: 'โอนเงินสวัสดิการเข้าบัญชีเรียบร้อย' }
     ];
   });
-  const navigate = useNavigate();
 
   if (!isLoggedIn || !user) {
     return (
@@ -242,6 +273,17 @@ export default function MemberDashboardPage() {
     setMemberComplaintModalOpen(false);
     setActiveTab('complaints');
     alert(`ส่งเรื่องร้องเรียน / ข้อเสนอแนะเรียบร้อยแล้ว\nรหัสติดตามเรื่อง: ${newId}`);
+  };
+
+  const handleMemberSubmitLoan = (newLoanItem) => {
+    const updated = [newLoanItem, ...loanQueue];
+    setLoanQueue(updated);
+    try {
+      localStorage.setItem('coop_service_requests', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {}
+    setActiveTab('loans');
+    alert(`ยื่นคำขอกู้เงินออนไลน์เรียบร้อยแล้ว!\nรหัสคำขอ: ${newLoanItem.id}\nวงเงิน: ${newLoanItem.amount}\n(ส่งต่อไปยังคิวการพิจารณาของเจ้าหน้าที่สินเชื่อเรียบร้อยแล้ว)`);
   };
 
   const userRole = user.role || 'member';
@@ -1418,6 +1460,13 @@ export default function MemberDashboardPage() {
         <EditProfileModal
           isOpen={editProfileModalOpen}
           onClose={() => setEditProfileModalOpen(false)}
+        />
+
+        {/* New Online Loan Request Modal */}
+        <NewLoanRequestModal
+          isOpen={memberLoanModalOpen}
+          onClose={() => setMemberLoanModalOpen(false)}
+          onSubmitLoan={handleMemberSubmitLoan}
         />
 
       </div>

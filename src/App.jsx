@@ -89,7 +89,12 @@ export default function App() {
           <Route path="/member/shares" element={<MemberDashboardPage />} />
           <Route path="/member/deposits" element={<MemberDashboardPage />} />
           <Route path="/member/loans" element={<MemberDashboardPage />} />
+          <Route path="/member/loan-requests" element={<MemberDashboardPage />} />
+          <Route path="/member/complaints" element={<MemberDashboardPage />} />
           <Route path="/member/receipts" element={<MemberDashboardPage />} />
+          <Route path="/e-tracking" element={<MemberDashboardPage />} />
+          <Route path="/tracking" element={<MemberDashboardPage />} />
+          <Route path="/loan-requests" element={<MemberDashboardPage />} />
           <Route path="/portal" element={<MemberDashboardPage />} />
           <Route path="/staff" element={<MemberDashboardPage />} />
           <Route path="/staff/dashboard" element={<MemberDashboardPage />} />

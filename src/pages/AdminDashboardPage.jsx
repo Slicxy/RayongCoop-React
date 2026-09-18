@@ -7,7 +7,7 @@ import {
   Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles,
   LogOut, ArrowRight, Eye, Bell, Newspaper, Image,
   Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink,
-  UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera
+  UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera, Percent
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
@@ -173,6 +173,9 @@ export default function AdminDashboardPage() {
   const [faqsList, setFaqsList] = useState(FAQS);
   const [faqModal, setFaqModal] = useState(false);
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
+
+  // 7. Loan Products & Interest Rates State (Master Data 10 Items)
+  const [loanProductsList, setLoanProductsList] = useState(LOAN_PRODUCTS);
 
   // Users Management State
   const [usersList, setUsersList] = useState([
@@ -411,6 +414,11 @@ export default function AdminDashboardPage() {
           <button onClick={() => setActiveTab('faqs')} className={`btn ${activeTab === 'faqs' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
             <HelpCircle size={15} />
             <span>6. จัดการคำถาม FAQs ({faqsList.length})</span>
+          </button>
+
+          <button onClick={() => setActiveTab('loans')} className={`btn ${activeTab === 'loans' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+            <Percent size={15} />
+            <span>7. ดอกเบี้ย & สินเชื่อ ({loanProductsList.length})</span>
           </button>
 
         </div>
@@ -993,6 +1001,68 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
               ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================================================================
+            MODULE 7: LOAN PRODUCTS & INTEREST RATES (10 MASTER DATA ITEMS)
+            ========================================================================= */}
+        {activeTab === 'loans' && (
+          <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Percent className="text-primary" size={20} />
+                  <span>ประเภทเงินกู้และอัตราดอกเบี้ย (Master Data 10 รายการ)</span>
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
+                  Source of Truth ตามประกาศสหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด (คิดดอกเบี้ยแบบลดต้นลดดอก)
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span className="badge badge-primary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
+                  ครบ 10 ประเภท
+                </span>
+              </div>
+            </div>
+
+            {/* Table of 10 items */}
+            <div style={{ overflowX: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-subtle)', borderBottom: '2px solid var(--border-subtle)', textAlign: 'left' }}>
+                    <th style={{ padding: '0.85rem', width: '50px' }}>#</th>
+                    <th style={{ padding: '0.85rem' }}>ประเภทเงินกู้</th>
+                    <th style={{ padding: '0.85rem', textAlign: 'center' }}>อัตราดอกเบี้ย</th>
+                    <th style={{ padding: '0.85rem' }}>วงเงินกู้สูงสุด</th>
+                    <th style={{ padding: '0.85rem' }}>ผ่อนสูงสุด</th>
+                    <th style={{ padding: '0.85rem' }}>หลักประกัน / เงื่อนไข</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loanProductsList.map((p, idx) => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}>
+                      <td style={{ padding: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>{idx + 1}</td>
+                      <td style={{ padding: '0.85rem', fontWeight: 700, color: 'var(--primary-900)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>{p.title}</span>
+                          <span className={`badge badge-${p.badgeColor}`} style={{ fontSize: '0.7rem' }}>{p.badge}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.85rem', textAlign: 'center', fontWeight: 800, color: 'var(--accent-gold-dark)', fontSize: '1.15rem', fontFamily: 'var(--font-display)' }}>
+                        {p.rateValue.toFixed(2)}%
+                      </td>
+                      <td style={{ padding: '0.85rem', fontWeight: 600, color: 'var(--primary-700)' }}>{p.maxAmount}</td>
+                      <td style={{ padding: '0.85rem' }}>{p.period}</td>
+                      <td style={{ padding: '0.85rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{p.guarantee}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
           </div>

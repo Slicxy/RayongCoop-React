@@ -5,6 +5,7 @@ $loanRates = $loanRates ?? [];
 $latestNews = $latestNews ?? [];
 $featuredDeposits = $featuredDeposits ?? [];
 $featuredLoans = $featuredLoans ?? [];
+$calcLoanProducts = $calcLoanProducts ?? [];
 $latestStats = $latestStats ?? null;
 $eservices = $eservices ?? [];
 $importantAnnouncements = $importantAnnouncements ?? [];
@@ -304,9 +305,24 @@ $upcomingEvents = $upcomingEvents ?? [];
                         <div class="col-md-12">
                             <label class="form-label fw-bold small">เลือกประเภทสินเชื่อ</label>
                             <select class="form-select" id="calcProduct">
-                                <option value="" data-rate="5.50" data-max-term="240">เงินกู้สามัญ (อัตราดอกเบี้ย 5.50% ต่อปี)</option>
-                                <option value="" data-rate="5.75" data-max-term="12">เงินกู้เพื่อเหตุฉุกเฉิน (5.75% ต่อปี)</option>
-                                <option value="" data-rate="4.75" data-max-term="360">เงินกู้พิเศษเพื่อเคหะสงเคราะห์ (4.75% ต่อปี)</option>
+                                <?php if (!empty($calcLoanProducts)): ?>
+                                    <?php foreach ($calcLoanProducts as $lp): ?>
+                                        <option value="<?= e($lp['id']) ?>" data-rate="<?= e($lp['interest_rate']) ?>" data-max-term="<?= e($lp['max_term_months']) ?>" data-method="<?= e($lp['calculation_type']) ?>">
+                                            <?= e($lp['name']) ?> (อัตราดอกเบี้ย <?= number_format((float)$lp['interest_rate'], 2) ?>% ต่อปี)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option value="1" data-rate="6.15" data-max-term="180">เงินกู้สามัญ (อัตราดอกเบี้ย 6.15% ต่อปี)</option>
+                                    <option value="2" data-rate="4.75" data-max-term="12">เงินกู้ฉุกเฉิน (อัตราดอกเบี้ย 4.75% ต่อปี)</option>
+                                    <option value="3" data-rate="5.25" data-max-term="360">เงินกู้พิเศษ (อัตราดอกเบี้ย 5.25% ต่อปี)</option>
+                                    <option value="4" data-rate="5.50" data-max-term="36">เงินกู้ผ่อนชำระสินค้า ฯ (อัตราดอกเบี้ย 5.50% ต่อปี)</option>
+                                    <option value="5" data-rate="2.00" data-max-term="60">เงินกู้เพื่อการศึกษา (อัตราดอกเบี้ย 2.00% ต่อปี)</option>
+                                    <option value="6" data-rate="5.50" data-max-term="120">เงินกู้เพื่อพัฒนาคุณภาพชีวิต (อัตราดอกเบี้ย 5.50% ต่อปี)</option>
+                                    <option value="7" data-rate="4.00" data-max-term="84">เงินกู้เพื่อจัดซื้อรถยนต์ (อัตราดอกเบี้ย 4.00% ต่อปี)</option>
+                                    <option value="8" data-rate="5.25" data-max-term="240">เงินกู้พิเศษเพื่อความมั่นคงในชีวิต (อัตราดอกเบี้ย 5.25% ต่อปี)</option>
+                                    <option value="9" data-rate="4.75" data-max-term="180">เงินกู้เพื่อปรับปรุงโครงสร้างหนี้ (อัตราดอกเบี้ย 4.75% ต่อปี)</option>
+                                    <option value="10" data-rate="2.00" data-max-term="60">เงินกู้รับการค้ำประกัน (อัตราดอกเบี้ย 2.00% ต่อปี)</option>
+                                <?php endif; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -317,7 +333,7 @@ $upcomingEvents = $upcomingEvents ?? [];
                             <label class="form-label fw-bold small">ระยะเวลาผ่อน (งวด/เดือน)</label>
                             <input type="number" class="form-control" id="calcTerm" value="60" min="1" max="360">
                         </div>
-                        <input type="hidden" id="calcRate" value="5.50">
+                        <input type="hidden" id="calcRate" value="6.15">
                         <input type="hidden" id="calcMethod" value="effective">
                     </form>
                 </div>
