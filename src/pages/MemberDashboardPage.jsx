@@ -300,12 +300,12 @@ export default function MemberDashboardPage() {
   });
 
   // Default mock balances for display if member properties are not provided
-  const memberShares = user.shares || 485000;
-  const memberMonthlyShare = user.monthlyShare || 3000;
-  const memberSavings = user.savings || 245300.50;
-  const memberLoanBalance = user.loanBalance || 820000;
-  const memberDividendEst = user.dividendEstimated || 25462.50;
-  const memberLoanRefundEst = user.loanRefundEstimated || 5125.00;
+  const memberShares = user.shares ?? 0;
+  const memberMonthlyShare = user.monthlyShare ?? 0;
+  const memberSavings = user.savings ?? 0;
+  const memberLoanBalance = user.loanBalance ?? 0;
+  const memberDividendEst = user.dividendEstimated ?? 0;
+  const memberLoanRefundEst = user.loanRefundEstimated ?? 0;
 
   const memberAccounts = user.accounts && user.accounts.length > 0 ? user.accounts : [
     { accNo: '101-2-04892-1', type: 'ออมทรัพย์สุขใจ', balance: 45300.50, status: 'ปกติ' },

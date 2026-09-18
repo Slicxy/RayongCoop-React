@@ -68,6 +68,9 @@ $router->get('/surveys/{slug}', 'Public\\SurveyController@show');
 $router->post('/surveys/{slug}/submit', 'Public\\SurveyController@submit', [CsrfMiddleware::class]);
 
 // APIs
+$router->get('/csrf-token', function ($request, $response) {
+    $response->json(['token' => \App\Core\Csrf::token()]);
+});
 $router->post('/api/cookie-consent', 'Public\\ApiController@logCookieConsent');
 $router->post('/api/popups/event', 'Public\\ApiController@logPopupEvent');
 
