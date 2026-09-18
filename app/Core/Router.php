@@ -98,9 +98,14 @@ class Router
                 }
 
                 // Execute Middlewares
-                foreach ($route['middlewares'] as $middlewareClass) {
-                    if (class_exists($middlewareClass)) {
-                        $middleware = new $middlewareClass();
+                foreach ($route['middlewares'] as $middlewareDefinition) {
+                    $middleware = is_object($middlewareDefinition)
+                        ? $middlewareDefinition
+                        : (is_string($middlewareDefinition) && class_exists($middlewareDefinition)
+                            ? new $middlewareDefinition()
+                            : null);
+
+                    if ($middleware && method_exists($middleware, 'handle')) {
                         $handled = $middleware->handle($request, $response);
                         if ($handled === false) {
                             return; // Middleware stopped request
