@@ -16,6 +16,7 @@ final class SecurityRegressionTest
         self::assertNoAuthenticationBypass();
         self::assertMemberLookupHasNoFallback();
         self::assertRouteRoleGuards();
+        self::assertRateLimitUsesSharedStorage();
 
         if (self::$failures === 0) {
             echo "Security regression tests passed.\n";
@@ -55,6 +56,13 @@ final class SecurityRegressionTest
         self::assertRouteHasRoles($routes, '/staff/dashboard', ['staff']);
         self::assertRouteHasRoles($routes, '/admin/dashboard', ['super_admin']);
         self::assertRouteHasRoles($routes, '/dashboard', ['super_admin']);
+    }
+
+    private static function assertRateLimitUsesSharedStorage(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../app/Middlewares/RateLimitMiddleware.php');
+        self::assert($source !== false && str_contains($source, 'rate_limit_attempts'), 'rate limit uses shared database storage');
+        self::assert($source !== false && !str_contains($source, 'Session::set("{$cacheKey}:attempts"'), 'rate limit does not store counters in the browser session');
     }
 
     private static function assertRouteHasRoles(array $routes, string $path, array $expectedRoles): void
