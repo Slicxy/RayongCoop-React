@@ -1,3 +1,11 @@
+1.Ask
+2.Plan
+3.Implement
+4.Review Diff
+5.Run/Test
+6.Commit (Thai Language)
+
+
 # RayongCoop Digital Portal & Financial Cooperative System
 ### สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด (Rayong Public Health Savings and Credit Cooperative Limited)
 
