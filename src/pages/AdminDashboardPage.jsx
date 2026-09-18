@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ShieldCheck, Users, Settings, Database, Activity, 
-  UserPlus, KeyRound, RefreshCw, Download, Search, 
-  Trash2, Edit, CheckCircle2, AlertTriangle, Lock, 
-  Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles, 
-  LogOut, ArrowRight, Eye, Bell, Newspaper, Image, 
+import {
+  ShieldCheck, Users, Settings, Database, Activity,
+  UserPlus, KeyRound, RefreshCw, Download, Search,
+  Trash2, Edit, CheckCircle2, AlertTriangle, Lock,
+  Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles,
+  LogOut, ArrowRight, Eye, Bell, Newspaper, Image,
   Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink,
   UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
 import EditProfileModal from '../components/member/EditProfileModal';
+import DashboardHeader from '../components/dashboard/DashboardHeader';
+import KpiCard from '../components/dashboard/KpiCard';
+import SectionHeader from '../components/dashboard/SectionHeader';
+import StatusBadge from '../components/dashboard/StatusBadge';
+import EmptyState from '../components/dashboard/EmptyState';
 
 export default function AdminDashboardPage() {
-  const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
+  const { user, isLoggedIn, logout, setShowAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState('announcements');
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -280,22 +285,22 @@ export default function AdminDashboardPage() {
 
   const handleSaveAdminReply = (id, replyText) => {
     const now = new Date().toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.';
-    const updated = feedbacks.map(f => f.id === id ? { 
-      ...f, 
-      adminReply: replyText, 
+    const updated = feedbacks.map(f => f.id === id ? {
+      ...f,
+      adminReply: replyText,
       status: 'ตอบกลับแล้ว',
-      replyDate: now 
+      replyDate: now
     } : f);
     setFeedbacks(updated);
     try {
       localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
     } catch (e) {}
     if (selectedFeedback && selectedFeedback.id === id) {
-      setSelectedFeedback({ 
-        ...selectedFeedback, 
-        adminReply: replyText, 
+      setSelectedFeedback({
+        ...selectedFeedback,
+        adminReply: replyText,
         status: 'ตอบกลับแล้ว',
-        replyDate: now 
+        replyDate: now
       });
     }
     alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว (สมาชิกสามารถตรวจสอบผลได้ทันที)`);
@@ -317,72 +322,67 @@ export default function AdminDashboardPage() {
   return (
     <div className="section" style={{ background: 'var(--bg-main)', minHeight: '90vh' }}>
       <div className="container">
-        
-        {/* Top Header Banner */}
-        <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 58, 138, 0.92))', color: '#ffffff' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              <div style={{
-                width: '68px',
-                height: '68px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #ef4444, #991b1b)',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.75rem',
-                boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4)',
-                overflow: 'hidden',
-                position: 'relative',
-                border: '2px solid rgba(255, 255, 255, 0.6)',
-                flexShrink: 0
-              }}>
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  '👑'
-                )}
-              </div>
 
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                  <h1 style={{ fontSize: '1.45rem', color: '#ffffff', margin: 0 }}>Super Admin Content & System Management</h1>
-                  <span className="badge badge-rose">Full Control</span>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
-                  ผู้ดูแลระบบ: <strong>{user.name}</strong> • เบอร์โทร: <strong>{user.phone || '081-999-8888'}</strong>
-                </div>
-              </div>
-            </div>
+        {/* Standardized Dashboard Hero Header */}
+        <DashboardHeader
+          user={user}
+          onEditProfile={() => setEditProfileModalOpen(true)}
+          onLogout={() => {
+            logout();
+            navigate('/');
+          }}
+          quickActions={
+            <Link
+              to="/"
+              target="_blank"
+              className="btn btn-subtle btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', border: '1px solid var(--border-subtle)' }}
+            >
+              <ExternalLink size={14} />
+              <span>ดูหน้าเว็บหลัก</span>
+            </Link>
+          }
+        />
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <button 
-                onClick={() => setEditProfileModalOpen(true)}
-                className="btn btn-sm"
-                style={{ background: 'rgba(255,255,255,0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                title="แก้ไขรูปภาพโปรไฟล์และเบอร์โทรศัพท์"
-              >
-                <Edit3 size={14} />
-                <span>แก้ไขรูป / เบอร์โทร</span>
-              </button>
-              <Link to="/" target="_blank" className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <ExternalLink size={14} />
-                <span>ดูหน้าเว็บหลัก</span>
-              </Link>
-              <button onClick={() => logout()} className="btn btn-sm btn-outline" style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.4)' }}>
-                <LogOut size={14} />
-                <span>ออกจากระบบ</span>
-              </button>
-            </div>
-
-          </div>
+        {/* 4 Super Admin KPI Overview Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          <KpiCard
+            title="ผู้ใช้งานทั้งหมดในระบบ"
+            value="4,850"
+            unit="คน"
+            subtitle="Admin 3 / Staff 12 / Member 4,835"
+            icon={Users}
+            variant="rose"
+          />
+          <KpiCard
+            title="สถานะความปลอดภัยเซิร์ฟเวอร์"
+            value="100%"
+            subtitle="TLS 1.3 / Firewall Active"
+            icon={Activity}
+            variant="emerald"
+            badgeText="ปกติ"
+            badgeVariant="emerald"
+          />
+          <KpiCard
+            title="ฐานข้อมูลและการสำรอง"
+            value="Auto Backup"
+            subtitle="สำรองข้อมูลล่าสุด: วันนี้ 04:00 น."
+            icon={Database}
+            variant="gold"
+          />
+          <KpiCard
+            title="เรื่องร้องเรียนรอดำเนินการ"
+            value={feedbacks.filter(f => f.status === 'รอดำเนินการ').length}
+            unit="เรื่อง"
+            subtitle={`จากทั้งหมด ${feedbacks.length} เรื่อง`}
+            icon={MessageSquare}
+            variant="primary"
+          />
         </div>
 
         {/* Navigation Tabs for All 6 Modules + Users */}
         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
-          
+
           <button onClick={() => setActiveTab('announcements')} className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
             <Bell size={15} />
             <span>1. ประกาศสหกรณ์ ({announcements.length})</span>
@@ -420,7 +420,7 @@ export default function AdminDashboardPage() {
             ========================================================================= */}
         {activeTab === 'announcements' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ประกาศทางการของสหกรณ์ (Announcements)</h3>
@@ -467,7 +467,7 @@ export default function AdminDashboardPage() {
             ========================================================================= */}
         {activeTab === 'news' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ข่าวสารประชาสัมพันธ์และกิจกรรม</h3>
@@ -514,14 +514,14 @@ export default function AdminDashboardPage() {
             ========================================================================= */}
         {activeTab === 'hero' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            
+
             <div style={{ marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ปรับแต่งแบนเนอร์หลักหน้าแรก (Hero Section Settings)</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>แก้ไขข้อความพาดหัว, คำโปรย, และเลือก/เปลี่ยนรูปภาพพื้นหลัง</p>
             </div>
 
             <form onSubmit={handleSaveHero}>
-              
+
               <div className="form-group">
                 <label className="form-label">ข้อความ Badge เล็กด้านบน</label>
                 <input type="text" className="form-control" value={heroSettings.badgeText} onChange={(e) => setHeroSettings({ ...heroSettings, badgeText: e.target.value })} />
@@ -541,12 +541,12 @@ export default function AdminDashboardPage() {
               <div className="form-group">
                 <label className="form-label">รูปภาพพื้นหลัง Hero Banner (URL หรือเลือกภาพที่มีในระบบ)</label>
                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="เช่น /assets/img/hero_bg_coop.jpg หรือ https://..." 
-                    value={heroSettings.bgImageUrl} 
-                    onChange={(e) => setHeroSettings({ ...heroSettings, bgImageUrl: e.target.value })} 
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="เช่น /assets/img/hero_bg_coop.jpg หรือ https://..."
+                    value={heroSettings.bgImageUrl}
+                    onChange={(e) => setHeroSettings({ ...heroSettings, bgImageUrl: e.target.value })}
                   />
                 </div>
 
@@ -613,7 +613,7 @@ export default function AdminDashboardPage() {
             ========================================================================= */}
         {activeTab === 'popup' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>ป็อปอัปแคมเปญแจ้งเตือนหน้าแรก (Pop-up Campaign Modal)</h3>
@@ -622,7 +622,7 @@ export default function AdminDashboardPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>สถานะการแสดงผล:</span>
-                <button 
+                <button
                   onClick={() => setPopupCampaign({ ...popupCampaign, enabled: !popupCampaign.enabled })}
                   className={`btn btn-sm ${popupCampaign.enabled ? 'btn-primary' : 'btn-subtle'}`}
                 >
@@ -632,7 +632,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <form onSubmit={handleSavePopup}>
-              
+
               <div className="form-group">
                 <label className="form-label">หัวข้อป็อปอัป (Campaign Title)</label>
                 <input type="text" className="form-control" value={popupCampaign.title} onChange={(e) => setPopupCampaign({ ...popupCampaign, title: e.target.value })} required />
@@ -818,7 +818,7 @@ export default function AdminDashboardPage() {
             ========================================================================= */}
         {activeTab === 'feedback' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -926,11 +926,11 @@ export default function AdminDashboardPage() {
                           </td>
                           <td style={{ padding: '0.85rem', textAlign: 'right' }}>
                             <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
-                              <button 
+                              <button
                                 onClick={() => {
                                   setSelectedFeedback(f);
                                   setReplyInput(f.adminReply || '');
-                                }} 
+                                }}
                                 className="btn btn-outline btn-sm"
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
                               >
@@ -962,7 +962,7 @@ export default function AdminDashboardPage() {
             ========================================================================= */}
         {activeTab === 'faqs' && (
           <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', margin: 0 }}>จัดการคำถามที่พบบ่อย (FAQs Management)</h3>
@@ -1001,7 +1001,7 @@ export default function AdminDashboardPage() {
         {/* =========================================================================
             MODALS
             ========================================================================= */}
-        
+
         {/* Modal: Add Announcement */}
         {annModal && (
           <div style={modalBackdropStyle}>
@@ -1130,7 +1130,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <button onClick={() => setSelectedFeedback(null)} style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
               </div>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.85rem', borderRadius: '8px', fontSize: '0.82rem' }}>
                   <div><strong>อีเมล:</strong> {selectedFeedback.email || '-'}</div>
@@ -1212,9 +1212,9 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Edit Profile Modal (Avatar & Phone) */}
-        <EditProfileModal 
-          isOpen={editProfileModalOpen} 
-          onClose={() => setEditProfileModalOpen(false)} 
+        <EditProfileModal
+          isOpen={editProfileModalOpen}
+          onClose={() => setEditProfileModalOpen(false)}
         />
 
       </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  MapPin, Phone, Mail, Clock, MessageSquare, 
-  Send, CheckCircle2, ChevronDown, ChevronUp, Search, ShieldCheck, AlertCircle 
+import {
+  MapPin, Phone, Mail, Clock, MessageSquare,
+  Send, CheckCircle2, ChevronDown, ChevronUp, Search, ShieldCheck, AlertCircle
 } from 'lucide-react';
 import { COOP_INFO, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
 
@@ -78,7 +78,7 @@ export default function ContactPage() {
   return (
     <div className="section">
       <div className="container">
-        
+
         <div className="section-title-wrap">
           <span className="section-badge">ติดต่อและบริการ</span>
           <h1 className="section-title">ติดต่อเรา & รับเรื่องร้องเรียน</h1>
@@ -106,7 +106,7 @@ export default function ContactPage() {
 
         {activeTab === 'contact' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem', marginBottom: '4rem' }}>
-            
+
             {/* Contact Info Card */}
             <div className="surface-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
@@ -157,10 +157,10 @@ export default function ContactPage() {
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     📍 142 ม.2 ถ.สุขุมวิท ต.เนินพระ อ.เมืองระยอง
                   </div>
-                  <a 
-                    href={COOP_INFO.mapUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <a
+                    href={COOP_INFO.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="btn btn-primary btn-sm"
                     style={{ fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                   >
@@ -262,7 +262,7 @@ export default function ContactPage() {
             </p>
 
             <form onSubmit={handleTrack} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-              <input 
+              <input
                 type="text"
                 className="form-control"
                 placeholder="เช่น TKT-670301, TKT-670303"
@@ -276,29 +276,9 @@ export default function ContactPage() {
               </button>
             </form>
 
-            {/* Quick Demo Pill Codes */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              <span>ตัวอย่างรหัสทดสอบ:</span>
-              {['TKT-670301', 'TKT-670302', 'TKT-670303', 'TKT-670304'].map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => {
-                    setTrackingId(code);
-                    let list = MEMBER_COMPLAINTS;
-                    try {
-                      const saved = localStorage.getItem('coop_member_complaints');
-                      if (saved) list = JSON.parse(saved);
-                    } catch (e) {}
-                    const found = list.find(i => i.id.toLowerCase() === code.toLowerCase());
-                    if (found) setTrackingResult(found);
-                  }}
-                  className="badge badge-primary"
-                  style={{ cursor: 'pointer', border: 'none' }}
-                >
-                  {code}
-                </button>
-              ))}
+            {/* Tracking ID Format Hint */}
+            <div style={{ marginBottom: '1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <span>รูปแบบรหัสติดตาม: <strong>TKT-XXXXXX</strong> (ได้รับเมื่อส่งเรื่องร้องเรียนหรือข้อเสนอแนะสำเร็จ)</span>
             </div>
 
             {trackingResult && (
