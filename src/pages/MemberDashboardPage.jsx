@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { 
-  User, Coins, Landmark, ShieldCheck, TrendingUp, 
-  FileText, Download, LogOut, CreditCard, Clock, 
-  CheckCircle2, ShieldAlert, Users, Settings, Database, 
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  User, Coins, Landmark, ShieldCheck, TrendingUp,
+  FileText, Download, LogOut, CreditCard, Clock,
+  CheckCircle2, ShieldAlert, Users, Settings, Database,
   Activity, Check, X, Search, FileCheck, Eye, MessageSquare,
-  AlertCircle, ExternalLink, Trash2, Send, PlusCircle, Edit3, Phone, Camera, Info
+  AlertCircle, ExternalLink, Trash2, Send, PlusCircle, Edit3, Phone, Camera,
+  FileSpreadsheet, ArrowUpRight, Calculator, HelpCircle, Shield
 } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
-import { COOP_INFO, KEY_STATS, MEMBER_COMPLAINTS } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { COOP_INFO, MEMBER_COMPLAINTS } from '../data/mockData';
 import StaffReviewModal from '../components/staff/StaffReviewModal';
 import EditProfileModal from '../components/member/EditProfileModal';
 import NewLoanRequestModal from '../components/member/NewLoanRequestModal';
 
-export default function MemberDashboardPage() {
-  const { user, isLoggedIn, logout, switchRole, setShowAuthModal } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
+// Reusable Dashboard UI Components
+import DashboardHeader from '../components/dashboard/DashboardHeader';
+import KpiCard from '../components/dashboard/KpiCard';
+import SectionHeader from '../components/dashboard/SectionHeader';
+import StatusBadge from '../components/dashboard/StatusBadge';
+import EmptyState from '../components/dashboard/EmptyState';
 
+export default function MemberDashboardPage() {
+  const { user, isLoggedIn, logout, setShowAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [staffFilter, setStaffFilter] = useState('all');
+  const [staffSearch, setStaffSearch] = useState('');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
@@ -95,15 +101,14 @@ export default function MemberDashboardPage() {
     };
   }, []);
 
+  // Loan/Service requests queue
   const [loanQueue, setLoanQueue] = useState(() => {
     try {
       const saved = localStorage.getItem('coop_service_requests');
       if (saved) {
         return JSON.parse(saved);
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     return [
       { id: 'LN-6703-01', memberName: 'นายสมชาย มีสุข', memberId: '04892', department: 'โรงพยาบาลระยอง', phone: '081-234-5678', type: 'คำขอกู้เงินฉุกเฉินออนไลน์', amount: '50,000 บาท', date: '11 มี.ค. 2567', status: 'รอดำเนินการ', currentStep: 2, note: 'รอการตรวจสอบเอกสารและอนุมัติจากเจ้าหน้าที่สินเชื่อ' },
       { id: 'LN-6703-02', memberName: 'นางสาววิมลรัตน์ จันทร์เพ็ญ', memberId: '05120', department: 'สสจ.ระยอง', phone: '089-987-6543', type: 'เงินกู้สามัญเพื่อสวัสดิการ', amount: '400,000 บาท', date: '10 มี.ค. 2567', status: 'รอตรวจเอกสารผู้ค้ำ', currentStep: 2, note: 'ตรวจสอบเอกสารผู้ค้ำประกัน 2 ท่าน' },
@@ -114,15 +119,19 @@ export default function MemberDashboardPage() {
 
   if (!isLoggedIn || !user) {
     return (
-      <div className="section" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <div className="glass-card" style={{ maxWidth: '480px', margin: '0 auto', padding: '3rem 2rem', borderRadius: 'var(--radius-xl)' }}>
-            <User size={48} style={{ color: 'var(--primary-600)', margin: '0 auto 1rem auto' }} />
-            <h2 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>กรุณาเข้าสู่ระบบ</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              เพื่อเข้าถึงหน้าแดชบอร์ดตามสิทธิ์การใช้งานของคุณ
+      <div className="section" style={{ minHeight: '65vh', display: 'flex', alignItems: 'center', background: 'var(--bg-main)' }}>
+        <div className="container" style={{ textAlign: 'center', maxWidth: '460px' }}>
+          <div className="surface-card shadow-lg" style={{ padding: '3rem 2rem', borderRadius: 'var(--radius-xl)' }}>
+            <div style={{ width: '56px', height: '56px', margin: '0 auto 1.25rem auto', borderRadius: '50%', background: 'var(--primary-50)', color: 'var(--primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={30} />
+            </div>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary-900)', marginBottom: '0.5rem' }}>
+              กรุณาเข้าสู่ระบบ
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '1.75rem', lineHeight: 1.5 }}>
+              เพื่อเข้าถึงหน้าแดชบอร์ดและข้อมูลตามสิทธิ์การใช้งานของท่าน
             </p>
-            <button onClick={() => setShowAuthModal(true)} className="btn btn-primary" style={{ width: '100%' }}>
+            <button onClick={() => setShowAuthModal(true)} className="btn btn-primary" style={{ width: '100%', padding: '0.8rem' }}>
               <span>เข้าสู่ระบบ</span>
             </button>
           </div>
@@ -137,53 +146,45 @@ export default function MemberDashboardPage() {
   };
 
   const handleApproveLoan = (id, remarks) => {
-    const updated = loanQueue.map(item => item.id === id ? { 
-      ...item, 
-      status: 'อนุมัติเรียบร้อยแล้ว (Approved)', 
-      statusColor: 'emerald',
-      currentStep: 4,
+    const updated = loanQueue.map(item => item.id === id ? {
+      ...item,
+      status: 'อนุมัติเรียบร้อยแล้ว',
+      currentStep: 3,
       note: remarks || 'ผ่านการตรวจสอบและอนุมัติจากเจ้าหน้าที่สินเชื่อเรียบร้อยแล้ว',
-      lastUpdated: new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
+      lastUpdated: new Date().toLocaleDateString('th-TH')
     } : item);
     setLoanQueue(updated);
     try {
       localStorage.setItem('coop_service_requests', JSON.stringify(updated));
-    } catch (e) {
-      // ignore
-    }
-    alert(`อนุมัติคำขอ ${id} เรียบร้อยแล้ว! (ข้อมูลซิงก์ไปยัง e-Tracking และระบบสมาชิกทันที)`);
+    } catch (e) {}
+    alert(`อนุมัติคำขอ ${id} เรียบร้อยแล้ว`);
   };
 
   const handleRejectLoan = (id, remarks) => {
-    const updated = loanQueue.map(item => item.id === id ? { 
-      ...item, 
-      status: 'ส่งกลับแก้ไข (Revision Required)', 
-      statusColor: 'rose',
+    const updated = loanQueue.map(item => item.id === id ? {
+      ...item,
+      status: 'ส่งกลับแก้ไข',
       currentStep: 2,
       note: remarks || 'เอกสารไม่สมบูรณ์ กรุณาแนบหลักฐานเพิ่มเติม',
-      lastUpdated: '11 มี.ค. 2567 14:55 น.'
+      lastUpdated: new Date().toLocaleDateString('th-TH')
     } : item);
     setLoanQueue(updated);
     try {
       localStorage.setItem('coop_service_requests', JSON.stringify(updated));
-    } catch (e) {
-      // ignore
-    }
-    alert(`ส่งกลับคำขอ ${id} ให้สมาชิกแก้ไขเรียบร้อยแล้ว!`);
+    } catch (e) {}
+    alert(`ส่งกลับคำขอ ${id} ให้สมาชิกแก้ไขเรียบร้อยแล้ว`);
   };
 
   const handleAddNote = (id, remarks) => {
-    const updated = loanQueue.map(item => item.id === id ? { 
-      ...item, 
+    const updated = loanQueue.map(item => item.id === id ? {
+      ...item,
       note: remarks,
-      lastUpdated: '11 มี.ค. 2567 14:55 น.'
+      lastUpdated: new Date().toLocaleDateString('th-TH')
     } : item);
     setLoanQueue(updated);
     try {
       localStorage.setItem('coop_service_requests', JSON.stringify(updated));
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     alert(`บันทึกหมายเหตุสำหรับคำขอ ${id} เรียบร้อยแล้ว`);
   };
 
@@ -200,25 +201,25 @@ export default function MemberDashboardPage() {
 
   const handleSaveAdminComplaintReply = (id, replyText) => {
     const now = new Date().toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' น.';
-    const updated = complaintsList.map(c => c.id === id ? { 
-      ...c, 
-      adminReply: replyText, 
+    const updated = complaintsList.map(c => c.id === id ? {
+      ...c,
+      adminReply: replyText,
       status: 'ตอบกลับแล้ว',
-      replyDate: now 
+      replyDate: now
     } : c);
     setComplaintsList(updated);
     try {
       localStorage.setItem('coop_member_complaints', JSON.stringify(updated));
     } catch (e) {}
     if (selectedAdminComplaint && selectedAdminComplaint.id === id) {
-      setSelectedAdminComplaint({ 
-        ...selectedAdminComplaint, 
-        adminReply: replyText, 
+      setSelectedAdminComplaint({
+        ...selectedAdminComplaint,
+        adminReply: replyText,
         status: 'ตอบกลับแล้ว',
-        replyDate: now 
+        replyDate: now
       });
     }
-    alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว (สมาชิกสามารถตรวจสอบผลได้ทันที)`);
+    alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว`);
   };
 
   const handleDeleteComplaint = (id) => {
@@ -248,11 +249,11 @@ export default function MemberDashboardPage() {
 
     const newEntry = {
       id: newId,
-      name: user.name || 'นายสมชาย มีสุข',
+      name: user.name || 'สมาชิกสหกรณ์',
       phone: user.phone || '081-234-5678',
-      email: user.email || 'somchai.m@rayongcoop.com',
+      email: user.email || '',
       department: user.department || 'โรงพยาบาลระยอง',
-      memberId: user.memberId || '04892',
+      memberId: user.memberId || user.username || '04892',
       topic: newMemberComplaint.topic || 'ข้อเสนอแนะการให้บริการ',
       message: newMemberComplaint.message.trim(),
       date: dateStr,
@@ -271,7 +272,7 @@ export default function MemberDashboardPage() {
     setNewMemberComplaint({ topic: 'ข้อเสนอแนะการให้บริการ', message: '' });
     setMemberComplaintModalOpen(false);
     setActiveTab('complaints');
-    alert(`ส่งเรื่องร้องเรียน / ข้อเสนอแนะเรียบร้อยแล้ว!\nรหัสติดตามเรื่อง: ${newId}\n(ข้อมูลเชื่อมโยงไปยังระบบ Super Admin ทันที)`);
+    alert(`ส่งเรื่องร้องเรียน / ข้อเสนอแนะเรียบร้อยแล้ว\nรหัสติดตามเรื่อง: ${newId}`);
   };
 
   const handleMemberSubmitLoan = (newLoanItem) => {
@@ -287,7 +288,7 @@ export default function MemberDashboardPage() {
 
   const userRole = user.role || 'member';
 
-  // Filter complaints strictly belonging to this logged-in member (Privacy Protection)
+  // Filter complaints strictly belonging to this logged-in member
   const myComplaints = complaintsList.filter(item => {
     if (user?.memberId && item?.memberId) {
       return String(item.memberId).trim() === String(user.memberId).trim();
@@ -298,246 +299,124 @@ export default function MemberDashboardPage() {
     return false;
   });
 
-  // Filter loan requests strictly belonging to this logged-in member
-  const myLoanRequests = loanQueue.filter(item => {
-    if (user?.memberId && item?.memberId) {
-      return String(item.memberId).trim() === String(user.memberId).trim();
-    }
-    if (user?.name && item?.memberName) {
-      return item.memberName.trim() === user.name.trim();
-    }
-    return false;
-  });
+  // Default mock balances for display if member properties are not provided
+  const memberShares = user.shares || 485000;
+  const memberMonthlyShare = user.monthlyShare || 3000;
+  const memberSavings = user.savings || 245300.50;
+  const memberLoanBalance = user.loanBalance || 820000;
+  const memberDividendEst = user.dividendEstimated || 25462.50;
+  const memberLoanRefundEst = user.loanRefundEstimated || 5125.00;
+
+  const memberAccounts = user.accounts && user.accounts.length > 0 ? user.accounts : [
+    { accNo: '101-2-04892-1', type: 'ออมทรัพย์สุขใจ', balance: 45300.50, status: 'ปกติ' },
+    { accNo: '201-4-04892-8', type: 'ออมทรัพย์พิเศษพลัส', balance: 200000.00, status: 'ปกติ' },
+  ];
+
+  const memberLoans = user.loans && user.loans.length > 0 ? user.loans : [
+    { contractNo: 'ส.66/0129', type: 'เงินกู้สามัญ', principal: 1000000, balance: 820000, monthlyPay: 12500, termRemaining: '96 งวด' },
+  ];
+
+  const memberReceipts = user.recentReceipts && user.recentReceipts.length > 0 ? user.recentReceipts : [
+    { receiptNo: 'RC-67020084', period: 'กุมภาพันธ์ 2567', date: '28 ก.พ. 2567', totalAmount: 15500, status: 'ชำระแล้ว' },
+    { receiptNo: 'RC-67010079', period: 'มกราคม 2567', date: '31 ม.ค. 2567', totalAmount: 15500, status: 'ชำระแล้ว' },
+    { receiptNo: 'RC-66120092', period: 'ธันวาคม 2566', date: '29 ธ.ค. 2566', totalAmount: 15500, status: 'ชำระแล้ว' },
+  ];
 
   return (
-    <div className="section" style={{ background: 'var(--bg-main)' }}>
+    <div className="section" style={{ background: 'var(--bg-main)', minHeight: '85vh', paddingBottom: '3.5rem' }}>
       <div className="container">
-        
-        {/* Quick Role Switcher Bar (For Testing) */}
-        <div style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '0.75rem 1.25rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem'
-        }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-            สลับสิทธิ์การทดสอบ (Switch Role Test):
-          </div>
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            <button 
-              onClick={() => switchRole('super_admin')} 
-              className={`btn btn-sm ${userRole === 'super_admin' ? 'btn-primary' : 'btn-subtle'}`}
-              style={{ fontSize: '0.78rem' }}
-            >
-              👑 Super Admin
-            </button>
-            <button 
-              onClick={() => switchRole('staff')} 
-              className={`btn btn-sm ${userRole === 'staff' ? 'btn-primary' : 'btn-subtle'}`}
-              style={{ fontSize: '0.78rem' }}
-            >
-              💼 เจ้าหน้าที่สินเชื่อ
-            </button>
-            <button 
-              onClick={() => switchRole('auditor')} 
-              className={`btn btn-sm ${userRole === 'auditor' ? 'btn-primary' : 'btn-subtle'}`}
-              style={{ fontSize: '0.78rem' }}
-            >
-              🔍 ผู้ตรวจสอบกิจการ
-            </button>
-            <button 
-              onClick={() => switchRole('member')} 
-              className={`btn btn-sm ${userRole === 'member' ? 'btn-primary' : 'btn-subtle'}`}
-              style={{ fontSize: '0.78rem' }}
-            >
-              👤 สมาชิกสหกรณ์
-            </button>
-          </div>
-        </div>
 
-        {/* User Header Profile Card */}
-        <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              <div style={{
-                width: '68px',
-                height: '68px',
-                borderRadius: '50%',
-                background: userRole === 'super_admin' ? 'linear-gradient(135deg, #ef4444, #991b1b)' : userRole === 'staff' ? 'var(--gradient-primary)' : userRole === 'auditor' ? 'var(--gradient-gold)' : 'var(--gradient-teal)',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.6rem',
-                fontWeight: 800,
-                boxShadow: 'var(--shadow-md)',
-                overflow: 'hidden',
-                position: 'relative',
-                border: '2px solid #ffffff',
-                flexShrink: 0
-              }}>
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  userRole === 'super_admin' ? '👑' : userRole === 'staff' ? '💼' : userRole === 'auditor' ? '🔍' : '👤'
-                )}
-              </div>
-
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                  <h2 style={{ fontSize: '1.35rem', color: 'var(--primary-900)' }}>{user.name}</h2>
-                  <span className={`badge badge-${user.badgeColor || 'primary'}`}>{user.roleBadge || user.roleName}</span>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  สังกัด: <strong>{user.department}</strong> ({user.position})
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <span>Username / รหัส: <strong>{user.username || user.memberId}</strong> • สิทธิ์: {user.roleName}</span>
-                  <span style={{ color: 'var(--border-subtle)' }}>|</span>
-                  <span style={{ color: 'var(--primary-700)', fontWeight: 600 }}>📞 {user.phone || '081-234-5678'}</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button 
-                onClick={() => setEditProfileModalOpen(true)} 
-                className="btn btn-subtle btn-sm" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
-                title="แก้ไขรูปภาพโปรไฟล์และเบอร์โทรศัพท์"
+        {/* Standardized Dashboard Hero Header */}
+        <DashboardHeader
+          user={user}
+          onEditProfile={() => setEditProfileModalOpen(true)}
+          onLogout={handleLogout}
+          quickActions={
+            userRole === 'member' ? (
+              <button
+                onClick={() => setMemberComplaintModalOpen(true)}
+                className="btn btn-primary btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <Edit3 size={15} style={{ color: 'var(--primary-600)' }} />
-                <span>แก้ไขรูปภาพ / เบอร์โทร</span>
+                <PlusCircle size={15} />
+                <span>ส่งคำร้อง / ข้อเสนอแนะ</span>
               </button>
-
-              <button onClick={handleLogout} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)' }}>
-                <LogOut size={16} />
-                <span>ออกจากระบบ</span>
+            ) : userRole === 'super_admin' ? (
+              <button
+                onClick={() => navigate('/admin/dashboard')}
+                className="btn btn-primary btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <Settings size={15} />
+                <span>เปิดแผงควบคุม CMS</span>
               </button>
-            </div>
-
-          </div>
-        </div>
+            ) : null
+          }
+        />
 
         {/* =========================================================================
             ROLE 1: SUPER ADMIN DASHBOARD
             ========================================================================= */}
         {userRole === 'super_admin' && (
           <div className="animate-fade-in">
-            {/* Stats */}
+            {/* KPI Cards Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-rose)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                  <Users size={16} style={{ color: 'var(--accent-rose)' }} />
-                  <span>ผู้ใช้งานทั้งหมดในระบบ</span>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)' }}>4,850 คน</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--accent-emerald-dark)', marginTop: '0.2rem' }}>Admin 3 / Staff 12 / Member 4,835</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--primary-600)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                  <Activity size={16} style={{ color: 'var(--primary-600)' }} />
-                  <span>สถานะความปลอดภัย & เซิร์ฟเวอร์</span>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-emerald-dark)' }}>100% ปกติ</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>SSL TLS 1.3 / Firewall Active</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-gold)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                  <Database size={16} style={{ color: 'var(--accent-gold-dark)' }} />
-                  <span>ฐานข้อมูล & การสำรอง</span>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-gold-dark)' }}>Auto Backup</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>สำรองข้อมูลล่าสุด: 11 มี.ค. 04:00 น.</div>
-              </div>
+              <KpiCard
+                title="ผู้ใช้งานทั้งหมดในระบบ"
+                value="4,850"
+                unit="คน"
+                subtitle="Admin 3 / Staff 12 / Member 4,835"
+                icon={Users}
+                variant="rose"
+              />
+              <KpiCard
+                title="สถานะความปลอดภัยเซิร์ฟเวอร์"
+                value="100%"
+                subtitle="TLS 1.3 / Firewall Active"
+                icon={Activity}
+                variant="emerald"
+                badgeText="ปกติ"
+                badgeVariant="emerald"
+              />
+              <KpiCard
+                title="ฐานข้อมูลและการสำรอง"
+                value="Auto Backup"
+                subtitle="สำรองข้อมูลล่าสุด: วันนี้ 04:00 น."
+                icon={Database}
+                variant="gold"
+              />
+              <KpiCard
+                title="เรื่องร้องเรียนรอดำเนินการ"
+                value={complaintsList.filter(c => c.status === 'รอดำเนินการ').length}
+                unit="เรื่อง"
+                subtitle={`จากทั้งหมด ${complaintsList.length} เรื่อง`}
+                icon={MessageSquare}
+                variant="primary"
+              />
             </div>
 
-            {/* Admin Management Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-              <div className="surface-card" style={{ padding: '1.75rem' }}>
-                <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-800)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Settings size={18} />
-                  <span>จัดการสิทธิ์และบทบาท (RBAC Management)</span>
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>1. Super Admin (ผู้ดูแลระบบสูงสุด)</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>สิทธิ์เต็ม 100% ทุกโมดูล</div>
-                    </div>
-                    <span className="badge badge-rose">Full Control</span>
-                  </div>
-                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>2. Loan & Finance Staff (เจ้าหน้าที่)</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>จัดการสมาชิก เงินกู้ เงินฝาก และเอกสาร</div>
-                    </div>
-                    <span className="badge badge-primary">Operational</span>
-                  </div>
-                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>3. Auditor (ผู้ตรวจสอบกิจการ)</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ตรวจสอบบัญชี Audit Logs และรายงาน</div>
-                    </div>
-                    <span className="badge badge-gold">Audit Access</span>
-                  </div>
-                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>4. Member (สมาชิกสหกรณ์)</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ดูข้อมูลตนเอง หุ้น เงินฝาก หนี้สิน e-Receipt</div>
-                    </div>
-                    <span className="badge badge-emerald">Self Service</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.75rem' }}>
-                <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-800)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ShieldCheck size={18} />
-                  <span>บันทึกความปลอดภัยล่าสุด (System Audit Trail)</span>
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.82rem' }}>
-                  <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>13:45:20</span> • ผู้ใช้ <strong>staff1</strong> อนุมัติสัญญาสินเชื่อฉุกเฉิน LN-6703-01
-                  </div>
-                  <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>12:30:10</span> • ผู้ใช้ <strong>admin</strong> อัปเดตการตั้งค่าระบบความปลอดภัย
-                  </div>
-                  <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>11:15:00</span> • สำรองฐานข้อมูลอัตโนมัติประจำวันเสร็จสมบูรณ์
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Access to Full CMS Admin Dashboard */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.08), rgba(244, 63, 94, 0.08))',
-              border: '1px solid rgba(30, 58, 138, 0.2)',
-              borderRadius: 'var(--radius-xl)',
-              padding: '1.25rem 1.75rem',
-              margin: '2rem 0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem'
-            }}>
+            {/* Quick Access to Full CMS */}
+            <div
+              className="surface-card"
+              style={{
+                border: '1px solid rgba(30, 58, 138, 0.2)',
+                borderRadius: 'var(--radius-xl)',
+                padding: '1.5rem 1.75rem',
+                marginBottom: '2rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1.25rem',
+                background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.05), rgba(244, 63, 94, 0.05))'
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'var(--primary-600)', color: '#ffffff' }}>
-                  <Settings size={24} />
+                <div style={{ padding: '0.85rem', borderRadius: '12px', background: 'var(--primary-600)', color: '#ffffff' }}>
+                  <Settings size={22} />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary-900)', marginBottom: '0.2rem' }}>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-900)', margin: '0 0 0.2rem 0' }}>
                     แผงควบคุมระบบเว็บไซต์แบบเต็มรูปแบบ (Super Admin Full CMS)
                   </h4>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -545,8 +424,8 @@ export default function MemberDashboardPage() {
                   </p>
                 </div>
               </div>
-              <button 
-                onClick={() => navigate('/admin/dashboard')} 
+              <button
+                onClick={() => navigate('/admin/dashboard')}
                 className="btn btn-primary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
               >
@@ -555,44 +434,35 @@ export default function MemberDashboardPage() {
               </button>
             </div>
 
-            {/* =========================================================================
-                SUPER ADMIN: MEMBER COMPLAINTS & FEEDBACK INBOX
-                ========================================================================= */}
+            {/* Complaints & Feedback Management */}
             <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                    <MessageSquare size={22} style={{ color: 'var(--accent-rose)' }} />
-                    <span>กล่องข้อเสนอแนะและเรื่องร้องเรียนจากสมาชิก (Feedback & Complaints Management)</span>
-                  </h3>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    ติดตามเรื่องร้องเรียน ตรวจสอบข้อเสนอแนะ และเขียนตอบกลับให้สมาชิกทราบแบบเรียลไทม์
-                  </p>
-                </div>
+              <SectionHeader
+                title="กล่องข้อเสนอแนะและเรื่องร้องเรียนจากสมาชิก"
+                subtitle="ติดตามเรื่องร้องเรียน ตรวจสอบข้อเสนอแนะ และเขียนตอบกลับให้สมาชิกทราบแบบเรียลไทม์"
+                icon={MessageSquare}
+                iconColor="var(--accent-rose)"
+                filters={
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                    {[
+                      { key: 'all', label: `ทั้งหมด (${complaintsList.length})` },
+                      { key: 'complaint', label: `เรื่องร้องเรียน (${complaintsList.filter(c => c.topic.includes('ร้องเรียน')).length})` },
+                      { key: 'feedback', label: `ข้อเสนอแนะ (${complaintsList.filter(c => c.topic.includes('ข้อเสนอแนะ')).length})` },
+                      { key: 'pending', label: `รอดำเนินการ (${complaintsList.filter(c => c.status === 'รอดำเนินการ').length})` },
+                      { key: 'replied', label: `ตอบกลับแล้ว (${complaintsList.filter(c => c.status === 'ตอบกลับแล้ว').length})` }
+                    ].map(tab => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setComplaintFilter(tab.key)}
+                        className={`btn btn-sm ${complaintFilter === tab.key ? 'btn-primary' : 'btn-subtle'}`}
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                }
+              />
 
-                {/* Filter Pills */}
-                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                  {[
-                    { key: 'all', label: `ทั้งหมด (${complaintsList.length})` },
-                    { key: 'complaint', label: `เรื่องร้องเรียน (${complaintsList.filter(c => c.topic.includes('ร้องเรียน')).length})` },
-                    { key: 'feedback', label: `ข้อเสนอแนะ (${complaintsList.filter(c => c.topic.includes('ข้อเสนอแนะ')).length})` },
-                    { key: 'pending', label: `รอดำเนินการ (${complaintsList.filter(c => c.status === 'รอดำเนินการ').length})` },
-                    { key: 'replied', label: `ตอบกลับแล้ว (${complaintsList.filter(c => c.status === 'ตอบกลับแล้ว').length})` }
-                  ].map(tab => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setComplaintFilter(tab.key)}
-                      className={`btn btn-sm ${complaintFilter === tab.key ? 'btn-primary' : 'btn-subtle'}`}
-                      style={{ fontSize: '0.78rem' }}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Complaints List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 {complaintsList
                   .filter(item => {
@@ -602,86 +472,140 @@ export default function MemberDashboardPage() {
                     if (complaintFilter === 'replied') return item.status === 'ตอบกลับแล้ว';
                     return true;
                   })
-                  .map((item) => {
-                    const isComplaint = item.topic.includes('ร้องเรียน');
-                    const isReplied = item.status === 'ตอบกลับแล้ว';
-                    const isPending = item.status === 'รอดำเนินการ';
-
-                    return (
-                      <div 
-                        key={item.id} 
-                        style={{ 
-                          background: 'var(--bg-subtle)', 
-                          padding: '1.25rem', 
-                          borderRadius: '12px', 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center', 
-                          flexWrap: 'wrap', 
-                          gap: '1rem',
-                          border: isComplaint ? '1px solid rgba(244, 63, 94, 0.3)' : isReplied ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-subtle)'
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: '260px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{item.name}</span>
-                            <span className={`badge ${isComplaint ? 'badge-rose' : 'badge-primary'}`}>{item.topic}</span>
-                            <span className="badge badge-subtle">{item.id}</span>
-                          </div>
-
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
-                            <span>โทร: <strong>{item.phone}</strong></span>
-                            <span>สังกัด: <strong>{item.department || 'สมาชิกสหกรณ์'}</strong></span>
-                            <span>วันที่ส่ง: <strong>{item.date}</strong></span>
-                          </div>
-
-                          <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', marginBottom: '0.35rem' }}>
-                            {item.message}
-                          </div>
-
-                          {item.adminReply && (
-                            <div style={{ fontSize: '0.8rem', color: 'var(--accent-emerald-dark)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                              <CheckCircle2 size={14} />
-                              <span>ข้อความตอบกลับ: {item.adminReply}</span>
-                            </div>
-                          )}
-
-                          <div style={{ 
-                            fontSize: '0.82rem', 
-                            color: isReplied ? 'var(--accent-emerald-dark)' : isPending ? 'var(--accent-rose)' : 'var(--accent-gold-dark)', 
-                            fontWeight: 700, 
-                            marginTop: '0.35rem'
-                          }}>
-                            สถานะ: {item.status}
-                          </div>
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        background: 'var(--bg-subtle)',
+                        padding: '1.25rem',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '1rem',
+                        border: item.topic.includes('ร้องเรียน') ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid var(--border-subtle)'
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: '260px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{item.name}</span>
+                          <span className={`badge ${item.topic.includes('ร้องเรียน') ? 'badge-rose' : 'badge-primary'}`}>{item.topic}</span>
+                          <span className="badge badge-subtle">{item.id}</span>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <button 
-                            onClick={() => {
-                              setSelectedAdminComplaint(item);
-                              setAdminReplyText(item.adminReply || '');
-                            }} 
-                            className="btn btn-sm btn-primary"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                          >
-                            <Eye size={14} />
-                            <span>เปิดอ่าน & ตอบกลับ</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteComplaint(item.id)}
-                            className="btn btn-outline btn-sm"
-                            style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)', padding: '0.4rem 0.6rem' }}
-                            title="ลบรายการ"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
+                          <span>โทร: <strong>{item.phone}</strong></span>
+                          <span>สังกัด: <strong>{item.department || 'สมาชิกสหกรณ์'}</strong></span>
+                          <span>วันที่: <strong>{item.date}</strong></span>
+                        </div>
+
+                        <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', marginBottom: '0.35rem' }}>
+                          {item.message}
+                        </div>
+
+                        {item.adminReply && (
+                          <div style={{ fontSize: '0.8rem', color: 'var(--accent-emerald-dark)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <CheckCircle2 size={14} />
+                            <span>ข้อความตอบกลับ: {item.adminReply}</span>
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: '0.35rem' }}>
+                          <StatusBadge status={item.status} size="sm" />
                         </div>
                       </div>
-                    );
-                  })}
+
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setSelectedAdminComplaint(item);
+                            setAdminReplyText(item.adminReply || '');
+                          }}
+                          className="btn btn-sm btn-primary"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                        >
+                          <Eye size={14} />
+                          <span>เปิดอ่าน & ตอบกลับ</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComplaint(item.id)}
+                          className="btn btn-outline btn-sm"
+                          style={{ color: 'var(--accent-rose)', borderColor: 'var(--accent-rose)', padding: '0.4rem 0.6rem' }}
+                          title="ลบรายการ"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                {complaintsList.length === 0 && (
+                  <EmptyState
+                    title="ไม่มีรายการเรื่องร้องเรียนหรือข้อเสนอแนะ"
+                    description="เมื่อสมาชิกส่งเรื่องร้องเรียนหรือข้อเสนอแนะเข้ามา รายการจะแสดงผลที่นี่ทันที"
+                    icon={MessageSquare}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* RBAC Overview & System Logs */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              <div className="surface-card" style={{ padding: '1.75rem' }}>
+                <SectionHeader
+                  title="ภาพรวมบทบาทและสิทธิ์ผู้ใช้งาน (RBAC)"
+                  icon={Settings}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>1. Super Admin (ผู้ดูแลระบบสูงสุด)</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>สิทธิ์เต็ม 100% ทุกโมดูล</div>
+                    </div>
+                    <span className="badge badge-rose">Full Control</span>
+                  </div>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>2. Loan & Finance Staff (เจ้าหน้าที่)</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>จัดการสมาชิก เงินกู้ เงินฝาก และเอกสาร</div>
+                    </div>
+                    <span className="badge badge-primary">Operational</span>
+                  </div>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>3. Auditor (ผู้ตรวจสอบกิจการ)</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ตรวจสอบบัญชี Audit Logs และรายงาน</div>
+                    </div>
+                    <span className="badge badge-gold">Audit Access</span>
+                  </div>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>4. Member (สมาชิกสหกรณ์)</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ดูข้อมูลตนเอง หุ้น เงินฝาก หนี้สิน e-Receipt</div>
+                    </div>
+                    <span className="badge badge-emerald">Self Service</span>
+                  </div>
+                </div>
               </div>
 
+              <div className="surface-card" style={{ padding: '1.75rem' }}>
+                <SectionHeader
+                  title="บันทึกความปลอดภัยล่าสุด (System Audit Trail)"
+                  icon={ShieldCheck}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.82rem' }}>
+                  <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>วันนี้ 13:45 น.</span> • เจ้าหน้าที่อนุมัติคำขอยื่นกู้ฉุกเฉินออนไลน์ LN-6703-01
+                  </div>
+                  <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>วันนี้ 12:30 น.</span> • ผู้ดูแลระบบอัปเดตการตั้งค่าประกาศทางการ
+                  </div>
+                  <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>วันนี้ 04:00 น.</span> • สำรองฐานข้อมูลอัตโนมัติประจำวันเสร็จสมบูรณ์
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -692,79 +616,85 @@ export default function MemberDashboardPage() {
             ========================================================================= */}
         {userRole === 'staff' && (
           <div className="animate-fade-in">
-            
             {/* KPI Summary Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-gold)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>คำขอรอดำเนินการ (Pending)</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-gold-dark)' }}>
-                  {loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length} รายการ
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>คำขอกู้ฉุกเฉินและบริการสมาชิก</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--primary-600)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>วงเงินรอเบิกจ่ายรวม</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-700)' }}>450,000 ฿</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>พร้อมโอนเข้าบัญชีสมาชิก</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-emerald)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>อนุมัติแล้ววันนี้ (Completed)</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-emerald-dark)' }}>
-                  {loanQueue.filter(i => i.status.includes('เรียบร้อย') || i.status.includes('Approved')).length} รายการ
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald-dark)' }}>ดำเนินการเสร็จสมบูรณ์</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-rose)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>ส่งกลับแก้ไข (Revisions)</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-rose)' }}>
-                  {loanQueue.filter(i => i.status.includes('แก้ไข')).length} รายการ
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>รอสมาชิกส่งเอกสารเพิ่มเติม</div>
-              </div>
+              <KpiCard
+                title="คำขอรอดำเนินการ (Pending)"
+                value={loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length}
+                unit="รายการ"
+                subtitle="คำขอกู้ฉุกเฉินและบริการสมาชิก"
+                icon={Clock}
+                variant="gold"
+              />
+              <KpiCard
+                title="วงเงินรอเบิกจ่ายรวม"
+                value="450,000"
+                unit="บาท"
+                subtitle="พร้อมโอนเข้าบัญชีสมาชิก"
+                icon={Coins}
+                variant="primary"
+              />
+              <KpiCard
+                title="อนุมัติแล้ววันนี้ (Completed)"
+                value={loanQueue.filter(i => i.status.includes('เรียบร้อย') || i.status.includes('Approved')).length}
+                unit="รายการ"
+                subtitle="ดำเนินการเสร็จสมบูรณ์"
+                icon={CheckCircle2}
+                variant="emerald"
+              />
+              <KpiCard
+                title="ส่งกลับแก้ไข (Revisions)"
+                value={loanQueue.filter(i => i.status.includes('แก้ไข')).length}
+                unit="รายการ"
+                subtitle="รอสมาชิกส่งเอกสารเพิ่มเติม"
+                icon={AlertCircle}
+                variant="rose"
+              />
             </div>
 
             {/* Worklist Section */}
             <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FileCheck size={22} style={{ color: 'var(--primary-600)' }} />
-                    <span>ระบบจัดการและพิจารณาคำขอสมาชิก (Staff Approval Workflow)</span>
-                  </h3>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    ตรวจสอบคุณสมบัติ อนุมัติวงเงิน หรือส่งกลับแก้ไขแบบเรียลไทม์
-                  </p>
-                </div>
-
-                {/* Filter Pills */}
-                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                  <button 
-                    onClick={() => setStaffFilter('all')} 
-                    className={`btn btn-sm ${staffFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    ทั้งหมด ({loanQueue.length})
-                  </button>
-                  <button 
-                    onClick={() => setStaffFilter('pending')} 
-                    className={`btn btn-sm ${staffFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    รอดำเนินการ ({loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length})
-                  </button>
-                  <button 
-                    onClick={() => setStaffFilter('approved')} 
-                    className={`btn btn-sm ${staffFilter === 'approved' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    อนุมัติแล้ว ({loanQueue.filter(i => i.status.includes('เรียบร้อย') || i.status.includes('Approved')).length})
-                  </button>
-                </div>
-              </div>
+              <SectionHeader
+                title="ระบบจัดการและพิจารณาคำขอสมาชิก (Staff Workflow)"
+                subtitle="ตรวจสอบคุณสมบัติ อนุมัติวงเงิน หรือส่งกลับแก้ไขแบบเรียลไทม์"
+                icon={FileCheck}
+                filters={
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', width: '200px' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                      <input
+                        type="text"
+                        placeholder="ค้นหาชื่อ / เลขคำขอ..."
+                        className="form-control"
+                        style={{ paddingLeft: '2rem', fontSize: '0.8rem', height: '32px' }}
+                        value={staffSearch}
+                        onChange={(e) => setStaffSearch(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      onClick={() => setStaffFilter('all')}
+                      className={`btn btn-sm ${staffFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      ทั้งหมด ({loanQueue.length})
+                    </button>
+                    <button
+                      onClick={() => setStaffFilter('pending')}
+                      className={`btn btn-sm ${staffFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      รอดำเนินการ ({loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length})
+                    </button>
+                    <button
+                      onClick={() => setStaffFilter('approved')}
+                      className={`btn btn-sm ${staffFilter === 'approved' ? 'btn-primary' : 'btn-subtle'}`}
+                      style={{ fontSize: '0.78rem' }}
+                    >
+                      อนุมัติแล้ว ({loanQueue.filter(i => i.status.includes('เรียบร้อย') || i.status.includes('Approved')).length})
+                    </button>
+                  </div>
+                }
+              />
 
               {/* Worklist Items */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -774,23 +704,27 @@ export default function MemberDashboardPage() {
                     if (staffFilter === 'approved') return item.status.includes('เรียบร้อย') || item.status.includes('Approved');
                     return true;
                   })
+                  .filter(item => {
+                    if (!staffSearch.trim()) return true;
+                    const q = staffSearch.toLowerCase();
+                    return item.memberName.toLowerCase().includes(q) || item.id.toLowerCase().includes(q);
+                  })
                   .map((item) => {
                     const isApproved = item.status.includes('เรียบร้อย') || item.status.includes('Approved');
-                    const isRevision = item.status.includes('แก้ไข');
 
                     return (
-                      <div 
-                        key={item.id} 
-                        style={{ 
-                          background: 'var(--bg-subtle)', 
-                          padding: '1.25rem', 
-                          borderRadius: '12px', 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center', 
-                          flexWrap: 'wrap', 
+                      <div
+                        key={item.id}
+                        style={{
+                          background: 'var(--bg-subtle)',
+                          padding: '1.25rem',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
                           gap: '1rem',
-                          border: isApproved ? '1px solid rgba(16, 185, 129, 0.3)' : isRevision ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid var(--border-subtle)'
+                          border: isApproved ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-subtle)'
                         }}
                       >
                         <div style={{ flex: 1, minWidth: '260px' }}>
@@ -800,7 +734,7 @@ export default function MemberDashboardPage() {
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({item.id})</span>
                           </div>
 
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                             <span>วงเงินที่ขอ: <strong style={{ color: 'var(--primary-700)' }}>{item.amount}</strong></span>
                             <span>วันที่ยื่น: <strong>{item.date || item.submitDate}</strong></span>
                             <span>สังกัด: <strong>{item.department || 'โรงพยาบาลระยอง'}</strong></span>
@@ -812,35 +746,35 @@ export default function MemberDashboardPage() {
                             </div>
                           )}
 
-                          <div style={{ 
-                            fontSize: '0.82rem', 
-                            color: isApproved ? 'var(--accent-emerald-dark)' : isRevision ? 'var(--accent-rose)' : 'var(--accent-gold-dark)', 
-                            fontWeight: 700, 
-                            marginTop: '0.35rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem'
-                          }}>
-                            <span>สถานะ: {item.status}</span>
+                          <div style={{ marginTop: '0.35rem' }}>
+                            <StatusBadge status={item.status} size="sm" />
                           </div>
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <button 
+                          <button
                             onClick={() => {
                               setSelectedReviewRequest(item);
                               setReviewModalOpen(true);
-                            }} 
+                            }}
                             className={`btn btn-sm ${isApproved ? 'btn-outline' : 'btn-teal'}`}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                           >
                             <ShieldCheck size={15} />
-                            <span>{isApproved ? 'ดูผลการอนุมัติ' : '🔍 ตรวจสอบ & พิจารณา'}</span>
+                            <span>{isApproved ? 'ดูผลการอนุมัติ' : 'ตรวจสอบ & พิจารณา'}</span>
                           </button>
                         </div>
                       </div>
                     );
                   })}
+
+                {loanQueue.length === 0 && (
+                  <EmptyState
+                    title="ไม่มีรายการคำขอในคิว"
+                    description="ไม่มีคำขอใหม่ที่ต้องดำเนินการในขณะนี้"
+                    icon={FileCheck}
+                  />
+                )}
               </div>
 
             </div>
@@ -848,149 +782,200 @@ export default function MemberDashboardPage() {
         )}
 
         {/* =========================================================================
-            ROLE 3: AUDITOR / MANAGER
+            ROLE 3: AUDITOR / MANAGER (READ-ONLY OVERSIGHT)
             ========================================================================= */}
         {userRole === 'auditor' && (
           <div className="animate-fade-in">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-gold)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>คะแนนความถูกต้องทางบัญชี</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-gold-dark)' }}>99.8%</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>ผ่านเกณฑ์มาตรฐานกรมส่งเสริมสหกรณ์</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-teal)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>สินทรัพย์ที่ตรวจสอบแล้ว</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-teal-dark)' }}>3,210.80 M฿</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>กระทบยอดตรงกับสมุดบัญชีแยกประเภท</div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--primary-600)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>รายการที่รอตรวจสอบ</div>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary-600)' }}>0 รายการ</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--accent-emerald-dark)' }}>ตรวจสอบครบถ้วนทุกรอบเดือน</div>
-              </div>
+            {/* KPI Summary Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+              <KpiCard
+                title="คะแนนความถูกต้องทางบัญชี"
+                value="99.8%"
+                subtitle="ผ่านเกณฑ์มาตรฐานกรมส่งเสริมสหกรณ์"
+                icon={ShieldCheck}
+                variant="gold"
+              />
+              <KpiCard
+                title="สินทรัพย์ที่ตรวจสอบแล้ว"
+                value="3,210.80"
+                unit="ล้านบาท"
+                subtitle="กระทบยอดตรงกับสมุดบัญชีแยกประเภท"
+                icon={Landmark}
+                variant="teal"
+              />
+              <KpiCard
+                title="รายการที่รอตรวจสอบ"
+                value="0"
+                unit="รายการ"
+                subtitle="ตรวจสอบครบถ้วนทุกรอบเดือน"
+                icon={CheckCircle2}
+                variant="emerald"
+              />
+              <KpiCard
+                title="อัตราผลตอบแทนต่อสินทรัพย์ (ROA)"
+                value="4.85%"
+                subtitle="ประสิทธิภาพการบริหารจัดการเงินทุน"
+                icon={TrendingUp}
+                variant="primary"
+              />
             </div>
 
-            <div className="surface-card" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)', marginBottom: '1rem' }}>
-                รายงานการตรวจสอบงบการเงินและเงินปันผลประจำงวด (Auditor Verification)
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '1.5rem' }}>
-                ผู้ตรวจสอบกิจการได้ทำการสุ่มตรวจยอดเงินกู้ เงินฝาก และสูตรคำนวณเงินปันผลหุ้น 5.25% และเงินเฉลี่ยคืน 12.50% พบว่าถูกต้องตามระเบียบข้อบังคับ
-              </p>
-              <button onClick={() => alert('ดาวน์โหลดรายงานผลการตรวจสอบกิจการฉบับเต็ม (PDF)')} className="btn btn-gold">
-                <Download size={16} />
-                <span>ดาวน์โหลดรายงานผลการตรวจสอบกิจการ (PDF)</span>
-              </button>
+            <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
+              <SectionHeader
+                title="รายงานการตรวจสอบงบการเงินและเงินปันผลประจำงวด (Auditor Verification)"
+                subtitle="รายงานการสุ่มตรวจยอดเงินกู้ เงินฝาก และสูตรคำนวณเงินปันผลเฉลี่ยคืนตามระเบียบข้อบังคับ"
+                icon={FileSpreadsheet}
+                iconColor="var(--accent-gold-dark)"
+                actionButton={
+                  <button onClick={() => alert('ดาวน์โหลดรายงานผลการตรวจสอบกิจการฉบับเต็ม (PDF)')} className="btn btn-gold btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Download size={15} />
+                    <span>ดาวน์โหลดรายงานผลการตรวจสอบ (PDF)</span>
+                  </button>
+                }
+              />
+
+              <div style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-subtle)', lineHeight: 1.6, fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '1.5rem' }}>
+                <div style={{ fontWeight: 700, color: 'var(--primary-900)', marginBottom: '0.5rem' }}>
+                  สรุปความเห็นของผู้ตรวจสอบกิจการ:
+                </div>
+                <p style={{ margin: 0 }}>
+                  ผู้ตรวจสอบกิจการได้ทำการสุ่มตรวจยอดเงินกู้ เงินฝาก และสูตรคำนวณเงินปันผลหุ้น 5.25% และเงินเฉลี่ยคืน 12.50% พบว่าถูกต้องตามระเบียบข้อบังคับ และการบันทึกบัญชีเป็นไปตามมาตรฐานการบัญชีของสหกรณ์ออมทรัพย์
+                </p>
+              </div>
+
+              {/* Read-only Audit Trail */}
+              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--primary-900)', marginBottom: '0.75rem' }}>
+                  ประวัติการตรวจสอบล่าสุด (Audit Trail - Read Only):
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.82rem' }}>
+                  <div style={{ background: 'var(--bg-surface)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>ตรวจสอบการกระทบยอดบัญชีเงินฝากธนาคารพาณิชย์</span>
+                    <span className="badge badge-emerald">ตรงกับยอดบัญชี</span>
+                  </div>
+                  <div style={{ background: 'var(--bg-surface)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>สุ่มตรวจสัญญาสินเชื่อเงินกู้สามัญ ประจำงวด ก.พ. 2567</span>
+                    <span className="badge badge-emerald">เอกสารครบถ้วน</span>
+                  </div>
+                  <div style={{ background: 'var(--bg-surface)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>ตรวจสอบการคำนวณเงินปันผลและเงินเฉลี่ยคืน</span>
+                    <span className="badge badge-emerald">สูตรคำนวณถูกต้อง</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* =========================================================================
-            ROLE 4: REGULAR MEMBER DASHBOARD
+            ROLE 4: REGULAR COOPERATIVE MEMBER DASHBOARD
             ========================================================================= */}
         {userRole === 'member' && (
           <div className="animate-fade-in">
-            {/* 4 Balances Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-              
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--primary-600)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                  <Coins size={16} style={{ color: 'var(--primary-600)' }} />
-                  <span>ทุนเรือนหุ้นสะสม</span>
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary-800)', fontFamily: 'var(--font-display)' }}>
-                  {user.shares ? user.shares.toLocaleString() : '485,000'} <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>บาท</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--accent-emerald-dark)', marginTop: '0.4rem' }}>
-                  ส่งเพิ่มเดือนละ {user.monthlyShare ? user.monthlyShare.toLocaleString() : '3,000'} บ.
-                </div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-teal)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                  <Landmark size={16} style={{ color: 'var(--accent-teal)' }} />
-                  <span>เงินฝากรวม ({user.accounts ? user.accounts.length : 2} บัญชี)</span>
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-teal-dark)', fontFamily: 'var(--font-display)' }}>
-                  {user.savings ? user.savings.toLocaleString() : '245,300.50'} <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>บาท</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  ดอกเบี้ยสะสมรายวัน
-                </div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-rose)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                  <CreditCard size={16} style={{ color: 'var(--accent-rose)' }} />
-                  <span>หนี้สินเงินกู้คงเหลือ</span>
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-rose)', fontFamily: 'var(--font-display)' }}>
-                  {user.loanBalance ? user.loanBalance.toLocaleString() : '820,000'} <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>บาท</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  สัญญา ส.66/0129 (เหลือ 96 งวด)
-                </div>
-              </div>
-
-              <div className="surface-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-gold)' }}>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                  <TrendingUp size={16} style={{ color: 'var(--accent-gold-dark)' }} />
-                  <span>ปันผล+เฉลี่ยคืน (ประมาณการ)</span>
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-gold-dark)', fontFamily: 'var(--font-display)' }}>
-                  {((user.dividendEstimated || 25462.50) + (user.loanRefundEstimated || 5125)).toLocaleString()} <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>บาท</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  ปันผล 25,462.50 + คืน 5,125.00 บ.
-                </div>
-              </div>
-
+            {/* 4 KPI Balances Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+              <KpiCard
+                title="ทุนเรือนหุ้นสะสม"
+                value={memberShares.toLocaleString()}
+                unit="บาท"
+                subtitle={`ส่งเพิ่มเดือนละ ${memberMonthlyShare.toLocaleString()} บ.`}
+                icon={Coins}
+                variant="primary"
+              />
+              <KpiCard
+                title="เงินฝากรวมทุกบัญชี"
+                value={memberSavings.toLocaleString()}
+                unit="บาท"
+                subtitle={`รวม ${memberAccounts.length} บัญชีเงินฝาก`}
+                icon={Landmark}
+                variant="teal"
+              />
+              <KpiCard
+                title="หนี้สินเงินกู้คงเหลือ"
+                value={memberLoanBalance.toLocaleString()}
+                unit="บาท"
+                subtitle="สัญญา ส.66/0129 (เหลือ 96 งวด)"
+                icon={CreditCard}
+                variant="rose"
+              />
+              <KpiCard
+                title="ปันผล + เฉลี่ยคืน (ประมาณการ)"
+                value={(memberDividendEst + memberLoanRefundEst).toLocaleString()}
+                unit="บาท"
+                subtitle={`ปันผล ${memberDividendEst.toLocaleString()} + คืน ${memberLoanRefundEst.toLocaleString()} บ.`}
+                icon={TrendingUp}
+                variant="gold"
+              />
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
-              <button onClick={() => setActiveTab('overview')} style={tabNavBtn(activeTab === 'overview')}>บัญชีเงินฝาก & หนี้</button>
-              <button onClick={() => setActiveTab('loans')} style={tabNavBtn(activeTab === 'loans')}>
-                📝 คำขอกู้เงิน & ติดตามสถานะ ({myLoanRequests.length})
+            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
+              <button onClick={() => setActiveTab('overview')} className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+                <Landmark size={15} />
+                <span>บัญชีเงินฝาก & หนี้สิน</span>
               </button>
-              <button onClick={() => setActiveTab('receipts')} style={tabNavBtn(activeTab === 'receipts')}>ใบเสร็จรับเงิน (e-Receipt)</button>
-              <button onClick={() => setActiveTab('complaints')} style={tabNavBtn(activeTab === 'complaints')}>
-                📬 เรื่องร้องเรียน & ข้อเสนอแนะ ({myComplaints.length})
+              <button onClick={() => setActiveTab('receipts')} className={`btn ${activeTab === 'receipts' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+                <FileText size={15} />
+                <span>ใบเสร็จรับเงิน (e-Receipt)</span>
+              </button>
+              <button onClick={() => setActiveTab('complaints')} className={`btn ${activeTab === 'complaints' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+                <MessageSquare size={15} />
+                <span>เรื่องร้องเรียน & ข้อเสนอแนะ ({myComplaints.length})</span>
+              </button>
+              <button onClick={() => setActiveTab('services')} className={`btn ${activeTab === 'services' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
+                <Calculator size={15} />
+                <span>บริการด่วน & แบบคำนวณ</span>
               </button>
             </div>
 
+            {/* TAB 1: ACCOUNTS & LOANS OVERVIEW */}
             {activeTab === 'overview' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                {/* Deposit Accounts */}
                 <div className="surface-card" style={{ padding: '1.75rem' }}>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-800)', marginBottom: '1rem' }}>บัญชีเงินฝากของสมาชิก</h3>
+                  <SectionHeader
+                    title="บัญชีเงินฝากของสมาชิก"
+                    icon={Landmark}
+                    iconColor="var(--accent-teal)"
+                  />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                    {(user.accounts || DEMO_USERS.member.accounts).map((acc, idx) => (
-                      <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {memberAccounts.map((acc, idx) => (
+                      <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border-subtle)' }}>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{acc.type}</div>
+                          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>{acc.type}</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>เลขที่บัญชี: {acc.accNo}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-teal-dark)' }}>
                             {acc.balance.toLocaleString()} ฿
                           </div>
-                          <span className="badge badge-emerald" style={{ fontSize: '0.7rem' }}>{acc.status}</span>
+                          <StatusBadge status={acc.status} size="sm" />
                         </div>
                       </div>
                     ))}
+                    {memberAccounts.length === 0 && (
+                      <EmptyState
+                        title="ไม่มีบัญชีเงินฝาก"
+                        description="ท่านยังไม่มีบัญชีเงินฝากที่เปิดไว้กับสหกรณ์"
+                        icon={Landmark}
+                      />
+                    )}
                   </div>
                 </div>
 
+                {/* Loans Overview */}
                 <div className="surface-card" style={{ padding: '1.75rem' }}>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--primary-800)', marginBottom: '1rem' }}>สัญญาเงินกู้ที่ผูกพัน</h3>
+                  <SectionHeader
+                    title="สัญญาเงินกู้ที่ผูกพัน"
+                    icon={CreditCard}
+                    iconColor="var(--accent-rose)"
+                  />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                    {(user.loans || DEMO_USERS.member.loans).map((loan, idx) => (
-                      <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '10px' }}>
+                    {memberLoans.map((loan, idx) => (
+                      <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <div style={{ fontWeight: 700 }}>{loan.type} ({loan.contractNo})</div>
-                          <span className="badge badge-gold">ผ่อนชำระปกติ</span>
+                          <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{loan.type} ({loan.contractNo})</div>
+                          <span className="badge badge-emerald">ผ่อนชำระปกติ</span>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.85rem' }}>
                           <div><span style={{ color: 'var(--text-muted)' }}>วงเงินตามสัญญา:</span> <strong>{loan.principal.toLocaleString()} ฿</strong></div>
@@ -1000,329 +985,42 @@ export default function MemberDashboardPage() {
                         </div>
                       </div>
                     ))}
+                    {memberLoans.length === 0 && (
+                      <EmptyState
+                        title="ไม่มีสัญญาเงินกู้ค้างชำระ"
+                        description="ท่านไม่มีภาระหนี้สินเงินกู้กับสหกรณ์ในขณะนี้"
+                        icon={CreditCard}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* =========================================================================
-                MEMBER: LOAN APPLICATIONS & STATUS TRACKER (คำขอกู้เงินของฉัน)
-                ========================================================================= */}
-            {activeTab === 'loans' && (
-              <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-                {/* Section Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                      <CreditCard size={22} style={{ color: 'var(--primary-600)' }} />
-                      <span>รายการคำขอกู้เงินออนไลน์และสถานะการพิจารณา (My Loan Applications)</span>
-                    </h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem', margin: 0 }}>
-                      ติดตามไทม์ไลน์ขั้นตอนการตรวจสอบ อนุมัติสินเชื่อ และการทำนิติกรรมสัญญาแบบ Real-time
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => setMemberLoanModalOpen(true)}
-                    className="btn btn-primary btn-sm"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.15rem' }}
-                  >
-                    <PlusCircle size={16} />
-                    <span>+ ยื่นคำขอกู้เงินออนไลน์ใหม่</span>
-                  </button>
-                </div>
-
-                {/* Filter Pills */}
-                <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', flexWrap: 'wrap', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-                  <button 
-                    onClick={() => setMemberLoanFilter('all')} 
-                    className={`btn btn-sm ${memberLoanFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    ทั้งหมด ({myLoanRequests.length})
-                  </button>
-                  <button 
-                    onClick={() => setMemberLoanFilter('pending')} 
-                    className={`btn btn-sm ${memberLoanFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    รอดำเนินการ ({myLoanRequests.filter(l => l.status.includes('รอดำเนินการ') || l.status.includes('รอ') || l.status.includes('Pending')).length})
-                  </button>
-                  <button 
-                    onClick={() => setMemberLoanFilter('approved')} 
-                    className={`btn btn-sm ${memberLoanFilter === 'approved' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    อนุมัติเรียบร้อย ({myLoanRequests.filter(l => l.status.includes('อนุมัติ') || l.status.includes('Approved')).length})
-                  </button>
-                  <button 
-                    onClick={() => setMemberLoanFilter('revision')} 
-                    className={`btn btn-sm ${memberLoanFilter === 'revision' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    ส่งกลับแก้ไข ({myLoanRequests.filter(l => l.status.includes('ส่งกลับ') || l.status.includes('Revision')).length})
-                  </button>
-                </div>
-
-                {/* Loan Requests List */}
-                {myLoanRequests.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'var(--bg-subtle)', borderRadius: '12px' }}>
-                    <CreditCard size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 0.75rem auto' }} />
-                    <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '0.35rem' }}>ยังไม่มีประวัติการยื่นคำขอกู้เงิน</h4>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                      ท่านสามารถยื่นคำขอกู้เงินฉุกเฉิน หรือกู้สามัญออนไลน์ได้สะดวกรวดเร็วตลอด 24 ชั่วโมง
-                    </p>
-                    <button 
-                      onClick={() => setMemberLoanModalOpen(true)}
-                      className="btn btn-primary btn-sm"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                    >
-                      <PlusCircle size={16} />
-                      <span>ยื่นคำขอกู้เงินออนไลน์ตอนนี้</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    {myLoanRequests
-                      .filter(item => {
-                        if (memberLoanFilter === 'pending') return item.status.includes('รอดำเนินการ') || item.status.includes('รอ') || item.status.includes('Pending');
-                        if (memberLoanFilter === 'approved') return item.status.includes('อนุมัติ') || item.status.includes('Approved');
-                        if (memberLoanFilter === 'revision') return item.status.includes('ส่งกลับ') || item.status.includes('Revision');
-                        return true;
-                      })
-                      .map(item => {
-                        const isApproved = item.status.includes('อนุมัติ') || item.status.includes('Approved');
-                        const isRevision = item.status.includes('ส่งกลับ') || item.status.includes('Revision');
-                        const isPending = !isApproved && !isRevision;
-                        const effectiveStep = isApproved ? 4 : (item.currentStep || 2);
-
-                        const steps = [
-                          { step: 1, title: 'ยื่นคำขอดิจิทัล' },
-                          { step: 2, title: 'เจ้าหน้าที่ตรวจเอกสาร' },
-                          { step: 3, title: 'พิจารณาอนุมัติสินเชื่อ' },
-                          { step: 4, title: 'ทำสัญญา & โอนเงิน' }
-                        ];
-
-                        return (
-                          <div 
-                            key={item.id}
-                            style={{
-                              background: 'var(--bg-subtle)',
-                              borderRadius: '16px',
-                              padding: '1.5rem',
-                              border: isApproved 
-                                ? '1px solid rgba(16, 185, 129, 0.4)' 
-                                : isRevision 
-                                ? '1px solid rgba(244, 63, 94, 0.4)' 
-                                : '1px solid var(--border-subtle)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '1.25rem'
-                            }}
-                          >
-                            {/* Card Header Row */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
-                              <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
-                                  <span className="badge badge-primary">{item.id}</span>
-                                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)' }}>
-                                    {item.type || item.name}
-                                  </span>
-                                </div>
-                                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                  วันที่ยื่นคำขอ: <strong>{item.date || '11 มี.ค. 2567'}</strong> {item.lastUpdated ? `• อัปเดตล่าสุด: ${item.lastUpdated}` : ''}
-                                </div>
-                              </div>
-
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary-700)', fontFamily: 'var(--font-display)' }}>
-                                  {item.amount}
-                                </div>
-                                <span className={`badge badge-${isApproved ? 'emerald' : isRevision ? 'rose' : 'gold'}`}>
-                                  {item.status}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Details Grid */}
-                            <div style={{
-                              background: 'var(--bg-surface)',
-                              borderRadius: '12px',
-                              padding: '1rem 1.25rem',
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                              gap: '0.75rem 1rem',
-                              fontSize: '0.85rem',
-                              border: '1px solid var(--border-subtle)'
-                            }}>
-                              {item.term && (
-                                <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>ระยะเวลาผ่อน:</span>{' '}
-                                  <strong>{item.term}</strong>
-                                </div>
-                              )}
-                              {item.monthlyEstimate && (
-                                <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>ประมาณการค่างวด:</span>{' '}
-                                  <strong style={{ color: 'var(--accent-teal-dark)' }}>{item.monthlyEstimate}</strong>
-                                </div>
-                              )}
-                              {item.interestRate && (
-                                <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>อัตราดอกเบี้ย:</span>{' '}
-                                  <strong style={{ color: 'var(--accent-gold-dark)' }}>{item.interestRate}</strong>
-                                </div>
-                              )}
-                              <div>
-                                <span style={{ color: 'var(--text-muted)' }}>หลักประกัน / ผู้ค้ำ:</span>{' '}
-                                <strong>{item.guarantor || 'ใช้วงเงินหุ้นสะสมค้ำประกัน'}</strong>
-                              </div>
-                              {item.purpose && (
-                                <div style={{ gridColumn: '1 / -1' }}>
-                                  <span style={{ color: 'var(--text-muted)' }}>วัตถุประสงค์:</span>{' '}
-                                  <strong style={{ color: 'var(--text-main)' }}>{item.purpose}</strong>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* 4-Step Visual Timeline */}
-                            <div>
-                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                                📌 ลำดับขั้นตอนการพิจารณาสินเชื่อ (Workflow Progress):
-                              </div>
-                              
-                              <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(4, 1fr)',
-                                gap: '0.5rem',
-                                position: 'relative'
-                              }}>
-                                {steps.map((s, sidx) => {
-                                  const isDone = isApproved ? true : s.step < effectiveStep;
-                                  const isCurrent = !isApproved && !isRevision && s.step === effectiveStep;
-                                  const isStepRevision = isRevision && s.step === effectiveStep;
-
-                                  return (
-                                    <div 
-                                      key={s.step} 
-                                      style={{ 
-                                        textAlign: 'center', 
-                                        padding: '0.65rem 0.35rem', 
-                                        borderRadius: '8px',
-                                        background: isDone 
-                                          ? 'rgba(16, 185, 129, 0.12)' 
-                                          : isStepRevision 
-                                          ? 'rgba(244, 63, 94, 0.12)' 
-                                          : isCurrent 
-                                          ? 'rgba(37, 99, 235, 0.12)' 
-                                          : 'var(--bg-surface)',
-                                        border: isDone 
-                                          ? '1px solid rgba(16, 185, 129, 0.35)' 
-                                          : isStepRevision 
-                                          ? '1px solid rgba(244, 63, 94, 0.4)' 
-                                          : isCurrent 
-                                          ? '1px solid var(--primary-600)' 
-                                          : '1px solid var(--border-subtle)',
-                                        transition: 'all 0.15s ease'
-                                      }}
-                                    >
-                                      <div style={{ 
-                                        display: 'inline-flex', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'center',
-                                        width: '24px', 
-                                        height: '24px', 
-                                        borderRadius: '50%',
-                                        background: isDone ? 'var(--accent-emerald)' : isStepRevision ? 'var(--accent-rose)' : isCurrent ? 'var(--primary-600)' : 'var(--bg-subtle)',
-                                        color: '#ffffff',
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        marginBottom: '0.25rem'
-                                      }}>
-                                        {isDone ? <Check size={14} /> : isStepRevision ? '!' : s.step}
-                                      </div>
-                                      <div style={{ 
-                                        fontSize: '0.75rem', 
-                                        fontWeight: isCurrent || isDone ? 700 : 500, 
-                                        color: isDone ? 'var(--accent-emerald-dark)' : isStepRevision ? 'var(--accent-rose)' : isCurrent ? 'var(--primary-600)' : 'var(--text-muted)' 
-                                      }}>
-                                        {s.title}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Officer Feedback Note Banner */}
-                            {item.note && (
-                              <div style={{ 
-                                background: isApproved 
-                                  ? 'rgba(16, 185, 129, 0.08)' 
-                                  : isRevision 
-                                  ? 'rgba(244, 63, 94, 0.08)' 
-                                  : 'rgba(245, 158, 11, 0.08)',
-                                borderLeft: `4px solid ${isApproved ? 'var(--accent-emerald)' : isRevision ? 'var(--accent-rose)' : 'var(--accent-gold)'}`,
-                                padding: '0.85rem 1.15rem',
-                                borderRadius: '0 8px 8px 0',
-                                fontSize: '0.85rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}>
-                                <Info size={16} style={{ color: isApproved ? 'var(--accent-emerald)' : isRevision ? 'var(--accent-rose)' : 'var(--accent-gold-dark)', flexShrink: 0 }} />
-                                <div>
-                                  <strong style={{ color: 'var(--text-main)' }}>ความเห็น/หมายเหตุจากเจ้าหน้าที่สินเชื่อ:</strong>{' '}
-                                  <span style={{ color: 'var(--text-main)' }}>{item.note}</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Card Footer Actions */}
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.85rem' }}>
-                              <button 
-                                onClick={() => alert(`พิมพ์เอกสารใบคำขอกู้เงินดิจิทัล รหัส: ${item.id} (PDF)`)}
-                                className="btn btn-outline btn-sm"
-                                style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                              >
-                                <Download size={14} />
-                                <span>ดาวน์โหลดใบคำขอ (PDF)</span>
-                              </button>
-                              
-                              {isRevision && (
-                                <button 
-                                  onClick={() => setMemberLoanModalOpen(true)}
-                                  className="btn btn-rose btn-sm"
-                                  style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                                >
-                                  <Edit3 size={14} />
-                                  <span>แก้ไขและส่งเอกสารใหม่</span>
-                                </button>
-                              )}
-                            </div>
-
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            )}
-
+            {/* TAB 2: E-RECEIPTS */}
             {activeTab === 'receipts' && (
-              <div className="surface-card" style={{ padding: '2rem' }}>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-800)', marginBottom: '1.25rem' }}>
-                  ประวัติใบเสร็จรับเงินประจำเดือน (e-Receipt)
-                </h3>
+              <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
+                <SectionHeader
+                  title="ประวัติใบเสร็จรับเงินประจำเดือน (e-Receipt)"
+                  subtitle="ตรวจสอบและดาวน์โหลดใบเสร็จรับเงินประจำงวดของสมาชิก"
+                  icon={FileText}
+                  actionButton={
+                    <button onClick={() => navigate('/verify-receipt')} className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <CheckCircle2 size={14} />
+                      <span>ระบบตรวจสอบลายมือชื่อดิจิทัล (Verify Receipt)</span>
+                    </button>
+                  }
+                />
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  {(user.recentReceipts || DEMO_USERS.member.recentReceipts).map((rc, idx) => (
-                    <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  {memberReceipts.map((rc, idx) => (
+                    <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', border: '1px solid var(--border-subtle)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ padding: '0.65rem', borderRadius: '10px', background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
                           <FileText size={22} />
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '1rem' }}>ใบเสร็จประจำเดือน {rc.period}</div>
+                          <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>ใบเสร็จประจำเดือน {rc.period}</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>เลขที่: {rc.receiptNo} • วันที่: {rc.date}</div>
                         </div>
                       </div>
@@ -1332,135 +1030,123 @@ export default function MemberDashboardPage() {
                           <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary-700)' }}>
                             {rc.totalAmount.toLocaleString()} บาท
                           </div>
-                          <span className="badge badge-emerald">{rc.status}</span>
+                          <StatusBadge status={rc.status} size="sm" />
                         </div>
 
-                        <button onClick={() => navigate('/verify-receipt')} className="btn btn-outline btn-sm">
+                        <button onClick={() => navigate('/verify-receipt')} className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
                           <Download size={14} />
                           <span>ดู/พิมพ์</span>
                         </button>
                       </div>
                     </div>
                   ))}
+
+                  {memberReceipts.length === 0 && (
+                    <EmptyState
+                      title="ยังไม่มีใบเสร็จรับเงิน"
+                      description="เมื่อมีการชำระเงินรายเดือน ระบบจะสร้างใบเสร็จรับเงินอิเล็กทรอนิกส์ให้ท่านทันที"
+                      icon={FileText}
+                    />
+                  )}
                 </div>
               </div>
             )}
 
+            {/* TAB 3: MY COMPLAINTS & FEEDBACK */}
             {activeTab === 'complaints' && (
               <div className="surface-card animate-fade-in" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)' }}>
-                {/* Section Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                      <MessageSquare size={22} style={{ color: 'var(--primary-600)' }} />
-                      <span>เรื่องร้องเรียน & ข้อเสนอแนะของฉัน (My Complaints & Feedback)</span>
-                    </h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem', margin: 0 }}>
-                      ติดตามสถานะคำร้องและตรวจสอบข้อความตอบกลับ/การแก้ไขปัญหาจากสหกรณ์ (แสดงเฉพาะรายการของคุณ)
-                    </p>
-                  </div>
+                <SectionHeader
+                  title="เรื่องร้องเรียน & ข้อเสนอแนะของฉัน (My Feedback)"
+                  subtitle="ติดตามสถานะคำร้องและตรวจสอบข้อความตอบกลับจากสหกรณ์ (แสดงเฉพาะรายการของท่าน)"
+                  icon={MessageSquare}
+                  actionButton={
+                    <button
+                      onClick={() => setMemberComplaintModalOpen(true)}
+                      className="btn btn-primary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <PlusCircle size={15} />
+                      <span>ส่งเรื่องใหม่</span>
+                    </button>
+                  }
+                  filters={
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => setMemberComplaintFilter('all')}
+                        className={`btn btn-sm ${memberComplaintFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        ทั้งหมด ({myComplaints.length})
+                      </button>
+                      <button
+                        onClick={() => setMemberComplaintFilter('pending')}
+                        className={`btn btn-sm ${memberComplaintFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        รอดำเนินการ ({myComplaints.filter(c => c.status === 'รอดำเนินการ').length})
+                      </button>
+                      <button
+                        onClick={() => setMemberComplaintFilter('replied')}
+                        className={`btn btn-sm ${memberComplaintFilter === 'replied' ? 'btn-primary' : 'btn-subtle'}`}
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        ตอบกลับแล้ว ({myComplaints.filter(c => c.status === 'ตอบกลับแล้ว').length})
+                      </button>
+                    </div>
+                  }
+                />
 
-                  <button
-                    onClick={() => setMemberComplaintModalOpen(true)}
-                    className="btn btn-primary btn-sm"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1rem' }}
-                  >
-                    <PlusCircle size={16} />
-                    <span>ส่งเรื่องร้องเรียน / ข้อเสนอแนะใหม่</span>
-                  </button>
-                </div>
-
-                {/* Filter Pills */}
-                <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem', flexWrap: 'wrap', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-                  <button 
-                    onClick={() => setMemberComplaintFilter('all')} 
-                    className={`btn btn-sm ${memberComplaintFilter === 'all' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    ทั้งหมด ({myComplaints.length})
-                  </button>
-                  <button 
-                    onClick={() => setMemberComplaintFilter('pending')} 
-                    className={`btn btn-sm ${memberComplaintFilter === 'pending' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    รอดำเนินการ ({myComplaints.filter(c => c.status === 'รอดำเนินการ').length})
-                  </button>
-                  <button 
-                    onClick={() => setMemberComplaintFilter('reviewing')} 
-                    className={`btn btn-sm ${memberComplaintFilter === 'reviewing' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    กำลังตรวจสอบ ({myComplaints.filter(c => c.status === 'กำลังตรวจสอบ').length})
-                  </button>
-                  <button 
-                    onClick={() => setMemberComplaintFilter('replied')} 
-                    className={`btn btn-sm ${memberComplaintFilter === 'replied' ? 'btn-primary' : 'btn-subtle'}`}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    ตอบกลับแล้ว ({myComplaints.filter(c => c.status === 'ตอบกลับแล้ว').length})
-                  </button>
-                </div>
-
-                {/* Complaints List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {myComplaints
                     .filter(item => {
                       if (memberComplaintFilter === 'pending') return item.status === 'รอดำเนินการ';
-                      if (memberComplaintFilter === 'reviewing') return item.status === 'กำลังตรวจสอบ';
                       if (memberComplaintFilter === 'replied') return item.status === 'ตอบกลับแล้ว';
                       return true;
                     })
                     .map(item => {
                       const isReplied = item.status === 'ตอบกลับแล้ว';
-                      const isPending = item.status === 'รอดำเนินการ';
 
                       return (
-                        <div 
-                          key={item.id} 
-                          style={{ 
-                            background: 'var(--bg-subtle)', 
-                            padding: '1.25rem 1.5rem', 
-                            borderRadius: '12px', 
+                        <div
+                          key={item.id}
+                          style={{
+                            background: 'var(--bg-subtle)',
+                            padding: '1.25rem 1.5rem',
+                            borderRadius: '12px',
                             border: isReplied ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid var(--border-subtle)',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '0.75rem'
                           }}
                         >
-                          {/* Card Top Row */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <span className="badge badge-primary">{item.id}</span>
                               <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>{item.topic}</span>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>• วันที่ยื่น: {item.date}</span>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>• วันที่: {item.date}</span>
                             </div>
-                            <span className={`badge badge-${isReplied ? 'emerald' : isPending ? 'rose' : 'gold'}`}>
-                              {item.status}
-                            </span>
+                            <StatusBadge status={item.status} size="sm" />
                           </div>
 
-                          {/* Message Content */}
                           <div style={{ background: 'var(--bg-surface)', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '0.9rem', color: 'var(--text-main)', lineHeight: 1.5 }}>
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.35rem' }}>
-                              💬 ข้อความเรื่องร้องเรียน / ข้อเสนอแนะ:
+                              💬 ข้อความที่ส่ง:
                             </div>
                             {item.message}
                           </div>
 
-                          {/* Admin Reply (If Available) */}
                           {item.adminReply ? (
-                            <div style={{ 
-                              background: 'rgba(16, 185, 129, 0.08)', 
-                              borderLeft: '4px solid var(--accent-emerald)', 
-                              padding: '1rem 1.25rem', 
+                            <div style={{
+                              background: 'rgba(16, 185, 129, 0.08)',
+                              borderLeft: '4px solid var(--accent-emerald)',
+                              padding: '1rem 1.25rem',
                               borderRadius: '0 8px 8px 0',
                               fontSize: '0.88rem'
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                                 <span style={{ fontWeight: 700, color: 'var(--accent-emerald-dark)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                                   <CheckCircle2 size={16} />
-                                  <span>ข้อความชี้แจง / ผลการดำเนินงานจากสหกรณ์ (Official Reply):</span>
+                                  <span>ข้อความชี้แจงจากสหกรณ์:</span>
                                 </span>
                                 {item.replyDate && (
                                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -1475,41 +1161,70 @@ export default function MemberDashboardPage() {
                           ) : (
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem', fontStyle: 'italic' }}>
                               <Clock size={14} style={{ color: 'var(--accent-gold)' }} />
-                              <span>อยู่ระหว่างการตรวจสอบและพิจารณาโดยเจ้าหน้าที่สหกรณ์</span>
+                              <span>อยู่ระหว่างการตรวจสอบและพิจารณาโดยเจ้าหน้าที่</span>
                             </div>
                           )}
-
-                          {/* Card Action Footer */}
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.25rem' }}>
-                            <button
-                              onClick={() => handleDeleteComplaint(item.id)}
-                              className="btn btn-outline btn-sm"
-                              style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderColor: 'var(--border-subtle)', padding: '0.3rem 0.6rem' }}
-                            >
-                              <Trash2 size={13} style={{ marginRight: '0.25rem' }} />
-                              <span>ลบรายการนี้</span>
-                            </button>
-                          </div>
                         </div>
                       );
                     })}
 
                   {myComplaints.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                      <MessageSquare size={48} style={{ opacity: 0.3, margin: '0 auto 1rem auto' }} />
-                      <p style={{ fontSize: '1rem', fontWeight: 600 }}>ยังไม่มีประวัติการส่งเรื่องร้องเรียนหรือข้อเสนอแนะของคุณ</p>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0 1rem 0' }}>ระบบจะแสดงเฉพาะเรื่องร้องเรียนและข้อเสนอแนะที่ส่งด้วยบัญชีของคุณเพื่อความเป็นส่วนตัว</p>
-                      <button 
-                        onClick={() => setMemberComplaintModalOpen(true)}
-                        className="btn btn-primary btn-sm"
-                      >
-                        ส่งเรื่องร้องเรียนข้อแรก
-                      </button>
-                    </div>
+                    <EmptyState
+                      title="ยังไม่มีประวัติเรื่องร้องเรียนหรือข้อเสนอแนะ"
+                      description="ท่านสามารถส่งข้อเสนอแนะหรือร้องเรียนการให้บริการเพื่อการพัฒนาปรับปรุงได้ตลอดเวลา"
+                      icon={MessageSquare}
+                      actionButton={
+                        <button
+                          onClick={() => setMemberComplaintModalOpen(true)}
+                          className="btn btn-primary btn-sm"
+                        >
+                          ส่งข้อเสนอแนะข้อแรก
+                        </button>
+                      }
+                    />
                   )}
                 </div>
               </div>
             )}
+
+            {/* TAB 4: QUICK SERVICES */}
+            {activeTab === 'services' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+                <div className="surface-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-50)', color: 'var(--primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                    <Calculator size={24} />
+                  </div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.35rem' }}>โปรแกรมคำนวณเงินกู้</h4>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>จำลองค่างวดและอัตราดอกเบี้ยผ่อนชำระ</p>
+                  <button onClick={() => navigate('/calculator')} className="btn btn-outline btn-sm" style={{ width: '100%' }}>
+                    เปิดโปรแกรมคำนวณ
+                  </button>
+                </div>
+
+                <div className="surface-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                    <TrendingUp size={24} />
+                  </div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.35rem' }}>ประมาณการเงินปันผล</h4>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>คำนวณเงินปันผลหุ้นและเงินเฉลี่ยคืน</p>
+                  <button onClick={() => navigate('/dividend-estimator')} className="btn btn-outline btn-sm" style={{ width: '100%' }}>
+                    คำนวณเงินปันผล
+                  </button>
+                </div>
+
+                <div className="surface-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                    <FileCheck size={24} />
+                  </div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.35rem' }}>ตรวจสอบความพร้อมกู้</h4>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>Checklist เอกสารและคุณสมบัติผู้กู้/ผู้ค้ำ</p>
+                  <button onClick={() => navigate('/loan-checklist')} className="btn btn-outline btn-sm" style={{ width: '100%' }}>
+                    ตรวจสอบคุณสมบัติ
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -1550,26 +1265,22 @@ export default function MemberDashboardPage() {
               overflowY: 'auto',
               border: '1px solid var(--border-subtle)'
             }}>
-              {/* Modal Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
                     <span className="badge badge-primary">{selectedAdminComplaint.id}</span>
-                    <span className={`badge badge-${selectedAdminComplaint.status === 'ตอบกลับแล้ว' ? 'emerald' : selectedAdminComplaint.status === 'กำลังตรวจสอบ' ? 'gold' : 'rose'}`}>
-                      {selectedAdminComplaint.status}
-                    </span>
+                    <StatusBadge status={selectedAdminComplaint.status} size="sm" />
                   </div>
                   <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-900)', fontWeight: 800, margin: 0 }}>
                     {selectedAdminComplaint.topic}
                   </h3>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    วันที่ส่ง: <strong>{selectedAdminComplaint.date}</strong> • ผู้ส่ง: <strong>{selectedAdminComplaint.name}</strong>
+                    วันที่: <strong>{selectedAdminComplaint.date}</strong> • ผู้ส่ง: <strong>{selectedAdminComplaint.name}</strong>
                   </div>
                 </div>
                 <button onClick={() => setSelectedAdminComplaint(null)} style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
               </div>
 
-              {/* Modal Body */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', fontSize: '0.82rem' }}>
                   <div>📞 <strong>เบอร์โทร:</strong> {selectedAdminComplaint.phone}</div>
@@ -1577,21 +1288,18 @@ export default function MemberDashboardPage() {
                   <div style={{ gridColumn: 'span 2' }}>🏢 <strong>สังกัด/หน่วยงาน:</strong> {selectedAdminComplaint.department || 'สมาชิกทั่วไป'}</div>
                 </div>
 
-                {/* Member Message */}
                 <div style={{ background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <MessageSquare size={16} style={{ color: 'var(--accent-rose)' }} />
-                    <span>ข้อความเรื่องร้องเรียน / ข้อเสนอแนะ:</span>
+                  <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem' }}>
+                    ข้อความเรื่องร้องเรียน / ข้อเสนอแนะ:
                   </div>
                   <p style={{ color: 'var(--text-main)', lineHeight: 1.6, margin: 0 }}>
                     {selectedAdminComplaint.message}
                   </p>
                 </div>
 
-                {/* Status Switcher Buttons */}
                 <div>
                   <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem', display: 'block' }}>
-                    ปรับเปลี่ยนสถานะการดำเนินการ (Update Status):
+                    ปรับเปลี่ยนสถานะ:
                   </label>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {['รอดำเนินการ', 'กำลังตรวจสอบ', 'ตอบกลับแล้ว'].map((st) => (
@@ -1608,18 +1316,17 @@ export default function MemberDashboardPage() {
                   </div>
                 </div>
 
-                {/* Admin Reply Input */}
                 <div style={{ background: 'rgba(14, 165, 233, 0.05)', padding: '1.25rem', borderRadius: '10px', border: '1px solid rgba(14, 165, 233, 0.25)' }}>
                   <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary-800)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}>
                     <CheckCircle2 size={16} style={{ color: 'var(--accent-emerald-dark)' }} />
-                    <span>พิมพ์ข้อความตอบกลับจากผู้บริหาร/เจ้าหน้าที่ (Official Reply):</span>
+                    <span>พิมพ์ข้อความตอบกลับจากสหกรณ์:</span>
                   </label>
                   <textarea
                     className="form-control"
                     rows={3}
                     value={adminReplyText}
                     onChange={(e) => setAdminReplyText(e.target.value)}
-                    placeholder="ระบุคำชี้แจง มาตรการแก้ไข หรือผลการตรวจสอบเพื่อแจ้งแก่สมาชิก..."
+                    placeholder="ระบุคำชี้แจง มาตรการแก้ไข หรือผลการตรวจสอบ..."
                     style={{ fontSize: '0.85rem', marginBottom: '0.75rem' }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1636,7 +1343,6 @@ export default function MemberDashboardPage() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
                 <button
                   type="button"
@@ -1689,14 +1395,12 @@ export default function MemberDashboardPage() {
               </div>
 
               <form onSubmit={handleMemberSubmitComplaint} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-                {/* Pre-filled Member Identity */}
                 <div style={{ background: 'var(--bg-subtle)', padding: '0.85rem 1rem', borderRadius: '8px', fontSize: '0.85rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  <div>👤 <strong>ผู้ยื่น:</strong> {user.name || 'นายสมชาย มีสุข'}</div>
-                  <div>🆔 <strong>เลขสมาชิก:</strong> {user.memberId || '04892'}</div>
-                  <div style={{ gridColumn: 'span 2' }}>🏢 <strong>สังกัด:</strong> {user.department || 'โรงพยาบาลระยอง'}</div>
+                  <div>👤 <strong>ผู้ยื่น:</strong> {user.name || 'สมาชิกสหกรณ์'}</div>
+                  <div>🆔 <strong>เลขสมาชิก:</strong> {user.memberId || user.username || '-'}</div>
+                  <div style={{ gridColumn: 'span 2' }}>🏢 <strong>สังกัด:</strong> {user.department || 'สหกรณ์ออมทรัพย์สาธารณสุขระยอง'}</div>
                 </div>
 
-                {/* Topic Selector */}
                 <div>
                   <label className="form-label" style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.4rem', display: 'block' }}>
                     หัวข้อเรื่อง / ประเภทคำร้อง <span style={{ color: 'var(--accent-rose)' }}>*</span>
@@ -1715,7 +1419,6 @@ export default function MemberDashboardPage() {
                   </select>
                 </div>
 
-                {/* Message Input */}
                 <div>
                   <label className="form-label" style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.4rem', display: 'block' }}>
                     รายละเอียดข้อความ <span style={{ color: 'var(--accent-rose)' }}>*</span>
@@ -1726,12 +1429,11 @@ export default function MemberDashboardPage() {
                     required
                     value={newMemberComplaint.message}
                     onChange={(e) => setNewMemberComplaint({ ...newMemberComplaint, message: e.target.value })}
-                    placeholder="โปรดระบุรายละเอียดเรื่องร้องเรียนหรือข้อเสนอแนะของท่านให้ชัดเจน เพื่อให้เจ้าหน้าที่ตรวจสอบและดำเนินการได้อย่างถูกต้อง..."
+                    placeholder="โปรดระบุรายละเอียดเรื่องร้องเรียนหรือข้อเสนอแนะของท่านให้ชัดเจน..."
                     style={{ fontSize: '0.88rem' }}
                   />
                 </div>
 
-                {/* Modal Buttons */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
                   <button
                     type="button"
@@ -1755,9 +1457,9 @@ export default function MemberDashboardPage() {
         )}
 
         {/* Edit Profile Modal (Avatar & Phone) */}
-        <EditProfileModal 
-          isOpen={editProfileModalOpen} 
-          onClose={() => setEditProfileModalOpen(false)} 
+        <EditProfileModal
+          isOpen={editProfileModalOpen}
+          onClose={() => setEditProfileModalOpen(false)}
         />
 
         {/* New Online Loan Request Modal */}
@@ -1771,14 +1473,3 @@ export default function MemberDashboardPage() {
     </div>
   );
 }
-
-const tabNavBtn = (active) => ({
-  padding: '0.5rem 1.25rem',
-  fontSize: '0.9rem',
-  fontWeight: active ? '700' : '500',
-  borderRadius: '8px',
-  background: active ? 'var(--primary-600)' : 'transparent',
-  color: active ? '#ffffff' : 'var(--text-main)',
-  cursor: 'pointer',
-  transition: 'all 0.15s ease'
-});
