@@ -61,6 +61,11 @@ DB_PORT=3306
 DB_DATABASE=rayongcoop_db
 DB_USERNAME=root
 DB_PASSWORD=
+
+# Required before running db:seed. Use a unique password of at least 16 characters.
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_EMAIL=admin@rayongcoop.com
+INITIAL_ADMIN_PASSWORD=replace-with-a-unique-secret
 ```
 
 ### 3.3 สร้างฐานข้อมูลและรัน Migration & Seeder
@@ -78,13 +83,14 @@ php bin/console db:seed
 
 ---
 
-## 4. บัญชีผู้ใช้งานเริ่มต้นสำหรับการทดสอบ (Default Test Accounts)
+## 4. บัญชีผู้ใช้งานเริ่มต้น
 
-| บทบาท (Role) | Username / Email | รหัสผ่าน (Password) | สิทธิ์การใช้งาน (Permissions) |
-|---|---|---|---|
-| **Super Admin** | `admin` / `admin@rayongcoop.com` | `Admin@RayongCoop2026!` | เข้าถึงแดชบอร์ดผู้บริหารและจัดการระบบทั้งหมด |
-| **Staff / Officer** | `staff` / `staff@rayongcoop.com` | `Staff@RayongCoop2026!` | Maker-Checker ตรวจสอบและอนุมัติคำขอกู้/สวัสดิการ |
-| **Member** | `member` / `02541` (เลขสมาชิก) | `Member@RayongCoop2026!` | ตรวจสอบยอดเงินกู้ หุ้น เงินฝาก และยื่นคำขอ |
+คำสั่ง `db:seed` จะสร้าง Super Admin จากค่า `INITIAL_ADMIN_USERNAME`,
+`INITIAL_ADMIN_EMAIL` และ `INITIAL_ADMIN_PASSWORD` ใน `.env` เท่านั้น โดยรหัสผ่าน
+ต้องมีอย่างน้อย 16 ตัวอักษร และไม่มีรหัสผ่านเริ่มต้นที่ฝังอยู่ใน source code
+
+ห้ามใช้ข้อมูลตัวอย่างหรือรหัสผ่านร่วมกันบน Production ให้กำหนดค่า `.env` เฉพาะ
+เครื่องและเก็บไว้ในระบบจัดการ secrets ที่เหมาะสม
 
 ---
 

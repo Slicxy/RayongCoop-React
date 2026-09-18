@@ -48,19 +48,28 @@ class DatabaseSeeder
         }
 
         // 4. SEED SUPER ADMIN USER
-        $adminPassword = password_hash('Adminrycoop2026', PASSWORD_BCRYPT);
+        $adminUsername = trim((string) env('INITIAL_ADMIN_USERNAME', 'admin'));
+        $adminEmail = trim((string) env('INITIAL_ADMIN_EMAIL', 'admin@rayongcoop.com'));
+        $adminPasswordPlaintext = (string) env('INITIAL_ADMIN_PASSWORD', '');
+        if (strlen($adminPasswordPlaintext) < 16) {
+            throw new \RuntimeException(
+                'INITIAL_ADMIN_PASSWORD must be set to a unique password of at least 16 characters before running db:seed.'
+            );
+        }
+
+        $adminPassword = password_hash($adminPasswordPlaintext, PASSWORD_BCRYPT);
         $adminUuid = '00000000-0000-0000-0000-000000000001';
 
         $stmt = $pdo->prepare("INSERT INTO users (uuid, name, username, email, password, status, two_factor_enabled, created_at) 
                                VALUES (?, ?, ?, ?, ?, 'active', 0, NOW()) 
                                ON DUPLICATE KEY UPDATE password=VALUES(password)");
-        $stmt->execute([$adminUuid, 'ผู้ดูแลระบบสูงสุด (Super Admin)', 'admin', 'admin@rayongcoop.com', $adminPassword]);
-        $adminId = (int) $pdo->lastInsertId() ?: (int) Database::value("SELECT id FROM users WHERE email = 'admin@rayongcoop.com'");
+        $stmt->execute([$adminUuid, 'ผู้ดูแลระบบสูงสุด (Super Admin)', $adminUsername, $adminEmail, $adminPassword]);
+        $adminId = (int) $pdo->lastInsertId() ?: (int) Database::value('SELECT id FROM users WHERE email = ?', [$adminEmail]);
 
         // Assign super_admin role
         $stmt = $pdo->prepare("INSERT IGNORE INTO user_roles (user_id, role_id, created_at) VALUES (?, ?, NOW())");
         $stmt->execute([$adminId, $superAdminRoleId]);
-        echo "✓ Seeded Super Admin User (admin / Adminrycoop2026)\n";
+        echo "✓ Seeded Super Admin User ({$adminUsername})\n";
 
         // 5. SEED COOKIE CATEGORIES
         $cookieCategories = [
