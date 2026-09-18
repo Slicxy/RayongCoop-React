@@ -36,7 +36,13 @@ class RoleMiddleware
             }
 
             Session::flash('error', 'คุณไม่มีสิทธิ์เข้าถึงส่วนนี้ (Permission Denied)');
-            $response->redirect(url('admin/dashboard'));
+            $role = Auth::user()['role_slug'] ?? '';
+            $fallbackUrl = match ($role) {
+                'member' => url('member/dashboard'),
+                'staff' => url('staff/dashboard'),
+                default => url('login'),
+            };
+            $response->redirect($fallbackUrl);
             return false;
         }
 

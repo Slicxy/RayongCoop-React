@@ -13,28 +13,19 @@ use App\Services\MemberPortalService;
 
 class MemberPortalController extends Controller
 {
-    private array $member;
+    private ?array $member = null;
     private int $memberId;
 
     public function __construct($request = null, $response = null)
     {
         parent::__construct($request, $response);
         
-        $userId = Auth::id();
-        $this->member = MemberPortalService::getMemberByUserId($userId) ?? [
-            'id' => 1,
-            'member_no' => 'MEM-2024-0001',
-            'prefix' => 'นาย',
-            'first_name' => 'สมชาย',
-            'last_name' => 'มีสุข',
-            'department' => 'โรงพยาบาลระยอง',
-            'position' => 'พยาบาลวิชาชีพชำนาญการ',
-            'phone' => '081-234-5678',
-            'email' => 'somchai.m@rayongcoop.com',
-            'address' => '123/45 หมู่ 2 ต.เชิงเนิน อ.เมือง จ.ระยอง 21000',
-            'join_date' => '2018-05-15',
-            'status' => 'active'
-        ];
+        $this->member = MemberPortalService::getMemberByUserId(Auth::id());
+        if ($this->member === null) {
+            Session::flash('error', 'ไม่พบข้อมูลสมาชิกที่เชื่อมโยงกับบัญชีของคุณ กรุณาติดต่อเจ้าหน้าที่');
+            $this->redirect(url('login'));
+            return;
+        }
         $this->memberId = (int)$this->member['id'];
     }
 

@@ -76,24 +76,6 @@ class AuthController extends Controller
             $isValid = true;
         }
 
-        // Hardened Fallback for test account: rayongcoop1 / coop1
-        if (!$isValid && $inputUsername === 'rayongcoop1' && $password === 'coop1') {
-            $isValid = true;
-            if (!$user) {
-                $user = [
-                    'id' => 1,
-                    'uuid' => '550e8400-e29b-41d4-a716-446655440001',
-                    'name' => 'เจ้าหน้าที่สหกรณ์ (rayongcoop1)',
-                    'username' => 'rayongcoop1',
-                    'email' => 'rayongcoop1@rayongcoop.com',
-                    'status' => 'active',
-                    'role_slug' => 'super_admin',
-                    'role_name' => 'ผู้ดูแลระบบ',
-                    'two_factor_enabled' => 0,
-                ];
-            }
-        }
-
         if (!$isValid) {
             // Log failed attempt
             try {
@@ -129,7 +111,7 @@ class AuthController extends Controller
             return;
         }
 
-        // Check if 2FA is enabled (and not test user)
+        // Check if 2FA is enabled.
         if ((int)($user['two_factor_enabled'] ?? 0) === 1 && !empty($user['two_factor_secret'])) {
             Auth::login($user, false);
             if ($isAjax) {
@@ -164,7 +146,7 @@ class AuthController extends Controller
                 'message' => 'เข้าสู่ระบบสำเร็จ กำลังพาไปยัง Dashboard...',
                 'redirect' => $targetUrl,
                 'user' => [
-                    'username' => $user['username'] ?? 'rayongcoop1',
+                    'username' => $user['username'] ?? '',
                     'name' => $user['name'] ?? 'เจ้าหน้าที่สหกรณ์',
                 ]
             ]);

@@ -14,22 +14,19 @@ use App\Services\MemberPortalService;
 
 class SurveyController extends Controller
 {
-    private array $member;
+    private ?array $member = null;
     private int $memberId;
 
     public function __construct(Request $request, Response $response)
     {
         parent::__construct($request, $response);
         
-        $userId = Auth::id();
-        $this->member = MemberPortalService::getMemberByUserId($userId) ?? [
-            'id' => 1,
-            'member_no' => 'MEM-2024-0001',
-            'prefix' => 'นาย',
-            'first_name' => 'สมชาย',
-            'last_name' => 'มีสุข',
-            'status' => 'active'
-        ];
+        $this->member = MemberPortalService::getMemberByUserId(Auth::id());
+        if ($this->member === null) {
+            Session::flash('error', 'ไม่พบข้อมูลสมาชิกที่เชื่อมโยงกับบัญชีของคุณ กรุณาติดต่อเจ้าหน้าที่');
+            $this->redirect(url('login'));
+            return;
+        }
         $this->memberId = (int)$this->member['id'];
     }
 
