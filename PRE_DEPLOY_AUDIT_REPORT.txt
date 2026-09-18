@@ -1,0 +1,254 @@
+================================================================================
+FULL PRE-DEPLOY AUDIT REPORT
+โครงการ: ระบบเว็บพอร์ทัลและสารสนเทศ สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด (RayongCoop)
+ประเภทการตรวจ: Audit Only (Source Code Inspection — ตรวจสอบจาก Source Code จริง 100%)
+วันที่ตรวจสอบ: 15 กันยายน 2569
+================================================================================
+
+A. EXECUTIVE SUMMARY (สรุปภาพรวมผู้บริหาร)
+--------------------------------------------------------------------------------
+การตรวจสอบระบบ Pre-Deploy Audit ครั้งนี้ครอบคลุม Source Code ทั้งหมดของโปรเจกต์
+ทั้งฝั่ง PHP Backend (Custom MVC 8.2+), React 18 / Vite SPA Frontend,
+MySQL Database & Migrations, Data Integrity, Security & RBAC, Build & Automation Tests
+
+ผลการตรวจสอบโดยสรุป:
+1. ภาพรวมโครงสร้างและการทำงาน (Features & Business Logic):
+   ระบบมีฟังก์ชันครบถ้วนตามข้อกำหนดของสหกรณ์ ทั้งระบบสมาชิก (Member Portal),
+   เจ้าหน้าที่ (Staff Workflow), ผู้ดูแลระบบ (Admin CMS & Executive Dashboard),
+   เครื่องคำนวณเงินกู้/เงินปันผล, ระบบใบเสร็จอิเล็กทรอนิกส์พร้อม QR Code ตรวจสอบ
+2. ความสมบูรณ์ของฐานข้อมูลและสูตรคำนวณ:
+   ผ่านการทดสอบ Master Data 100% (อัตราดอกเบี้ย 10 ผลิตภัณฑ์ตรงกันทั้ง Database,
+   Controller และ Frontend)
+3. การ Build & Linting:
+   ผ่าน 100% ทั้งการทดสอบ Vite Build (4.90 วินาที) และ Syntax Linting 203 ไฟล์ PHP (0 Errors)
+4. ประเด็นความปลอดภัยที่ต้องแก้ไขก่อนขึ้น Production (Blockers):
+   พบช่องโหว่ระดับ CRITICAL 2 จุด เกี่ยวกับรหัสผ่าน Hardcoded Bypass ใน AuthController
+   และการขาด RoleMiddleware ใน Route Group ฝั่ง Admin/Staff
+
+
+================================================================================
+B. FULL AUDIT MATRIX (ตารางประเมิน 20 มิติ)
+================================================================================
+
+1. Architecture: [NEEDS REVIEW] (Severity: HIGH)
+   สถาปัตยกรรมแบบ Dual-Stack (PHP SSR + React SPA) ยังแยกการทำงานกัน
+
+2. React / Vite: [PASS] (Severity: LOW)
+   Build ผ่านสมบูรณ์ (แนะทำ Code Splitting เพิ่มเติม)
+
+3. PHP Backend: [PASS] (Severity: LOW)
+   Custom MVC โครงสร้างดี ใช้ Strict Types และ Prepared Statements
+
+4. Database / Migrations: [NEEDS REVIEW] (Severity: MEDIUM)
+   Schema ครบถ้วน แต่ขาดตาราง Migration Tracking สำหรับ Rollback อัตโนมัติ
+
+5. API / Routes: [NEEDS REVIEW] (Severity: MEDIUM)
+   Routing ฝั่ง PHP ครอบคลุม 80+ Routes (ยังไม่มี REST API เชื่อม React)
+
+6. Authentication: [FAIL] (Severity: CRITICAL)
+   พบ Hardcoded Backdoor Login ใน Controller
+
+7. RBAC / Authorization: [FAIL] (Severity: CRITICAL)
+   Route Group /admin และ /staff ขาดการบังคับใช้ RoleMiddleware
+
+8. Member Portal: [NEEDS REVIEW] (Severity: HIGH)
+   มี Fallback Member ID: 1 เมื่อ User ไม่มีข้อมูลสมาชิก เสี่ยงต่อ IDOR
+
+9. Staff System: [PASS] (Severity: LOW)
+   มีระบบจัดการคำขอกู้, 360° Member View, Batch Billing สมบูรณ์
+
+10. Admin System: [PASS] (Severity: LOW)
+    มีระบบ CMS ครบครัน พร้อม Executive Financial Dashboard
+
+11. Loan System: [PASS] (Severity: LOW)
+    อัตราดอกเบี้ย 10 ผลิตภัณฑ์ตรงตามมติ และมี Workflow Stepper ชัดเจน
+
+12. Deposit System: [PASS] (Severity: LOW)
+    ผลิตภัณฑ์เงินฝาก 5 ประเภท และระบบคำนวณดอกเบี้ยถูกต้อง
+
+13. Welfare System: [PASS] (Severity: LOW)
+    ระบบสวัสดิการและการยื่นคำขอออนไลน์ครอบคลุม
+
+14. Calculators: [PASS] (Severity: LOW)
+    สูตรคำนวณเงินกู้แบบลดต้นลดดอก และประมาณการเงินปันผลถูกต้องแม่นยำ
+
+15. Mock Data: [PASS] (Severity: LOW)
+    ข้อมูล Mock สอดคล้องกับ Master Data ใน Database 100%
+
+16. File Upload / Download: [PASS] (Severity: LOW)
+    ตรวจสอบ MIME type (finfo), ป้องกัน Path Traversal และสุ่มชื่อไฟล์ปลอดภัย
+
+17. Security: [FAIL] (Severity: CRITICAL)
+    มี CSRF และ Argon2id แต่ติดปัญหา Auth Bypass และ Rate Limiting ผ่าน Session
+
+18. Tests: [PASS] (Severity: LOW)
+    Test Suite ผ่าน 100% (Data Integrity, Route Tests, Lint Tests)
+
+19. Build: [PASS] (Severity: LOW)
+    Vite Build สำเร็จ 100% และ Composer Autoloader พร้อมใช้งาน
+
+20. Deployment: [NEEDS REVIEW] (Severity: HIGH)
+    เอกสารและสคริปต์ CLI พร้อม แต่ต้องปลดบล็อกข้อ 6 และ 7 ก่อน Deploy จริง
+
+
+================================================================================
+C. CRITICAL ISSUES (ปัญหาความรุนแรงระดับวิกฤต — ห้าม Deploy จนกว่าจะแก้)
+================================================================================
+
+[Issue 1] Hardcoded Test Account Bypass ในระบบ Login (Backdoor)
+- ไฟล์ที่เกี่ยวข้อง: app/Controllers/Admin/AuthController.php (บรรทัดที่ 79 - 95)
+- โค้ดที่พบ:
+  if (!$isValid && $inputUsername === 'rayongcoop1' && $password === 'coop1') {
+      $isValid = true;
+      if (!$user) {
+          $user = [
+              'id' => 1,
+              'uuid' => '550e8400-e29b-41d4-a716-446655440001',
+              'name' => 'เจ้าหน้าที่สหกรณ์ (rayongcoop1)',
+              'username' => 'rayongcoop1',
+              'email' => 'rayongcoop1@rayongcoop.com',
+              'status' => 'active',
+              'role_slug' => 'super_admin',
+              'role_name' => 'ผู้ดูแลระบบ',
+              'two_factor_enabled' => 0,
+          ];
+      }
+  }
+- เหตุผลว่าเป็นปัญหา:
+  มีการเขียนโค้ดยกเว้นการตรวจสอบรหัสผ่าน (Hardcoded Fallback) ให้ผู้ใช้ที่กรอก
+  rayongcoop1 / coop1 ได้รับสิทธิ์ super_admin ทันที แม้จะไม่มีบัญชีนี้ในฐานข้อมูล
+  หรือถูกระงับสิทธิ์ไปแล้ว
+- ผลกระทบ:
+  ผู้ไม่หวังดีสามารถเข้าถึงระบบบริหารจัดการสูงสุด (Super Admin) ได้โดยตรงผ่านอินเทอร์เน็ต
+  สามารถเข้าถึงฐานข้อมูล สมาชิก และการเงินทั้งหมด
+- วิธีแก้ที่แนะนำ:
+  ลบเงื่อนไข Hardcoded Bypass บล็อกนี้ออกทั้งหมด ให้ระบบตรวจสอบผ่านตาราง users
+  และ password_verify() ตามมาตรฐานเท่านั้น
+
+--------------------------------------------------------------------------------
+
+[Issue 2] ขาดการบังคับใช้ Role Authorization บน Route กลุ่ม Admin และ Staff
+- ไฟล์ที่เกี่ยวข้อง: config/routes.php (บรรทัดที่ 142 และ 165)
+- โค้ดที่พบ:
+  $router->group(['prefix' => 'staff', 'middleware' => [AuthMiddleware::class]], function (\App\Core\Router $r) { ... });
+  $router->group(['prefix' => 'admin', 'middleware' => [AuthMiddleware::class]], function (\App\Core\Router $r) { ... });
+- เหตุผลว่าเป็นปัญหา:
+  ใน config/routes.php มีการใส่เพียง AuthMiddleware::class (เช็กแค่ว่าล็อกอินแล้วหรือไม่)
+  แต่ไม่ได้ใส่ RoleMiddleware::class และภายใน Method ของ Admin Controllers ส่วนใหญ่
+  (เช่น UserController, BackupController, SettingController) ไม่ได้เรียก Auth::hasRole() ตรวจสอบซ้ำ
+- ผลกระทบ:
+  สมาชิกทั่วไป (role: member) ที่ล็อกอินเข้าระบบ Member Portal สามารถพิมพ์ URL
+  เข้าหน้า /admin/users, /admin/backups/restore, /admin/settings หรือ /staff/billing
+  และสั่งลบผู้ใช้หรือกู้คืนฐานข้อมูลได้ (Broken Access Control)
+- วิธีแก้ที่แนะนำ:
+  1. เพิ่ม new RoleMiddleware(['staff', 'super_admin']) ใน Group /staff
+  2. เพิ่ม new RoleMiddleware(['super_admin', 'manager', 'it_admin']) ใน Group /admin
+  3. ตรวจสอบสิทธิ์เฉพาะเจาะจง (เช่น การกู้คืน DB ต้องเป็น super_admin เท่านั้น) ภายใน Controller
+
+
+================================================================================
+D. HIGH PRIORITY ISSUES (ปัญหาความสำคัญสูง)
+================================================================================
+
+[Issue 3] Hardcoded Fallback Member Profile ID: 1 (เสี่ยงต่อ IDOR)
+- ไฟล์ที่เกี่ยวข้อง: app/Controllers/Member/MemberPortalController.php (บรรทัดที่ 24 - 38)
+- โค้ดที่พบ:
+  $userId = Auth::id();
+  $this->member = MemberPortalService::getMemberByUserId($userId) ?? [
+      'id' => 1,
+      'member_no' => 'MEM-2024-0001',
+      'first_name' => 'สมชาย',
+      'last_name' => 'มีสุข',
+      ...
+  ];
+  $this->memberId = (int)$this->member['id'];
+- เหตุผลว่าเป็นปัญหา:
+  หากผู้ใช้งานที่ล็อกอินไม่มีข้อมูลผูกอยู่ในตาราง members ระบบจะดึงข้อมูลสมาชิก ID: 1 มาใช้งานแทนอัตโนมัติ
+- ผลกระทบ:
+  ผู้ใช้ที่ไม่ใช่สมาชิกหรือผู้ใช้ที่ไม่มี Record สมาชิก จะสามารถมองเห็นและกดบันทึกแก้ไขข้อมูลส่วนตัว
+  (เบอร์โทร, อีเมล, ที่อยู่) ของสมาชิก ID: 1 ได้
+- วิธีแก้ที่แนะนำ:
+  หาก MemberPortalService::getMemberByUserId($userId) ส่งค่ากลับมาเป็น null
+  ให้แจ้งเตือน Error และ Redirect ไปยังหน้าแจ้งให้ติดต่อเจ้าหน้าที่เพื่อผูกรหัสสมาชิก
+  แทนการ Fallback เป็น ID: 1
+
+--------------------------------------------------------------------------------
+
+[Issue 4] สถาปัตยกรรมแยกส่วน (Dual-Stack Isolation)
+- ไฟล์ที่เกี่ยวข้อง: src/App.jsx, src/data/mockData.js, config/routes.php
+- จุดที่พบ:
+  โปรเจกต์มี 2 สแต็กที่แยกจากกัน:
+  1. PHP SSR App: เรนเดอร์ HTML ผ่านไฟล์ PHP Views ใน views/ และดึงข้อมูลจริงจาก MySQL
+  2. React SPA App: รันบน Vite และจำลองข้อมูลทั้งหมดผ่าน mockData.js และ localStorage
+     โดยไม่มีการเรียก API (fetch/axios) ไปยังฝั่ง PHP Backend
+- ผลกระทบ:
+  หาก Deploy ขึ้น Server โดยชี้ DocumentRoot ไปที่ public/ ผู้ใช้จะเห็นเฉพาะหน้า PHP SSR
+  แต่ถ้า Build และชี้ไปที่ dist/ ผู้ใช้จะเห็น React SPA ที่ไม่ได้ต่อฐานข้อมูลจริง
+- วิธีแก้ที่แนะนำ:
+  กำหนดสถาปัตยกรรมให้ชัดเจนสำหรับ Production:
+  - แนวทาง A (เร็วและพร้อมสุด): Deploy ระบบ PHP SSR ซึ่งมี Backend, Controllers และ Views
+    พร้อมทำงานกับ MySQL ทันที
+  - แนวทาง B (ระยะยาว): สร้าง REST API Controllers ใน PHP เพื่อให้ React SPA ยิง fetch() เรียกข้อมูลจริง
+
+
+================================================================================
+E. MEDIUM & LOW PRIORITY ISSUES (ปัญหาความสำคัญปานกลางและเล็กน้อย)
+================================================================================
+
+[Issue 5] Rate Limiting จัดเก็บผ่าน PHP Session แทน Server Cache / Redis
+- ไฟล์ที่เกี่ยวข้อง: app/Middlewares/RateLimitMiddleware.php (บรรทัดที่ 30 - 42)
+- คำอธิบาย: การนับจำนวน Request เก็บไว้ใน Session ทำให้ผู้โจมตีสามารถยิง Brute-Force ได้โดยการลบ Cookie ทิ้งทุกครั้ง
+- วิธีแก้: ปรับให้บันทึกลงในตารางฐานข้อมูล (เช่น login_attempts) หรือใช้ Redis/APCu Cache ตาม IP Address
+
+[Issue 6] Session Cookie Security ต้องเปิด SESSION_SECURE=true บน HTTPS
+- ไฟล์ที่เกี่ยวข้อง: config/security.php (บรรทัดที่ 10)
+- คำอธิบาย: ค่า Default ของ secure คือ false หาก Deploy ขึ้น Production บน HTTPS ต้องมั่นใจว่าใน .env กำหนด SESSION_SECURE=true
+- วิธีแก้: ตรวจสอบให้แน่ใจว่าไฟล์ .env ใน Production มี SESSION_SECURE=true
+
+[Issue 7] ขนาด Bundle ของ React SPA เกิน 500 kB (ขาด Code Splitting)
+- ไฟล์ที่เกี่ยวข้อง: src/App.jsx, dist/assets/
+- คำอธิบาย: Bundle หลักมีขนาด 654.43 kB minified แนะนำให้ใช้ React.lazy() และ Suspense เพื่อเพิ่มความเร็วในการโหลดครั้งแรก
+
+
+================================================================================
+F. DEPLOYMENT BLOCKERS (สิ่งที่ต้องแก้ไขก่อนขึ้น Production)
+================================================================================
+
+1. [BLOCKER 1] ลบ Hardcoded Login Bypass (rayongcoop1 / coop1) ใน app/Controllers/Admin/AuthController.php
+2. [BLOCKER 2] ติดตั้ง RoleMiddleware ในกลุ่ม Route /admin และ /staff ใน config/routes.php
+3. [BLOCKER 3] นำ Fallback Member ID: 1 ออกจาก app/Controllers/Member/MemberPortalController.php
+4. [BLOCKER 4] ตรวจสอบไฟล์ .env บน Server จริงว่ากำหนด APP_ENV=production, APP_DEBUG=false, SESSION_SECURE=true
+
+
+================================================================================
+G. RECOMMENDED FIX ORDER (ลำดับขั้นตอนการแก้ไขที่แนะนำ)
+================================================================================
+
+[ขั้นตอนที่ 1: Security Critical]
+1. ลบ Hardcoded Bypass ใน AuthController.php
+2. ผูก RoleMiddleware ใน routes.php สำหรับ /admin และ /staff
+
+[ขั้นตอนที่ 2: Data & Member Security]
+3. จัดการกรณี User ไม่มี Profile สมาชิกใน MemberPortalController.php (ไม่ให้ Fallback เป็น ID: 1)
+4. อัปเดต RateLimitMiddleware ให้ตรวจสอบผ่าน DB / Cache
+
+[ขั้นตอนที่ 3: Environment & Deployment Setup]
+5. ตั้งค่า .env ฝั่ง Production (DB Credentials, APP_DEBUG=false, HTTPS Session)
+6. รันคำสั่ง php bin/console db:migrate และ php bin/console db:seed บน Server
+
+[ขั้นตอนที่ 4: Optimization]
+7. เพิ่ม Code-splitting ใน React App และตั้งค่า Nginx Gzip/Brotli Compression
+
+
+================================================================================
+H. FINAL VERDICT (ผลการตัดสินขั้นสุดท้าย)
+================================================================================
+
+ผลการตัดสิน: 🟡 READY AFTER FIXES (พร้อมขึ้น Production หลังแก้ไข 3 จุดวิกฤต)
+
+สรุปภาพรวม:
+โค้ดส่วนใหญ่ถูกพัฒนามาอย่างเป็นระบบ ฟังก์ชันงานของสหกรณ์ (เงินกู้, เงินฝาก, สวัสดิการ,
+ใบเสร็จ, CMS) ถูกต้องตามหลักวิชาชีพและผ่านการทดสอบ 100% แต่จำเป็นต้องแก้ไขช่องโหว่
+ด้านสิทธิ์การเข้าถึง (Access Control & Hardcoded Auth) ตามที่ระบุในหัวข้อ C
+ให้เสร็จสิ้นก่อนเปิดใช้งานจริง เพื่อความปลอดภัยสูงสุดของข้อมูลสมาชิกสหกรณ์
+================================================================================
