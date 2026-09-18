@@ -17,6 +17,7 @@ final class SecurityRegressionTest
         self::assertMemberLookupHasNoFallback();
         self::assertRouteRoleGuards();
         self::assertRateLimitUsesSharedStorage();
+        self::assertLoginKeepsCsrfProtection();
 
         if (self::$failures === 0) {
             echo "Security regression tests passed.\n";
@@ -63,6 +64,12 @@ final class SecurityRegressionTest
         $source = file_get_contents(__DIR__ . '/../app/Middlewares/RateLimitMiddleware.php');
         self::assert($source !== false && str_contains($source, 'rate_limit_attempts'), 'rate limit uses shared database storage');
         self::assert($source !== false && !str_contains($source, 'Session::set("{$cacheKey}:attempts"'), 'rate limit does not store counters in the browser session');
+    }
+
+    private static function assertLoginKeepsCsrfProtection(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../app/Middlewares/CsrfMiddleware.php');
+        self::assert($source !== false && !str_contains($source, 'Allow initial Ajax login request from SPA'), 'CSRF protection is not bypassed for AJAX login');
     }
 
     private static function assertRouteHasRoles(array $routes, string $path, array $expectedRoles): void

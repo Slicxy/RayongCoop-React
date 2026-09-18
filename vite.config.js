@@ -13,5 +13,23 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      '/login': {
+        target: 'http://localhost/rayongcoop-react',
+        changeOrigin: true,
+      },
+      '/logout': {
+        target: 'http://localhost/rayongcoop-react',
+        changeOrigin: true,
+      },
+      '/csrf-token': {
+        target: 'http://localhost/rayongcoop-react',
+        changeOrigin: true,
+      },
+      '/api': {
+        target: 'http://localhost/rayongcoop-react',
+        changeOrigin: true,
+      },
+    },
   },
 });

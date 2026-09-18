@@ -175,12 +175,7 @@ export default function AdminDashboardPage() {
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
 
   // Users Management State
-  const [usersList, setUsersList] = useState([
-    { id: 1, name: 'นายธีระพงษ์ ผู้ดูแลระบบสูงสุด', username: 'admin', email: 'admin@rayongcoop.com', role: 'super_admin', roleName: 'Super Admin', status: 'active', lastLogin: '11 มี.ค. 14:15 น.' },
-    { id: 2, name: 'นางสาวกานดา ใจดี', username: 'staff1', email: 'staff1@rayongcoop.com', role: 'staff', roleName: 'Loan & Finance Staff', status: 'active', lastLogin: '11 มี.ค. 13:45 น.' },
-    { id: 3, name: 'นายวรวุฒิ สมบูรณ์ทรัพย์', username: 'rayongcoop1', email: 'rayongcoop1@rayongcoop.com', role: 'auditor', roleName: 'Auditor & Manager', status: 'active', lastLogin: '11 มี.ค. 11:20 น.' },
-    { id: 4, name: 'นายสมชาย มีสุข', username: '04892', email: 'somchai.m@rayongcoop.com', role: 'member', roleName: 'Cooperative Member', status: 'active', lastLogin: '10 มี.ค. 18:30 น.' },
-  ]);
+  const [usersList, setUsersList] = useState([]);
 
   const isSuperAdmin = user && user.role === 'super_admin';
 

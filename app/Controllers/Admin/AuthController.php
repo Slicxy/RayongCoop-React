@@ -146,8 +146,18 @@ class AuthController extends Controller
                 'message' => 'เข้าสู่ระบบสำเร็จ กำลังพาไปยัง Dashboard...',
                 'redirect' => $targetUrl,
                 'user' => [
+                    'id' => $user['id'] ?? null,
                     'username' => $user['username'] ?? '',
-                    'name' => $user['name'] ?? 'เจ้าหน้าที่สหกรณ์',
+                    'name' => $user['name'] ?? 'ผู้ใช้งาน',
+                    'email' => $user['email'] ?? '',
+                    'role' => $roleSlug,
+                    'role_slug' => $roleSlug,
+                    'role_name' => $user['role_name'] ?? match($roleSlug) {
+                        'super_admin' => 'ผู้ดูแลระบบสูงสุด',
+                        'staff' => 'เจ้าหน้าที่สินเชื่อ/การเงิน',
+                        'auditor' => 'ผู้ตรวจสอบกิจการ / ผู้จัดการ',
+                        default => 'สมาชิกสหกรณ์'
+                    },
                 ]
             ]);
             return;

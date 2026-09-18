@@ -24,9 +24,7 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  /**
-   * Real Authentication Login connecting to PHP Backend /login API
-   */
+  /** Real authentication against the same-origin PHP backend. */
   const login = async (usernameOrId, password) => {
     const inputUsername = (usernameOrId || '').trim();
     const inputPassword = (password || '').trim();
@@ -39,74 +37,80 @@ export function AuthProvider({ children }) {
     }
 
     try {
+      const csrfResponse = await fetch('/csrf-token', {
+        headers: { Accept: 'application/json' },
+        credentials: 'include'
+      });
+      if (!csrfResponse.ok) {
+        return { success: false, message: 'ไม่สามารถเริ่มต้นเซสชันที่ปลอดภัยได้ กรุณารีเฟรชหน้าและลองใหม่' };
+      }
+
+      const csrfData = await csrfResponse.json();
       const formData = new FormData();
       formData.append('username', inputUsername);
       formData.append('password', inputPassword);
       formData.append('ajax', '1');
+      formData.append('_csrf_token', csrfData.token || '');
 
       const response = await fetch('/login', {
         method: 'POST',
         body: formData,
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'application/json'
-        }
+          Accept: 'application/json'
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user) {
-          const roleSlug = data.user.role || data.user.role_slug || 'member';
-          const authUser = {
-            id: data.user.id,
-            username: data.user.username || inputUsername,
-            name: data.user.name || inputUsername,
-            role: roleSlug,
-            roleName: data.user.role_name || (roleSlug === 'super_admin' ? 'ผู้ดูแลระบบสูงสุด' : roleSlug === 'staff' ? 'เจ้าหน้าที่สินเชื่อ/การเงิน' : roleSlug === 'auditor' ? 'ผู้ตรวจสอบกิจการ' : 'สมาชิกสหกรณ์'),
-            roleBadge: data.user.role_badge || (roleSlug === 'super_admin' ? 'Super Admin' : roleSlug === 'staff' ? 'เจ้าหน้าที่สหกรณ์' : roleSlug === 'auditor' ? 'ผู้ตรวจสอบกิจการ' : 'สมาชิกสหกรณ์'),
-            department: data.user.department || data.user.org_name || 'สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด',
-            position: data.user.position || '',
-            phone: data.user.phone || '',
-            avatar: data.user.avatar || '',
-            memberId: data.user.member_no || data.user.memberId || inputUsername,
-            shares: data.user.shares_amount || data.user.shares || 0,
-            monthlyShare: data.user.monthly_share || 0,
-            savings: data.user.savings_balance || data.user.savings || 0,
-            loanBalance: data.user.loan_balance || 0,
-            dividendEstimated: data.user.dividend_estimated || 0,
-            loanRefundEstimated: data.user.loan_refund_estimated || 0,
-            accounts: data.user.accounts || [],
-            loans: data.user.loans || [],
-            recentReceipts: data.user.recent_receipts || []
-          };
+              const roleSlug = data.user.role || data.user.role_slug || 'member';
+              const authUser = {
+                id: data.user.id,
+                username: data.user.username || inputUsername,
+                name: data.user.name || inputUsername,
+                role: roleSlug,
+                roleName: data.user.role_name || (roleSlug === 'super_admin' ? 'ผู้ดูแลระบบสูงสุด' : roleSlug === 'staff' ? 'เจ้าหน้าที่สินเชื่อ/การเงิน' : roleSlug === 'auditor' ? 'ผู้ตรวจสอบกิจการ' : 'สมาชิกสหกรณ์'),
+                roleBadge: data.user.role_badge || (roleSlug === 'super_admin' ? 'Super Admin' : roleSlug === 'staff' ? 'เจ้าหน้าที่สหกรณ์' : roleSlug === 'auditor' ? 'ผู้ตรวจสอบกิจการ' : 'สมาชิกสหกรณ์'),
+                department: data.user.department || data.user.org_name || 'สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด',
+                position: data.user.position || '',
+                phone: data.user.phone || '',
+                avatar: data.user.avatar || '',
+                memberId: data.user.member_no || data.user.memberId || inputUsername,
+                shares: data.user.shares_amount || data.user.shares || 0,
+                monthlyShare: data.user.monthly_share || 0,
+                savings: data.user.savings_balance || data.user.savings || 0,
+                loanBalance: data.user.loan_balance || 0,
+                dividendEstimated: data.user.dividend_estimated || 0,
+                loanRefundEstimated: data.user.loan_refund_estimated || 0,
+                accounts: data.user.accounts || [],
+                loans: data.user.loans || [],
+                recentReceipts: data.user.recent_receipts || []
+              };
 
-          setUser(authUser);
-          setShowAuthModal(false);
-          return {
-            success: true,
-            redirect: data.redirect || (roleSlug === 'super_admin' ? '/admin/dashboard' : '/member/dashboard'),
-            user: authUser
-          };
-        } else {
-          return {
-            success: false,
-            message: data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'
-          };
+              setUser(authUser);
+              setShowAuthModal(false);
+              return {
+                success: true,
+                redirect: data.redirect || (roleSlug === 'super_admin' ? '/admin/dashboard' : roleSlug === 'staff' ? '/staff/dashboard' : '/member/dashboard'),
+                user: authUser
+              };
         }
-      } else {
-        return {
-          success: false,
-          message: `ไม่สามารถเชื่อมต่อระบบยืนยันตัวตนได้ (HTTP ${response.status}) กรุณาลองใหม่อีกครั้ง`
-        };
+        return { success: false, message: data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง' };
       }
+
+      if (response.status === 419) {
+        return { success: false, message: 'เซสชันหมดอายุ กรุณารีเฟรชหน้าและลองใหม่' };
+      }
+      return { success: false, message: 'ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง' };
     } catch (err) {
-      // If running Vite standalone or API unreachable
       console.warn('Authentication server connection error:', err);
-      return {
-        success: false,
-        message: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ระบบสหกรณ์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือบริการ backend'
-      };
     }
+    return {
+      success: false,
+      message: 'ไม่สามารถติดต่อระบบยืนยันตัวตนได้ กรุณาตรวจสอบการเชื่อมต่อแล้วลองใหม่'
+    };
   };
 
   const updateProfile = ({ avatar, phone }) => {
@@ -125,7 +129,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      fetch('/logout', { method: 'POST' }).catch(() => {});
+      fetch('/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     } catch (e) {}
     setUser(null);
     localStorage.removeItem('coop_auth_user');
