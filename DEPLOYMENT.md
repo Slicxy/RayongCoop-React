@@ -31,11 +31,9 @@ sudo apt install -y nginx mysql-server composer \
 server {
     listen 80;
     server_name portal.rayongcoop.com www.portal.rayongcoop.com;
-    # Release 1 serves the PHP MVC application. Do not point this server at
-    # Vite's dist/ directory: the React application currently uses demo data.
     root /var/www/rayongcoop/public;
 
-    index index.php index.html;
+    index index.html index.php;
 
     # Security Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -44,8 +42,19 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
+    # React SPA Assets & Routing (/app/ and root fallback)
+    location /app/ {
+        try_files $uri $uri/ /app/index.html;
+    }
+
+    # API & Authentication Endpoints -> PHP FastCGI
+    location ~ ^/(api|csrf-token|login|logout|change-password|verify-receipt) {
+        try_files $uri /index.php?$query_string;
+    }
+
+    # PHP Front Controller
     location / {
-        try_files $uri $uri/ /index.php?$query_string;
+        try_files $uri $uri/ /app/index.html /index.php?$query_string;
     }
 
     location ~ \.php$ {
@@ -60,16 +69,15 @@ server {
         deny all;
     }
 
-    # Serve uploads stored outside the public document root. The alias must end
-    # with a slash so /storage/uploads/a.jpg maps to storage/uploads/a.jpg.
+    # Serve uploads stored outside the public document root
     location /storage/uploads/ {
         alias /var/www/rayongcoop/storage/uploads/;
         try_files $uri =404;
         add_header X-Content-Type-Options "nosniff" always;
     }
 
-    # Never execute uploaded files as PHP.
-    location ~* ^/storage/uploads/.*\.php$ {
+    # Never execute uploaded files as PHP
+    location ~* ^/(storage/uploads|public/uploads)/.*\.php$ {
         deny all;
     }
 
