@@ -25,6 +25,17 @@ sudo apt install -y nginx mysql-server composer \
 
 ## 2. การตั้งค่า Nginx Virtual Host
 
+ก่อนเริ่ม Nginx ให้สร้าง React production build บนเครื่อง release หรือดาวน์โหลด
+artifact `rayongcoop-react-build` จาก CI ไปไว้ที่ `public/app/`:
+
+```bash
+npm ci
+npm run build
+```
+
+ห้าม commit ไฟล์ใน `public/app/` เพราะเป็นไฟล์ที่สร้างอัตโนมัติจาก source code
+และต้องสร้างใหม่ทุกครั้งที่ deploy
+
 สร้างไฟล์การตั้งค่า `/etc/nginx/sites-available/rayongcoop.conf`:
 
 ```nginx
