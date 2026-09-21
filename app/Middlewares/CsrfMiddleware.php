@@ -14,6 +14,15 @@ class CsrfMiddleware
     public function handle(Request $request, Response $response): bool
     {
         if (in_array($request->method(), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            // Only exempt login endpoint from CSRF — the React SPA fetches a
+            // CSRF token before calling /login, so the initial POST must be
+            // allowed through.  All other mutating endpoints (including
+            // change-password) MUST present a valid CSRF token.
+            $uri = $request->uri();
+            if ($uri === '/login' || str_ends_with($uri, '/login')) {
+                return true;
+            }
+
             $token = $request->csrfToken();
 
             if (!Csrf::validate($token)) {

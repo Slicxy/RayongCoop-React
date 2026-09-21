@@ -316,7 +316,8 @@ class MemberImportService
                             $userId = (int)$existingUser['id'];
                         } else {
                             $userUuid = self::generateUuid();
-                            $passwordHash = password_hash('coop123', PASSWORD_DEFAULT);
+                            $pwConfig = config('security.password');
+                            $passwordHash = password_hash('coop1234', $pwConfig['algo'] ?? PASSWORD_ARGON2ID, $pwConfig['options'] ?? []);
                             $userId = Database::insert(
                                 "INSERT INTO users (uuid, name, username, email, password, status, two_factor_enabled, created_at, updated_at) 
                                  VALUES (?, ?, ?, ?, ?, 'active', 0, NOW(), NOW())",
