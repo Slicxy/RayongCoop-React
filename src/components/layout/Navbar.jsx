@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Menu, X, ChevronDown, Landmark, ShieldCheck, HeartHandshake, 
+import {
+  Menu, X, ChevronDown, Landmark, ShieldCheck, HeartHandshake,
   FileText, Bell, PhoneCall, LayoutDashboard, LogIn, Award,
   PiggyBank, TrendingUp, Zap, Banknote, Home, CheckSquare,
   Calculator, Sparkles, GraduationCap, Stethoscope, LifeBuoy,
@@ -19,7 +19,7 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  
+
   const navRef = useRef(null);
   const userMenuRef = useRef(null);
   const location = useLocation();
@@ -47,13 +47,18 @@ export default function Navbar() {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target)) {
         setActiveMegaMenu(null);
+        setMobileMenuOpen(false);
       }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setUserDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const toggleMegaMenu = (menuName) => {
@@ -93,7 +98,7 @@ export default function Navbar() {
   };
 
   return (
-    <header 
+    <header
       ref={navRef}
       style={{
         position: 'sticky',
@@ -106,32 +111,21 @@ export default function Navbar() {
         transition: 'all 0.3s ease'
       }}
     >
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 1.5rem', gap: '1rem', position: 'relative' }}>
-        
+      <div className="navbar-container">
+
         {/* Logo & Brand */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', flexShrink: 0 }}>
-          <img 
-            src="/assets/img/logo.webp" 
-            alt="Logo" 
-            style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }}
+        <Link to="/" className="navbar-brand-link">
+          <img
+            src="/assets/img/logo.webp"
+            alt="Logo"
+            className="navbar-brand-logo"
             onError={(e) => { e.target.src = '/img/logo.webp'; }}
           />
-          <div style={{ whiteSpace: 'nowrap' }}>
-            <div style={{ 
-              fontFamily: 'var(--font-heading)', 
-              fontWeight: 800, 
-              fontSize: '1.05rem', 
-              color: 'var(--primary-700)', 
-              lineHeight: 1.25 
-            }}>
+          <div className="navbar-brand-text">
+            <div className="navbar-brand-title">
               {COOP_INFO.nameTh}
             </div>
-            <div style={{ 
-              fontSize: '0.7rem', 
-              color: 'var(--text-muted)', 
-              fontWeight: 500,
-              letterSpacing: '0.01em' 
-            }}>
+            <div className="navbar-brand-subtitle">
               {COOP_INFO.nameEn}
             </div>
           </div>
@@ -139,10 +133,10 @@ export default function Navbar() {
 
         {/* Desktop Navigation - 5 MAIN CATEGORIES */}
         <nav className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap' }}>
-          
+
           {/* 1. หน้าแรก */}
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className={`nav-link ${isActive('/') ? 'active' : ''}`}
             style={navLinkStyle(isActive('/'))}
             onMouseEnter={() => setActiveMegaMenu(null)}
@@ -152,7 +146,7 @@ export default function Navbar() {
 
           {/* 2. เกี่ยวกับสหกรณ์ (Mega Menu) */}
           <div style={{ position: 'static' }}>
-            <button 
+            <button
               onClick={() => toggleMegaMenu('about')}
               onMouseEnter={() => setActiveMegaMenu('about')}
               style={{
@@ -169,7 +163,7 @@ export default function Navbar() {
 
           {/* 3. บริการทางการเงิน (Mega Menu) */}
           <div style={{ position: 'static' }}>
-            <button 
+            <button
               onClick={() => toggleMegaMenu('finance')}
               onMouseEnter={() => setActiveMegaMenu('finance')}
               style={{
@@ -186,7 +180,7 @@ export default function Navbar() {
 
           {/* 4. สวัสดิการ (Mega Menu) */}
           <div style={{ position: 'static' }}>
-            <button 
+            <button
               onClick={() => toggleMegaMenu('welfare')}
               onMouseEnter={() => setActiveMegaMenu('welfare')}
               style={{
@@ -203,7 +197,7 @@ export default function Navbar() {
 
           {/* 5. ข่าวสารและเอกสาร (Mega Menu) */}
           <div style={{ position: 'static' }}>
-            <button 
+            <button
               onClick={() => toggleMegaMenu('news_docs')}
               onMouseEnter={() => setActiveMegaMenu('news_docs')}
               style={{
@@ -221,12 +215,12 @@ export default function Navbar() {
         </nav>
 
         {/* Right Action: User Profile Pill / Login */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          
+        <div className="navbar-actions">
+
           {isLoggedIn ? (
             /* Logged-In User Pill with Dropdown matching user screenshot */
             <div ref={userMenuRef} style={{ position: 'relative' }}>
-              <button 
+              <button
                 onClick={() => {
                   setActiveMegaMenu(null);
                   setUserDropdownOpen(!userDropdownOpen);
@@ -255,7 +249,7 @@ export default function Navbar() {
               {/* User Account Dropdown Menu (Exact match to screenshot) */}
               {userDropdownOpen && (
                 <div className="user-dropdown-panel animate-fade-in">
-                  
+
                   {/* Header */}
                   <div className="user-dropdown-header">
                     <div className="user-dropdown-header-name">
@@ -268,9 +262,9 @@ export default function Navbar() {
 
                   {/* Menu Items */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                    
-                    <Link 
-                      to={user.role === 'super_admin' ? '/admin/dashboard' : '/member/dashboard'} 
+
+                    <Link
+                      to={user.role === 'super_admin' ? '/admin/dashboard' : '/member/dashboard'}
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
@@ -278,8 +272,8 @@ export default function Navbar() {
                       <span>{user.role === 'super_admin' ? 'ไปที่ แผงควบคุมระบบ (Admin)' : 'ไปที่ พอร์ทัลสมาชิก'}</span>
                     </Link>
 
-                    <Link 
-                      to="/member/loans" 
+                    <Link
+                      to="/member/loans"
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
@@ -287,8 +281,8 @@ export default function Navbar() {
                       <span>คำขอกู้เงิน & ติดตามสถานะ</span>
                     </Link>
 
-                    <Link 
-                      to="/member/shares" 
+                    <Link
+                      to="/member/shares"
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
@@ -296,17 +290,17 @@ export default function Navbar() {
                       <span>บัญชีเงินฝาก & หุ้น</span>
                     </Link>
 
-                    <Link 
-                      to="/profile" 
+                    <Link
+                      to="/profile"
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
                       <User size={18} style={{ color: '#8b5cf6', flexShrink: 0 }} />
-                      <span>แก้ไขข้อมูลส่วนตัว (รูปภาพ / เบอร์โทร)</span>
+                      <span>ข้อมูลส่วนตัว & เปลี่ยนรหัสผ่าน</span>
                     </Link>
 
-                    <Link 
-                      to="/member/receipts" 
+                    <Link
+                      to="/member/receipts"
                       className="user-dropdown-item"
                       onClick={() => setUserDropdownOpen(false)}
                     >
@@ -315,8 +309,8 @@ export default function Navbar() {
                     </Link>
 
                     {user.role === 'super_admin' && (
-                      <Link 
-                        to="/admin/dashboard" 
+                      <Link
+                        to="/admin/dashboard"
                         className="user-dropdown-item"
                         onClick={() => setUserDropdownOpen(false)}
                       >
@@ -327,7 +321,7 @@ export default function Navbar() {
 
                     <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0.35rem 0' }} />
 
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="user-dropdown-item logout"
                     >
@@ -342,10 +336,9 @@ export default function Navbar() {
             </div>
           ) : (
             /* Logged-Out State: Login CTA */
-            <button 
-              onClick={() => setShowAuthModal(true)} 
-              className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.88rem', whiteSpace: 'nowrap', padding: '0.45rem 1rem' }}
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="btn btn-primary btn-sm navbar-login-btn"
             >
               <LogIn size={15} />
               <span>เข้าสู่ระบบ</span>
@@ -353,17 +346,9 @@ export default function Navbar() {
           )}
 
           {/* Mobile Menu Toggle Button */}
-          <button 
-            className="show-mobile-btn" 
+          <button
+            className="show-mobile-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{ 
-              padding: '0.5rem', 
-              color: 'var(--text-main)', 
-              background: 'var(--bg-subtle)', 
-              borderRadius: '8px',
-              display: 'none',
-              border: '1px solid var(--border-subtle)'
-            }}
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -377,11 +362,11 @@ export default function Navbar() {
       {/* DESKTOP MEGA MENUS CONTAINER                                            */}
       {/* ========================================================================= */}
       {activeMegaMenu && (
-        <div 
+        <div
           className="mega-menu-wrapper"
           onMouseLeave={() => setActiveMegaMenu(null)}
         >
-          
+
           {/* MEGA MENU 1: เกี่ยวกับสหกรณ์ */}
           {activeMegaMenu === 'about' && (
             <div className="mega-menu-grid">
@@ -480,8 +465,8 @@ export default function Navbar() {
                       สินทรัพย์รวมกว่า 4,850 ล้านบาท มุ่งมั่นดูแลคุณภาพชีวิตบุคลากรสาธารณสุขจังหวัดระยองอย่างยั่งยืน
                     </p>
                   </div>
-                  <Link 
-                    to="/statistics" 
+                  <Link
+                    to="/statistics"
                     className="btn btn-gold btn-sm"
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
                   >
@@ -620,8 +605,8 @@ export default function Navbar() {
                       คำนวณค่างวดรายเดือน ดอกเบี้ยลดต้นลดดอก และตารางการผ่อนชำระแบบเรียลไทม์
                     </p>
                   </div>
-                  <Link 
-                    to="/calculator" 
+                  <Link
+                    to="/calculator"
                     className="btn btn-gold btn-sm"
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
                   >
@@ -731,8 +716,8 @@ export default function Navbar() {
                       จัดสรรงบประมาณสวัสดิการกว่า 15 ล้านบาท/ปี เพื่อคุ้มครองและเสริมสร้างความสุขแก่สมาชิกทุกคน
                     </p>
                   </div>
-                  <Link 
-                    to="/welfare" 
+                  <Link
+                    to="/welfare"
                     className="btn btn-light btn-sm"
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%', background: '#ffffff', color: '#881337', fontWeight: 700 }}
                   >
@@ -845,8 +830,8 @@ export default function Navbar() {
                       ดาวน์โหลดแบบฟอร์มสัญญากู้เงิน แบบฟอร์มสวัสดิการ และรายงานประจำปี ครบถ้วนในที่เดียว
                     </p>
                   </div>
-                  <Link 
-                    to="/documents" 
+                  <Link
+                    to="/documents"
                     className="btn btn-gold btn-sm"
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', width: '100%' }}
                   >
@@ -876,6 +861,31 @@ export default function Navbar() {
           maxHeight: '80vh',
           overflowY: 'auto'
         }}>
+          {/* If NOT Logged In, Show Quick Login CTA Card in Mobile Drawer */}
+          {!isLoggedIn && (
+            <div className="mobile-login-card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary-100)', color: 'var(--primary-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <User size={18} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>สำหรับสมาชิกสหกรณ์</div>
+                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>เข้าสู่ระบบเพื่อดูหุ้น เงินฝาก และยื่นกู้</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowAuthModal(true);
+                }}
+                className="btn btn-primary btn-sm"
+                style={{ width: '100%', marginTop: '0.75rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <LogIn size={15} />
+                <span>เข้าสู่ระบบสมาชิก</span>
+              </button>
+            </div>
+          )}
           {/* If Logged In, Show User Card in Mobile Drawer */}
           {isLoggedIn && (
             <div style={{
@@ -888,8 +898,8 @@ export default function Navbar() {
               marginBottom: '0.5rem',
               border: '1px solid var(--border-subtle)'
             }}>
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 onClick={() => setMobileMenuOpen(false)}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', color: 'inherit' }}
               >
@@ -905,7 +915,7 @@ export default function Navbar() {
                   <div style={{ fontSize: '0.72rem', color: 'var(--primary-600)', fontWeight: 600 }}>✏️ แก้ไขข้อมูลส่วนตัว</div>
                 </div>
               </Link>
-              <button 
+              <button
                 onClick={handleLogout}
                 style={{ background: 'none', border: 'none', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
               >
@@ -922,7 +932,7 @@ export default function Navbar() {
 
           {/* 2. เกี่ยวกับสหกรณ์ Accordion */}
           <div>
-            <button 
+            <button
               onClick={() => toggleMobileAccordion('about')}
               style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
             >
@@ -942,7 +952,7 @@ export default function Navbar() {
 
           {/* 3. บริการทางการเงิน Accordion */}
           <div>
-            <button 
+            <button
               onClick={() => toggleMobileAccordion('finance')}
               style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
             >
@@ -964,7 +974,7 @@ export default function Navbar() {
 
           {/* 4. สวัสดิการ Accordion */}
           <div>
-            <button 
+            <button
               onClick={() => toggleMobileAccordion('welfare')}
               style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
             >
@@ -984,7 +994,7 @@ export default function Navbar() {
 
           {/* 5. ข่าวสารและเอกสาร Accordion */}
           <div>
-            <button 
+            <button
               onClick={() => toggleMobileAccordion('news_docs')}
               style={{ ...mobileItemStyle, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
             >

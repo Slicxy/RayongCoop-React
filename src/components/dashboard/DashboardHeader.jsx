@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, LogOut, Edit3, Calendar, Phone } from 'lucide-react';
+import { User, LogOut, Edit3, Calendar, Phone, KeyRound } from 'lucide-react';
 
 /**
  * Reusable Dashboard Header with Profile Info, Role Badge, and Actions
@@ -7,6 +7,7 @@ import { User, LogOut, Edit3, Calendar, Phone } from 'lucide-react';
 export default function DashboardHeader({
   user,
   onEditProfile,
+  onChangePassword,
   onLogout,
   quickActions
 }) {
@@ -57,40 +58,20 @@ export default function DashboardHeader({
     <div
       className="surface-card dashboard-hero-header"
       style={{
-        padding: '1.75rem 2rem',
         borderRadius: 'var(--radius-xl)',
         marginBottom: '2rem',
         border: '1px solid var(--border-subtle)',
         boxShadow: 'var(--shadow-sm)'
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem'
-        }}
-      >
+      <div className="dashboard-header-inner">
         {/* User Identity Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', minWidth: '280px' }}>
+        <div className="dashboard-user-info">
           <div
+            className="dashboard-avatar"
             style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
               background: roleConfig.gradient,
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              boxShadow: 'var(--shadow-md)',
-              overflow: 'hidden',
-              border: '2px solid var(--bg-surface)',
-              flexShrink: 0
+              border: '2px solid var(--bg-surface)'
             }}
           >
             {user?.avatar ? (
@@ -100,9 +81,9 @@ export default function DashboardHeader({
             )}
           </div>
 
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-900)', margin: 0 }}>
+          <div className="dashboard-user-details">
+            <div className="dashboard-user-name-row">
+              <h2 className="dashboard-user-name">
                 {user?.name || 'ผู้ใช้งานสหกรณ์'}
               </h2>
               <span className={`badge ${roleConfig.badgeClass}`}>
@@ -110,33 +91,23 @@ export default function DashboardHeader({
               </span>
             </div>
 
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <div className="dashboard-user-dept">
               <span>{user?.department || 'สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด'}</span>
               {user?.position && <span> ({user.position})</span>}
             </div>
 
-            <div
-              style={{
-                fontSize: '0.78rem',
-                color: 'var(--text-muted)',
-                marginTop: '0.35rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                flexWrap: 'wrap'
-              }}
-            >
+            <div className="dashboard-user-meta">
               <span>รหัส: <strong>{user?.memberId || user?.username || '-'}</strong></span>
               {user?.phone && (
                 <>
-                  <span style={{ color: 'var(--border-subtle)' }}>•</span>
+                  <span className="meta-dot">•</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--primary-700)', fontWeight: 600 }}>
                     <Phone size={13} />
                     {user.phone}
                   </span>
                 </>
               )}
-              <span style={{ color: 'var(--border-subtle)' }}>•</span>
+              <span className="meta-dot">•</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)' }}>
                 <Calendar size={13} />
                 {todayStr}
@@ -146,15 +117,14 @@ export default function DashboardHeader({
         </div>
 
         {/* Header Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+        <div className="dashboard-header-actions">
           {quickActions}
 
           {onEditProfile && (
             <button
               type="button"
               onClick={onEditProfile}
-              className="btn btn-subtle btn-sm"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', border: '1px solid var(--border-subtle)' }}
+              className="btn btn-subtle btn-sm dashboard-action-btn"
               title="แก้ไขโปรไฟล์และข้อมูลติดต่อ"
             >
               <Edit3 size={15} style={{ color: 'var(--primary-600)' }} />
@@ -162,15 +132,24 @@ export default function DashboardHeader({
             </button>
           )}
 
+          {onChangePassword && (
+            <button
+              type="button"
+              onClick={onChangePassword}
+              className="btn btn-subtle btn-sm dashboard-action-btn"
+              title="เปลี่ยนรหัสผ่านเพื่อความปลอดภัย"
+            >
+              <KeyRound size={15} style={{ color: 'var(--accent-gold-dark)' }} />
+              <span>เปลี่ยนรหัสผ่าน</span>
+            </button>
+          )}
+
           {onLogout && (
             <button
               type="button"
               onClick={onLogout}
-              className="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm dashboard-action-btn"
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
                 color: 'var(--accent-rose)',
                 borderColor: 'var(--accent-rose)'
               }}

@@ -5,6 +5,7 @@ import {
   ArrowRight, Landmark, Info
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const LOAN_TYPES = [
   {
@@ -121,6 +122,7 @@ const LOAN_TYPES = [
 
 export default function NewLoanRequestModal({ isOpen, onClose, onSubmitLoan }) {
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const [selectedType, setSelectedType] = useState(LOAN_TYPES[0]);
   const [amount, setAmount] = useState(50000);
@@ -159,11 +161,11 @@ export default function NewLoanRequestModal({ isOpen, onClose, onSubmitLoan }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!agreeTerms) {
-      alert('กรุณากดยอมรับข้อกำหนดและเงื่อนไขการยื่นกู้');
+      toast.error('กรุณากดยอมรับข้อกำหนดและเงื่อนไขการยื่นกู้');
       return;
     }
     if (amount <= 0 || amount > selectedType.maxAmount) {
-      alert(`วงเงินกู้ต้องอยู่ระหว่าง 1 ถึง ${selectedType.maxAmount.toLocaleString()} บาท`);
+      toast.error(`วงเงินกู้ต้องอยู่ระหว่าง 1 ถึง ${selectedType.maxAmount.toLocaleString()} บาท`);
       return;
     }
 

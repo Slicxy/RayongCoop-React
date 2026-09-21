@@ -10,8 +10,11 @@ import {
   UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera, Percent
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS, LOAN_PRODUCTS } from '../data/mockData';
+import { fetchAdminDashboard } from '../services/api';
 import EditProfileModal from '../components/member/EditProfileModal';
+import ChangePasswordModal from '../components/common/ChangePasswordModal';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import KpiCard from '../components/dashboard/KpiCard';
 import SectionHeader from '../components/dashboard/SectionHeader';
@@ -20,8 +23,10 @@ import EmptyState from '../components/dashboard/EmptyState';
 
 export default function AdminDashboardPage() {
   const { user, isLoggedIn, logout, setShowAuthModal } = useAuth();
+  const { toast, confirmDialog } = useToast();
   const [activeTab, setActiveTab] = useState('announcements');
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // 1. Announcements State
@@ -92,11 +97,11 @@ export default function AdminDashboardPage() {
   const handlePopupFileUpload = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น (เช่น PNG, JPG, JPEG, WEBP, SVG)');
+      toast.error('กรุณาเลือกไฟล์รูปภาพเท่านั้น (เช่น PNG, JPG, JPEG, WEBP, SVG)');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('ไฟล์รูปภาพมีขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ที่มีขนาดเล็กลง');
+      toast.error('ไฟล์รูปภาพมีขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ที่มีขนาดเล็กลง');
       return;
     }
 
@@ -179,8 +184,19 @@ export default function AdminDashboardPage() {
 
   // Users Management State
   const [usersList, setUsersList] = useState([]);
+  const [apiAdminData, setApiAdminData] = useState(null);
 
   const isSuperAdmin = user && user.role === 'super_admin';
+
+  useEffect(() => {
+    if (isLoggedIn && isSuperAdmin) {
+      fetchAdminDashboard().then(res => {
+        if (res?.success && res?.data) {
+          setApiAdminData(res.data);
+        }
+      }).catch(() => {});
+    }
+  }, [isLoggedIn, isSuperAdmin]);
 
   if (!isLoggedIn) {
     return (
@@ -205,14 +221,14 @@ export default function AdminDashboardPage() {
   const handleSaveHero = (e) => {
     e.preventDefault();
     localStorage.setItem('coop_hero_settings', JSON.stringify(heroSettings));
-    alert('บันทึกการตั้งค่า Hero Section เรียบร้อยแล้ว! (แสดงผลที่หน้าแรกทันที)');
+    toast.success('บันทึกการตั้งค่า Hero Section เรียบร้อยแล้ว! (แสดงผลที่หน้าแรกทันที)');
   };
 
   const handleSavePopup = (e) => {
     e.preventDefault();
     localStorage.setItem('coop_popup_campaign', JSON.stringify(popupCampaign));
     sessionStorage.removeItem('coop_campaign_shown'); // reset so it shows on next homepage visit
-    alert('บันทึกการตั้งค่า Pop-up Campaign เรียบร้อยแล้ว! (เปิดหน้าเว็บเพื่อดูพรีวิวได้ทันที)');
+    toast.success('บันทึกการตั้งค่า Pop-up Campaign เรียบร้อยแล้ว! (เปิดหน้าเว็บเพื่อดูพรีวิวได้ทันที)');
   };
 
   const handleAddAnnouncement = (e) => {
@@ -227,11 +243,18 @@ export default function AdminDashboardPage() {
     setAnnouncements([item, ...announcements]);
     setAnnModal(false);
     setNewAnn({ title: '', date: '11 มี.ค. 2567', fileSize: '850 KB', important: true });
+    toast.success('เพิ่มประกาศใหม่เรียบร้อยแล้ว');
   };
 
-  const handleDeleteAnnouncement = (id) => {
-    if (confirm('ยืนยันการลบประกาศนี้?')) {
+  const handleDeleteAnnouncement = async (id) => {
+    const confirmed = await confirmDialog({
+      title: 'ยืนยันการลบประกาศ',
+      message: 'ท่านแน่ใจหรือไม่ว่าต้องการลบประกาศนี้?',
+      type: 'danger'
+    });
+    if (confirmed) {
       setAnnouncements(announcements.filter(a => a.id !== id));
+      toast.success('ลบประกาศเรียบร้อยแล้ว');
     }
   };
 
@@ -249,11 +272,18 @@ export default function AdminDashboardPage() {
     setNews([item, ...news]);
     setNewsModal(false);
     setNewNews({ title: '', category: 'ข่าวประชาสัมพันธ์', date: '11 มี.ค. 2567', excerpt: '', image: '/assets/img/news_placeholder.jpg' });
+    toast.success('เพิ่มข่าวประชาสัมพันธ์เรียบร้อยแล้ว');
   };
 
-  const handleDeleteNews = (id) => {
-    if (confirm('ยืนยันการลบข่าวสารนี้?')) {
+  const handleDeleteNews = async (id) => {
+    const confirmed = await confirmDialog({
+      title: 'ยืนยันการลบข่าวสาร',
+      message: 'ท่านแน่ใจหรือไม่ว่าต้องการลบข่าวสารนี้?',
+      type: 'danger'
+    });
+    if (confirmed) {
       setNews(news.filter(n => n.id !== id));
+      toast.success('ลบข่าวสารเรียบร้อยแล้ว');
     }
   };
 
@@ -262,11 +292,18 @@ export default function AdminDashboardPage() {
     setFaqsList([...faqsList, newFaq]);
     setFaqModal(false);
     setNewFaq({ q: '', a: '' });
+    toast.success('เพิ่มคำถาม-คำตอบที่พบบ่อยเรียบร้อยแล้ว');
   };
 
-  const handleDeleteFaq = (index) => {
-    if (confirm('ยืนยันการลบคำถามนี้?')) {
+  const handleDeleteFaq = async (index) => {
+    const confirmed = await confirmDialog({
+      title: 'ยืนยันการลบคำถาม',
+      message: 'ท่านแน่ใจหรือไม่ว่าต้องการลบคำถามนี้?',
+      type: 'danger'
+    });
+    if (confirmed) {
       setFaqsList(faqsList.filter((_, idx) => idx !== index));
+      toast.success('ลบคำถามเรียบร้อยแล้ว');
     }
   };
 
@@ -301,11 +338,16 @@ export default function AdminDashboardPage() {
         replyDate: now
       });
     }
-    alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว (สมาชิกสามารถตรวจสอบผลได้ทันที)`);
+    toast.success(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว (สมาชิกสามารถตรวจสอบผลได้ทันที)`);
   };
 
-  const handleDeleteFeedback = (id) => {
-    if (confirm(`ยืนยันการลบรายการเรื่องร้องเรียน ${id}?`)) {
+  const handleDeleteFeedback = async (id) => {
+    const confirmed = await confirmDialog({
+      title: 'ยืนยันการลบเรื่องร้องเรียน',
+      message: `ยืนยันการลบรายการเรื่องร้องเรียน ${id}?`,
+      type: 'danger'
+    });
+    if (confirmed) {
       const updated = feedbacks.filter(f => f.id !== id);
       setFeedbacks(updated);
       try {
@@ -314,6 +356,7 @@ export default function AdminDashboardPage() {
       if (selectedFeedback && selectedFeedback.id === id) {
         setSelectedFeedback(null);
       }
+      toast.success(`ลบรายการเรื่องร้องเรียน ${id} เรียบร้อยแล้ว`);
     }
   };
 
@@ -325,6 +368,7 @@ export default function AdminDashboardPage() {
         <DashboardHeader
           user={user}
           onEditProfile={() => setEditProfileModalOpen(true)}
+          onChangePassword={() => setChangePasswordModalOpen(true)}
           onLogout={() => {
             logout();
             navigate('/');
@@ -343,7 +387,7 @@ export default function AdminDashboardPage() {
         />
 
         {/* 4 Super Admin KPI Overview Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+        <div className="dashboard-kpi-grid">
           <KpiCard
             title="ผู้ใช้งานทั้งหมดในระบบ"
             value="4,850"
@@ -379,7 +423,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Navigation Tabs for All 6 Modules + Users */}
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="dashboard-tabs-bar">
 
           <button onClick={() => setActiveTab('announcements')} className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
             <Bell size={15} />
@@ -871,7 +915,8 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
+            <div className="table-scroll-hint">👈 เลื่อนซ้าย-ขวาเพื่อดูข้อมูลเพิ่มเติม 👉</div>
+            <div className="table-scroll-container">
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-subtle)', borderBottom: '2px solid var(--border-subtle)', textAlign: 'left' }}>
@@ -1026,7 +1071,8 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Table of 10 items */}
-            <div style={{ overflowX: 'auto', border: '1px solid var(--border-subtle)', borderRadius: '12px' }}>
+            <div className="table-scroll-hint">👈 เลื่อนซ้าย-ขวาเพื่อดูข้อมูลเพิ่มเติม 👉</div>
+            <div className="table-scroll-container" style={{ border: '1px solid var(--border-subtle)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-subtle)', borderBottom: '2px solid var(--border-subtle)', textAlign: 'left' }}>
@@ -1280,6 +1326,12 @@ export default function AdminDashboardPage() {
         <EditProfileModal
           isOpen={editProfileModalOpen}
           onClose={() => setEditProfileModalOpen(false)}
+        />
+
+        {/* Change Password Modal */}
+        <ChangePasswordModal
+          isOpen={changePasswordModalOpen}
+          onClose={() => setChangePasswordModalOpen(false)}
         />
 
       </div>
