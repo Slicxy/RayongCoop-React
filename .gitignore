@@ -20,6 +20,9 @@
 /public/uploads/**/*
 !/public/uploads/**/.gitkeep
 
+# Generated React production build (created by the deployment pipeline)
+/public/app/
+
 # OS & Editor files
 .DS_Store
 Thumbs.db

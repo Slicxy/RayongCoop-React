@@ -37,16 +37,41 @@ switch ($command) {
             $pdoInit->exec("CREATE DATABASE IF NOT EXISTS `{$config['database']}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
 
             $pdo = Database::connect();
+
+            // Create migration tracking table if it doesn't exist
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `migrations` (
+                `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `migration` VARCHAR(255) NOT NULL UNIQUE,
+                `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+            // Get already-applied migrations
+            $applied = [];
+            $stmt = $pdo->query("SELECT migration FROM migrations ORDER BY id ASC");
+            foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $m) {
+                $applied[$m] = true;
+            }
+
             $migrationFiles = glob(__DIR__ . '/../database/migrations/*.sql');
             sort($migrationFiles);
 
+            $newCount = 0;
             foreach ($migrationFiles as $file) {
-                echo "Running migration: " . basename($file) . "...\n";
+                $basename = basename($file);
+                if (isset($applied[$basename])) {
+                    echo "⏭  Already applied: {$basename}\n";
+                    continue;
+                }
+                echo "Running migration: {$basename}...\n";
                 $sql = file_get_contents($file);
                 $pdo->exec($sql);
-                echo "✓ Applied " . basename($file) . "\n";
+                $pdo->prepare("INSERT INTO migrations (migration) VALUES (?)")->execute([$basename]);
+                echo "✓ Applied {$basename}\n";
+                $newCount++;
             }
-            echo "All migrations applied successfully!\n";
+            echo $newCount > 0
+                ? "{$newCount} new migration(s) applied successfully!\n"
+                : "Nothing to migrate — all migrations are up to date.\n";
         } catch (Exception $e) {
             echo "✗ Migration failed: " . $e->getMessage() . "\n";
             exit(1);

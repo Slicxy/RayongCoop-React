@@ -9,9 +9,12 @@ import {
   FileSpreadsheet, ArrowUpRight, Calculator, HelpCircle, Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { COOP_INFO, MEMBER_COMPLAINTS } from '../data/mockData';
+import { fetchMemberDashboard } from '../services/api';
 import StaffReviewModal from '../components/staff/StaffReviewModal';
 import EditProfileModal from '../components/member/EditProfileModal';
+import ChangePasswordModal from '../components/common/ChangePasswordModal';
 import NewLoanRequestModal from '../components/member/NewLoanRequestModal';
 
 // Reusable Dashboard UI Components
@@ -23,24 +26,22 @@ import EmptyState from '../components/dashboard/EmptyState';
 
 export default function MemberDashboardPage() {
   const { user, isLoggedIn, logout, setShowAuthModal } = useAuth();
+  const { toast, confirmDialog } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [staffFilter, setStaffFilter] = useState('all');
   const [staffSearch, setStaffSearch] = useState('');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewRequest, setSelectedReviewRequest] = useState(null);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
 
-  // Sync activeTab and role based on pathname and search parameters
+  // Sync activeTab based on pathname and search parameters
   useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    const searchParams = new URLSearchParams(location.search);
+    const path = window.location.pathname.toLowerCase();
+    const searchParams = new URLSearchParams(window.location.search);
     const tabParam = searchParams.get('tab');
 
-    if (path.includes('/staff')) {
-      if (user?.role !== 'staff') {
-        switchRole('staff');
-      }
-    } else if (tabParam) {
+    if (tabParam) {
       setActiveTab(tabParam);
     } else if (path.includes('/loans') || path.includes('/loan-requests') || path.includes('/tracking') || path.includes('/e-tracking')) {
       setActiveTab('loans');
@@ -51,7 +52,7 @@ export default function MemberDashboardPage() {
     } else if (path.includes('/shares') || path.includes('/deposits')) {
       setActiveTab('overview');
     }
-  }, [location.pathname, location.search, user?.role, switchRole]);
+  }, []);
 
   // Member Loan Request State
   const [memberLoanModalOpen, setMemberLoanModalOpen] = useState(false);
@@ -157,7 +158,7 @@ export default function MemberDashboardPage() {
     try {
       localStorage.setItem('coop_service_requests', JSON.stringify(updated));
     } catch (e) {}
-    alert(`อนุมัติคำขอ ${id} เรียบร้อยแล้ว`);
+    toast.success(`อนุมัติคำขอ ${id} เรียบร้อยแล้ว`);
   };
 
   const handleRejectLoan = (id, remarks) => {
@@ -172,7 +173,7 @@ export default function MemberDashboardPage() {
     try {
       localStorage.setItem('coop_service_requests', JSON.stringify(updated));
     } catch (e) {}
-    alert(`ส่งกลับคำขอ ${id} ให้สมาชิกแก้ไขเรียบร้อยแล้ว`);
+    toast.info(`ส่งกลับคำขอ ${id} ให้สมาชิกแก้ไขเรียบร้อยแล้ว`);
   };
 
   const handleAddNote = (id, remarks) => {
@@ -185,7 +186,7 @@ export default function MemberDashboardPage() {
     try {
       localStorage.setItem('coop_service_requests', JSON.stringify(updated));
     } catch (e) {}
-    alert(`บันทึกหมายเหตุสำหรับคำขอ ${id} เรียบร้อยแล้ว`);
+    toast.success(`บันทึกหมายเหตุสำหรับคำขอ ${id} เรียบร้อยแล้ว`);
   };
 
   const handleUpdateComplaintStatus = (id, newStatus) => {
@@ -219,11 +220,19 @@ export default function MemberDashboardPage() {
         replyDate: now
       });
     }
-    alert(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว`);
+    toast.success(`บันทึกข้อความตอบกลับสำหรับรหัส ${id} เรียบร้อยแล้ว`);
   };
 
-  const handleDeleteComplaint = (id) => {
-    if (confirm(`ยืนยันการลบรายการ ${id}?`)) {
+  const handleDeleteComplaint = async (id) => {
+    const confirmed = await confirmDialog({
+      title: 'ยืนยันการลบรายการ',
+      message: `ยืนยันการลบรายการ ${id} หรือไม่? รายการที่ถูกลบจะไม่สามารถกู้คืนได้`,
+      confirmText: 'ลบรายการ',
+      cancelText: 'ยกเลิก',
+      type: 'danger'
+    });
+
+    if (confirmed) {
       const updated = complaintsList.filter(c => c.id !== id);
       setComplaintsList(updated);
       try {
@@ -233,13 +242,14 @@ export default function MemberDashboardPage() {
       if (selectedAdminComplaint && selectedAdminComplaint.id === id) {
         setSelectedAdminComplaint(null);
       }
+      toast.success(`ลบรายการ ${id} เรียบร้อยแล้ว`);
     }
   };
 
   const handleMemberSubmitComplaint = (e) => {
     e.preventDefault();
     if (!newMemberComplaint.message.trim()) {
-      alert('กรุณากรอกรายละเอียดเรื่องร้องเรียน / ข้อเสนอแนะ');
+      toast.error('กรุณากรอกรายละเอียดเรื่องร้องเรียน / ข้อเสนอแนะ');
       return;
     }
 
@@ -272,7 +282,7 @@ export default function MemberDashboardPage() {
     setNewMemberComplaint({ topic: 'ข้อเสนอแนะการให้บริการ', message: '' });
     setMemberComplaintModalOpen(false);
     setActiveTab('complaints');
-    alert(`ส่งเรื่องร้องเรียน / ข้อเสนอแนะเรียบร้อยแล้ว\nรหัสติดตามเรื่อง: ${newId}`);
+    toast.success(`ส่งเรื่องร้องเรียน / ข้อเสนอแนะเรียบร้อยแล้ว (รหัสติดตามเรื่อง: ${newId})`, 'ส่งเรื่องสำเร็จ');
   };
 
   const handleMemberSubmitLoan = (newLoanItem) => {
@@ -283,7 +293,7 @@ export default function MemberDashboardPage() {
       window.dispatchEvent(new Event('storage'));
     } catch (e) {}
     setActiveTab('loans');
-    alert(`ยื่นคำขอกู้เงินออนไลน์เรียบร้อยแล้ว!\nรหัสคำขอ: ${newLoanItem.id}\nวงเงิน: ${newLoanItem.amount}\n(ส่งต่อไปยังคิวการพิจารณาของเจ้าหน้าที่สินเชื่อเรียบร้อยแล้ว)`);
+    toast.success(`ยื่นคำขอกู้เงินออนไลน์เรียบร้อยแล้ว! รหัสคำขอ: ${newLoanItem.id} วงเงิน: ${newLoanItem.amount}`, 'ยื่นกู้เงินสำเร็จ');
   };
 
   const userRole = user.role || 'member';
@@ -299,22 +309,50 @@ export default function MemberDashboardPage() {
     return false;
   });
 
-  // Default mock balances for display if member properties are not provided
-  const memberShares = user.shares ?? 0;
-  const memberMonthlyShare = user.monthlyShare ?? 0;
-  const memberSavings = user.savings ?? 0;
-  const memberLoanBalance = user.loanBalance ?? 0;
+  const [apiSummary, setApiSummary] = useState(null);
+
+  useEffect(() => {
+    if (isLoggedIn && userRole === 'member') {
+      fetchMemberDashboard().then(res => {
+        if (res?.success && res?.data?.summary) {
+          setApiSummary(res.data.summary);
+        }
+      }).catch(() => {});
+    }
+  }, [isLoggedIn, userRole]);
+
+  // Use live API summary data when available, with fallbacks to user object / default state
+  const memberShares = apiSummary?.shares?.total_amount ?? user.shares ?? 0;
+  const memberMonthlyShare = apiSummary?.shares?.monthly_share ?? user.monthlyShare ?? 0;
+  const memberSavings = apiSummary?.deposits?.total_balance ?? user.savings ?? 0;
+  const memberLoanBalance = apiSummary?.loans?.total_balance ?? user.loanBalance ?? 0;
   const memberDividendEst = user.dividendEstimated ?? 0;
   const memberLoanRefundEst = user.loanRefundEstimated ?? 0;
 
-  const memberAccounts = user.accounts && user.accounts.length > 0 ? user.accounts : [
-    { accNo: '101-2-04892-1', type: 'ออมทรัพย์สุขใจ', balance: 45300.50, status: 'ปกติ' },
-    { accNo: '201-4-04892-8', type: 'ออมทรัพย์พิเศษพลัส', balance: 200000.00, status: 'ปกติ' },
-  ];
+  const memberAccounts = apiSummary?.deposits?.accounts && apiSummary.deposits.accounts.length > 0
+    ? apiSummary.deposits.accounts.map(acc => ({
+        accNo: acc.account_no,
+        type: acc.account_type || 'บัญชีเงินฝาก',
+        balance: parseFloat(acc.balance || 0),
+        status: acc.status === 'active' ? 'ปกติ' : acc.status
+      }))
+    : (user.accounts && user.accounts.length > 0 ? user.accounts : [
+        { accNo: '101-2-04892-1', type: 'ออมทรัพย์สุขใจ', balance: 45300.50, status: 'ปกติ' },
+        { accNo: '201-4-04892-8', type: 'ออมทรัพย์พิเศษพลัส', balance: 200000.00, status: 'ปกติ' },
+      ]);
 
-  const memberLoans = user.loans && user.loans.length > 0 ? user.loans : [
-    { contractNo: 'ส.66/0129', type: 'เงินกู้สามัญ', principal: 1000000, balance: 820000, monthlyPay: 12500, termRemaining: '96 งวด' },
-  ];
+  const memberLoans = apiSummary?.loans?.active_loans && apiSummary.loans.active_loans.length > 0
+    ? apiSummary.loans.active_loans.map(loan => ({
+        contractNo: loan.contract_no,
+        type: loan.loan_type || 'เงินกู้สามัญ',
+        principal: parseFloat(loan.principal_amount || 0),
+        balance: parseFloat(loan.balance || 0),
+        monthlyPay: parseFloat(loan.monthly_installment || 0),
+        termRemaining: `${loan.remaining_months || 0} งวด`
+      }))
+    : (user.loans && user.loans.length > 0 ? user.loans : [
+        { contractNo: 'ส.66/0129', type: 'เงินกู้สามัญ', principal: 1000000, balance: 820000, monthlyPay: 12500, termRemaining: '96 งวด' },
+      ]);
 
   const memberReceipts = user.recentReceipts && user.recentReceipts.length > 0 ? user.recentReceipts : [
     { receiptNo: 'RC-67020084', period: 'กุมภาพันธ์ 2567', date: '28 ก.พ. 2567', totalAmount: 15500, status: 'ชำระแล้ว' },
@@ -330,6 +368,7 @@ export default function MemberDashboardPage() {
         <DashboardHeader
           user={user}
           onEditProfile={() => setEditProfileModalOpen(true)}
+          onChangePassword={() => setChangePasswordModalOpen(true)}
           onLogout={handleLogout}
           quickActions={
             userRole === 'member' ? (
@@ -360,7 +399,7 @@ export default function MemberDashboardPage() {
         {userRole === 'super_admin' && (
           <div className="animate-fade-in">
             {/* KPI Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+            <div className="dashboard-kpi-grid">
               <KpiCard
                 title="ผู้ใช้งานทั้งหมดในระบบ"
                 value="4,850"
@@ -617,7 +656,7 @@ export default function MemberDashboardPage() {
         {userRole === 'staff' && (
           <div className="animate-fade-in">
             {/* KPI Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+            <div className="dashboard-kpi-grid">
               <KpiCard
                 title="คำขอรอดำเนินการ (Pending)"
                 value={loanQueue.filter(i => !i.status.includes('เรียบร้อย') && !i.status.includes('Approved')).length}
@@ -787,7 +826,7 @@ export default function MemberDashboardPage() {
         {userRole === 'auditor' && (
           <div className="animate-fade-in">
             {/* KPI Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+            <div className="dashboard-kpi-grid">
               <KpiCard
                 title="คะแนนความถูกต้องทางบัญชี"
                 value="99.8%"
@@ -827,7 +866,7 @@ export default function MemberDashboardPage() {
                 icon={FileSpreadsheet}
                 iconColor="var(--accent-gold-dark)"
                 actionButton={
-                  <button onClick={() => alert('ดาวน์โหลดรายงานผลการตรวจสอบกิจการฉบับเต็ม (PDF)')} className="btn btn-gold btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <button onClick={() => toast.info('จำลองการดาวน์โหลดรายงานผลการตรวจสอบกิจการฉบับเต็ม (PDF)')} className="btn btn-gold btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                     <Download size={15} />
                     <span>ดาวน์โหลดรายงานผลการตรวจสอบ (PDF)</span>
                   </button>
@@ -873,7 +912,7 @@ export default function MemberDashboardPage() {
         {userRole === 'member' && (
           <div className="animate-fade-in">
             {/* 4 KPI Balances Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+            <div className="dashboard-kpi-grid">
               <KpiCard
                 title="ทุนเรือนหุ้นสะสม"
                 value={memberShares.toLocaleString()}
@@ -909,7 +948,7 @@ export default function MemberDashboardPage() {
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
+            <div className="dashboard-tabs-bar">
               <button onClick={() => setActiveTab('overview')} className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
                 <Landmark size={15} />
                 <span>บัญชีเงินฝาก & หนี้สิน</span>
@@ -1460,6 +1499,12 @@ export default function MemberDashboardPage() {
         <EditProfileModal
           isOpen={editProfileModalOpen}
           onClose={() => setEditProfileModalOpen(false)}
+        />
+
+        {/* Change Password Modal */}
+        <ChangePasswordModal
+          isOpen={changePasswordModalOpen}
+          onClose={() => setChangePasswordModalOpen(false)}
         />
 
         {/* New Online Loan Request Modal */}

@@ -36,11 +36,12 @@ class UserController extends Controller
             'name' => 'required',
             'username' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:6',
+            'password' => 'required|min:8',
             'role_id' => 'required|numeric',
         ]);
 
-        $hashed = password_hash($data['password'], PASSWORD_ARGON2ID);
+        $pwConfig = config('security.password');
+        $hashed = password_hash($data['password'], $pwConfig['algo'] ?? PASSWORD_ARGON2ID, $pwConfig['options'] ?? []);
         $uuid = bin2hex(random_bytes(16));
 
         $sql = "INSERT INTO users (uuid, name, username, email, password, status, created_at)

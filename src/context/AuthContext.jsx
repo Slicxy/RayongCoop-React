@@ -37,7 +37,34 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const csrfResponse = await fetch('/csrf-token', {
+      const getApiUrl = (path) => {
+        const clean = path.startsWith('/') ? path.slice(1) : path;
+        const base = (import.meta.env.BASE_URL || './').replace(/\/$/, '');
+        return base ? `${base}/${clean}` : clean;
+      };
+
+      const fetchWithFallback = async (path, options = {}) => {
+        const clean = path.startsWith('/') ? path.slice(1) : path;
+        const candidateUrls = [
+          getApiUrl(path),
+          path,
+          clean,
+          `/rayongcoop-react/${clean}`,
+          `http://localhost/rayongcoop-react/${clean}`
+        ];
+        const uniqueUrls = [...new Set(candidateUrls)];
+        for (const url of uniqueUrls) {
+          try {
+            const res = await fetch(url, options);
+            if (res.ok || res.status === 419 || res.status === 401 || res.status === 400 || res.status === 422) {
+              return res;
+            }
+          } catch (e) {}
+        }
+        return await fetch(getApiUrl(path), options);
+      };
+
+      const csrfResponse = await fetchWithFallback('/csrf-token', {
         headers: { Accept: 'application/json' },
         credentials: 'include'
       });
@@ -52,7 +79,7 @@ export function AuthProvider({ children }) {
       formData.append('ajax', '1');
       formData.append('_csrf_token', csrfData.token || '');
 
-      const response = await fetch('/login', {
+      const response = await fetchWithFallback('/login', {
         method: 'POST',
         body: formData,
         headers: {

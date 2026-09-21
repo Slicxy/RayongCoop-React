@@ -4,7 +4,18 @@
     # Prevent directory listing
     Options -Indexes
 
-    # Route all requests to public folder
-    RewriteRule ^$ public/ [L]
-    RewriteRule (.*) public/$1 [L]
+    # Route backend API & Auth endpoints to PHP Front Controller
+    RewriteRule ^(csrf-token|login|logout|change-password|api)(/.*)?$ public/index.php [L,QSA]
+
+    # Serve built React assets from the PHP document root
+    RewriteCond %{DOCUMENT_ROOT}/rayongcoop-react/public/app/$1 -f
+    RewriteRule ^(.*)$ public/app/$1 [L]
+
+    # If requested file or directory exists directly, serve it
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all SPA routes to the React entrypoint
+    RewriteRule ^ public/app/index.html [L]
 </IfModule>

@@ -5,9 +5,11 @@ import {
   Lock, Trash2, ArrowLeft, Save, ShieldCheck, AlertCircle 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function ProfilePage() {
   const { user, isLoggedIn, updateProfile, setShowAuthModal } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const [avatar, setAvatar] = useState('');
@@ -45,11 +47,11 @@ export default function ProfilePage() {
   const handleFileUpload = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น (เช่น PNG, JPG, JPEG, WEBP)');
+      toast.error('กรุณาเลือกไฟล์รูปภาพเท่านั้น (เช่น PNG, JPG, JPEG, WEBP)');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('ไฟล์รูปภาพมีขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ขนาดเล็กลง');
+      toast.error('ไฟล์รูปภาพมีขนาดใหญ่เกิน 5MB กรุณาเลือกไฟล์ขนาดเล็กลง');
       return;
     }
 
@@ -80,11 +82,12 @@ export default function ProfilePage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!phone.trim()) {
-      alert('กรุณาระบุเบอร์โทรศัพท์ติดต่อ');
+      toast.error('กรุณาระบุเบอร์โทรศัพท์ติดต่อ');
       return;
     }
 
     updateProfile({ avatar, phone: phone.trim() });
+    toast.success('บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว');
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);

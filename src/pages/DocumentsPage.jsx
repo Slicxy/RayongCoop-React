@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Download, FileText, Search, Filter } from 'lucide-react';
 import { DOCUMENTS } from '../data/mockData';
+import { useToast } from '../context/ToastContext';
 
 export default function DocumentsPage() {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
 
@@ -87,7 +89,7 @@ export default function DocumentsPage() {
 
                 <button 
                   className="btn btn-outline btn-sm"
-                  onClick={() => alert(`จำลองการดาวน์โหลด: ${doc.title} (${doc.size})`)}
+                  onClick={() => toast.info(`จำลองการดาวน์โหลด: ${doc.title} (${doc.size})`)}
                 >
                   <Download size={15} />
                   <span>ดาวน์โหลดไฟล์</span>

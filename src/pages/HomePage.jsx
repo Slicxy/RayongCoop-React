@@ -1,38 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Calculator, TrendingUp, ShieldCheck, Coins, Users, Building2, 
   ArrowRight, Landmark, FileText, HeartHandshake, PhoneCall, 
   ChevronRight, Sparkles, CheckCircle2, Clock, Award, Download
 } from 'lucide-react';
-import { COOP_INFO, KEY_STATS, INTEREST_RATES, LOAN_PRODUCTS, NEWS_LIST, ANNOUNCEMENTS, WELFARE_ITEMS } from '../data/mockData';
+import { fetchHomeData, fetchCoopInfo } from '../services/api';
 import LoanCalculator from '../components/calculators/LoanCalculator';
 import DividendEstimator from '../components/calculators/DividendEstimator';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+
+// Fallback defaults when API is unreachable (development/offline mode)
+const FALLBACK_COOP = {
+  nameTh: 'สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด',
+  slogan: 'มั่นคง โปร่งใส ใส่ใจบริการ',
+};
 
 export default function HomePage() {
   const { setShowAuthModal, isLoggedIn } = useAuth();
+  const { toast } = useToast();
   const [activeRateTab, setActiveRateTab] = useState('deposits');
   const [activeNewsTab, setActiveNewsTab] = useState('news');
+  const [loading, setLoading] = useState(true);
 
-  const [heroSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('coop_hero_settings');
-      return saved ? JSON.parse(saved) : {
-        title: COOP_INFO.nameTh,
-        subtitle: `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
-        badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
-        bgImageUrl: '/assets/img/hero_bg_coop.jpg'
-      };
-    } catch (e) {
-      return {
-        title: COOP_INFO.nameTh,
-        subtitle: `${COOP_INFO.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
-        badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
-        bgImageUrl: '/assets/img/hero_bg_coop.jpg'
-      };
-    }
-  });
+  // API-fetched data state
+  const [coopInfo, setCoopInfo] = useState(FALLBACK_COOP);
+  const [keyStats, setKeyStats] = useState([]);
+  const [depositRates, setDepositRates] = useState([]);
+  const [loanRates, setLoanRates] = useState([]);
+  const [loanProducts, setLoanProducts] = useState([]);
+  const [newsList, setNewsList] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [welfareItems, setWelfareItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [homeRes, coopRes] = await Promise.all([
+          fetchHomeData(),
+          fetchCoopInfo(),
+        ]);
+        if (cancelled) return;
+        if (homeRes?.success && homeRes.data) {
+          const d = homeRes.data;
+          setDepositRates(d.depositRates || []);
+          setLoanRates(d.loanRates || []);
+          setLoanProducts(d.featuredLoans || []);
+          setNewsList(d.latestNews || []);
+          setAnnouncements(d.importantAnnouncements || []);
+          setWelfareItems(d.heroSlides || []); // welfare comes from separate endpoint if needed
+
+          // Build key stats from latestStats
+          if (d.latestStats) {
+            const s = d.latestStats;
+            setKeyStats([
+              { label: 'จำนวนสมาชิก', value: Number(s.total_members || 0).toLocaleString(), unit: 'คน', change: `ข้อมูล ${s.month}/${s.year}` },
+              { label: 'สินทรัพย์รวม', value: (Number(s.total_assets || 0) / 1e6).toFixed(0), unit: 'ล้านบาท', change: 'มั่นคง' },
+              { label: 'ทุนเรือนหุ้น', value: (Number(s.total_shares || 0) / 1e6).toFixed(0), unit: 'ล้านบาท', change: 'เติบโตต่อเนื่อง' },
+              { label: 'เงินฝากรวม', value: (Number(s.total_deposits || 0) / 1e6).toFixed(0), unit: 'ล้านบาท', change: 'สูงสุดเป็นประวัติการณ์' },
+              { label: 'เงินกู้คงเหลือ', value: (Number(s.total_loans || 0) / 1e6).toFixed(0), unit: 'ล้านบาท', change: 'คุณภาพดี' },
+              { label: 'อัตราปันผล', value: s.dividend_rate || '-', unit: '% ต่อปี', change: `เฉลี่ยคืน ${s.loan_refund_rate || '-'}%` },
+            ]);
+          }
+        }
+        if (coopRes?.success && coopRes.data) {
+          setCoopInfo({
+            nameTh: coopRes.data.name_th || FALLBACK_COOP.nameTh,
+            nameEn: coopRes.data.name_en || '',
+            slogan: FALLBACK_COOP.slogan,
+            phone: coopRes.data.phone || '',
+            email: coopRes.data.email || '',
+            address: coopRes.data.address || '',
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load homepage data:', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const heroSettings = {
+    title: coopInfo.nameTh,
+    subtitle: `${coopInfo.slogan || FALLBACK_COOP.slogan} มอบความมั่นคงทางการเงิน ดอกเบี้ยเงินฝากคุ้มค่า สินเชื่ออัตราดอกเบี้ยเป็นธรรม พร้อมสวัสดิการดูแลตลอดทุกช่วงชีวิต`,
+    badgeText: 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล',
+    bgImageUrl: '/assets/img/hero_bg_coop.jpg'
+  };
 
   return (
     <div>
@@ -146,7 +203,7 @@ export default function HomePage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Award size={20} style={{ color: '#fbbf24' }} />
-                  <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>ปันผลปีล่าสุด {INTEREST_RATES.deposits[4].rate}</span>
+                  <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>ปันผลปีล่าสุด {depositRates.length > 0 ? `${depositRates[0].rate}%` : '-'}</span>
                 </div>
               </div>
 
@@ -165,7 +222,7 @@ export default function HomePage() {
                   <TrendingUp style={{ color: '#fbbf24' }} size={20} />
                   <span>อัตราดอกเบี้ยเด่นวันนี้</span>
                 </h3>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>อัปเดต {INTEREST_RATES.effectiveDate}</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>อัปเดตล่าสุด</span>
               </div>
 
               {/* Rate Items */}
@@ -299,7 +356,7 @@ export default function HomePage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '1.5rem'
           }}>
-            {KEY_STATS.map((stat, idx) => (
+            {keyStats.map((stat, idx) => (
               <div key={idx} className="surface-card" style={{ padding: '1.75rem 1.5rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
                   {stat.label}
@@ -343,7 +400,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid-3">
-            {LOAN_PRODUCTS.map((prod) => (
+            {loanProducts.map((prod) => (
               <div key={prod.id} className="surface-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -442,7 +499,7 @@ export default function HomePage() {
 
           {activeNewsTab === 'news' ? (
             <div className="grid-4">
-              {NEWS_LIST.map((item) => (
+              {newsList.map((item) => (
                 <div key={item.id} className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ height: '160px', background: 'var(--primary-100)', position: 'relative' }}>
                     <img 
@@ -480,7 +537,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {ANNOUNCEMENTS.map((ann) => (
+              {announcements.map((ann) => (
                 <div key={ann.id} className="surface-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ padding: '0.75rem', borderRadius: '10px', background: ann.important ? 'var(--accent-rose-light)' : 'var(--primary-100)', color: ann.important ? 'var(--accent-rose)' : 'var(--primary-600)' }}>
@@ -495,7 +552,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <button className="btn btn-outline btn-sm" onClick={() => alert(`ดาวน์โหลดไฟล์: ${ann.title} (${ann.fileSize})`)}>
+                  <button className="btn btn-outline btn-sm" onClick={() => toast.info(`จำลองการดาวน์โหลดไฟล์: ${ann.title} (${ann.fileSize})`)}>
                     <Download size={14} />
                     <span>ดาวน์โหลด ({ann.fileSize})</span>
                   </button>
@@ -528,7 +585,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid-3">
-            {WELFARE_ITEMS.slice(0, 6).map((item, idx) => (
+            {welfareItems.slice(0, 6).map((item, idx) => (
               <div key={idx} className="surface-card" style={{ padding: '1.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <span className="badge badge-teal">{item.category}</span>

@@ -3,7 +3,18 @@
 declare(strict_types=1);
 
 /**
- * RayongCoop Digital Portal - Root Entrypoint Forwarder
+ * RayongCoop Digital Portal - React Entrypoint
  */
 
-require_once __DIR__ . '/public/index.php';
+$spaIndex = __DIR__ . '/public/app/index.html';
+if (file_exists($spaIndex)) {
+    readfile($spaIndex);
+    exit;
+}
+
+// Fallback to root index.html
+$rootIndex = __DIR__ . '/index.html';
+if (file_exists($rootIndex)) {
+    readfile($rootIndex);
+    exit;
+}

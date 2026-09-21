@@ -322,7 +322,10 @@ export default function LoanCalculator() {
           <h4 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--text-main)' }}>
             ตารางจำลองการผ่อนชำระรายงวด ({activeProduct.title} - ดอกเบี้ย {rate}%)
           </h4>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="table-scroll-hint">
+            <span>👈 เลื่อนในแนวนอนเพื่อดูรายละเอียด 👉</span>
+          </div>
+          <div className="table-scroll-container">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'right' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-subtle)', color: 'var(--text-main)', borderBottom: '2px solid var(--border-subtle)' }}>

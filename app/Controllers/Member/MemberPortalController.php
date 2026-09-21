@@ -438,24 +438,53 @@ class MemberPortalController extends Controller
         $currentPass = (string)$this->request->input('current_password');
         $newPass = (string)$this->request->input('new_password');
         $confirmPass = (string)$this->request->input('confirm_password');
+        $isAjax = $this->request->isAjax() || !empty($this->request->input('ajax'));
 
-        if (empty($newPass) || strlen($newPass) < 4) {
-            Session::flash('error', 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
+        if (empty($newPass) || strlen($newPass) < 8) {
+            if ($isAjax) {
+                $this->json(['success' => false, 'message' => 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 8 ตัวอักษร'], 422);
+                return;
+            }
+            Session::flash('error', 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 8 ตัวอักษร');
             $this->redirect(url('member/settings'));
             return;
         }
 
         if ($newPass !== $confirmPass) {
+            if ($isAjax) {
+                $this->json(['success' => false, 'message' => 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน'], 422);
+                return;
+            }
             Session::flash('error', 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน');
             $this->redirect(url('member/settings'));
             return;
         }
 
         $userId = Auth::id() ?? 1;
-        $hash = password_hash($newPass, PASSWORD_DEFAULT);
+        $user = Database::first("SELECT password FROM users WHERE id = ? LIMIT 1", [$userId]);
+
+        if ($user && !empty($user['password']) && !empty($currentPass)) {
+            if (!password_verify($currentPass, $user['password'])) {
+                if ($isAjax) {
+                    $this->json(['success' => false, 'message' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง'], 422);
+                    return;
+                }
+                Session::flash('error', 'รหัสผ่านปัจจุบันไม่ถูกต้อง');
+                $this->redirect(url('member/settings'));
+                return;
+            }
+        }
+
+        $pwConfig = config('security.password');
+        $hash = password_hash($newPass, $pwConfig['algo'] ?? PASSWORD_DEFAULT, $pwConfig['options'] ?? []);
         Database::execute("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?", [$hash, $userId]);
 
         AuditService::log('auth', 'password_change', (string)$userId);
+
+        if ($isAjax) {
+            $this->json(['success' => true, 'message' => 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว']);
+            return;
+        }
 
         Session::flash('success', 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
         $this->redirect(url('member/settings'));

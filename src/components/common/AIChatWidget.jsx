@@ -6,6 +6,7 @@ import {
   Lightbulb, HeartHandshake, FileText, AlertCircle, Play
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 // Pre-defined Fun AI Excuse Database
 const EXCUSES = [
@@ -47,6 +48,7 @@ const FORTUNES = [
 
 export default function AIChatWidget() {
   const { user } = useAuth();
+  const { confirmDialog, toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'generators' | 'fortune' | 'game'
   const [bossKeyActive, setBossKeyActive] = useState(false);
@@ -844,9 +846,15 @@ export default function AIChatWidget() {
                   </p>
 
                   <button
-                    onClick={() => {
-                      if (confirm('ต้องการรีเซ็ตยอดหุ้นสะสมในมินิเกมหรือไม่?')) {
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: 'รีเซ็ตแต้มหุ้นสะสม',
+                        message: 'ต้องการรีเซ็ตยอดหุ้นสะสมในมินิเกมเป็นค่าเริ่มต้น (100 หุ้น) หรือไม่?',
+                        type: 'danger'
+                      });
+                      if (confirmed) {
                         setSlackerCoins(100);
+                        toast.info('รีเซ็ตยอดหุ้นสะสมเรียบร้อยแล้ว');
                       }
                     }}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline' }}

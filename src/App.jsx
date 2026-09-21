@@ -1,7 +1,10 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import React, { lazy, Suspense, useCallback, useEffect } from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import { useToast } from './context/ToastContext';
+import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 
-// Layout
+// Core Layout Shell (Synchronously loaded for instant UI render)
 import TopBar from './components/layout/TopBar';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -9,27 +12,31 @@ import QuickActionDock from './components/layout/QuickActionDock';
 import AuthModal from './components/member/AuthModal';
 import CampaignModal from './components/common/CampaignModal';
 import AIChatWidget from './components/common/AIChatWidget';
+import PageSkeletonLoader from './components/common/PageSkeletonLoader';
+import SessionTimeoutModal from './components/common/SessionTimeoutModal';
 
-// Pages
+// Synchronous Fast-Entry Pages
 import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-import BoardPage from './pages/BoardPage';
-import StatisticsPage from './pages/StatisticsPage';
-import DepositsPage from './pages/DepositsPage';
-import LoansPage from './pages/LoansPage';
-import CalculatorPage from './pages/CalculatorPage';
-import LoanChecklistPage from './pages/LoanChecklistPage';
-import WelfarePage from './pages/WelfarePage';
-import EServicePage from './pages/EServicePage';
-import DocumentsPage from './pages/DocumentsPage';
-import NewsPage from './pages/NewsPage';
-import ContactPage from './pages/ContactPage';
-import VerifyReceiptPage from './pages/VerifyReceiptPage';
-import MemberDashboardPage from './pages/MemberDashboardPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
-import NotFoundPage from './pages/NotFoundPage';
+
+// Lazy-Loaded Route Chunks (Performance & Code Splitting)
+const MemberDashboardPage = lazy(() => import('./pages/MemberDashboardPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
+const LoansPage = lazy(() => import('./pages/LoansPage'));
+const DepositsPage = lazy(() => import('./pages/DepositsPage'));
+const LoanChecklistPage = lazy(() => import('./pages/LoanChecklistPage'));
+const WelfarePage = lazy(() => import('./pages/WelfarePage'));
+const EServicePage = lazy(() => import('./pages/EServicePage'));
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const BoardPage = lazy(() => import('./pages/BoardPage'));
+const StatisticsPage = lazy(() => import('./pages/StatisticsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const VerifyReceiptPage = lazy(() => import('./pages/VerifyReceiptPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Scroll to top component on route changes
 function ScrollToTop() {
@@ -40,70 +47,99 @@ function ScrollToTop() {
   return null;
 }
 
+const publicRoutes = [
+  ['/about', AboutPage],
+  ['/board', BoardPage],
+  ['/statistics', StatisticsPage],
+  ['/assets', StatisticsPage],
+  ['/financial-assets', StatisticsPage],
+  ['/deposits', DepositsPage],
+  ['/rates', DepositsPage],
+  ['/loans', LoansPage],
+  ['/calculator', CalculatorPage],
+  ['/loan-checklist', LoanChecklistPage],
+  ['/loan-readiness', LoanChecklistPage],
+  ['/loans/checklist', LoanChecklistPage],
+  ['/dividend-estimator', CalculatorPage],
+  ['/welfare', WelfarePage],
+  ['/eservice', EServicePage],
+  ['/documents', DocumentsPage],
+  ['/news', NewsPage],
+  ['/announcements', NewsPage],
+  ['/events', NewsPage],
+  ['/calendar', NewsPage],
+  ['/contact', ContactPage],
+  ['/complaints', ContactPage],
+  ['/faqs', ContactPage],
+];
+
+const memberRoutes = [
+  '/dashboard', '/member', '/member/dashboard', '/member/shares',
+  '/member/deposits', '/member/loans', '/member/loan-requests',
+  '/member/complaints', '/member/receipts', '/e-tracking', '/tracking',
+  '/loan-requests', '/portal', '/staff', '/staff/dashboard',
+];
+
+const profileRoutes = ['/member/profile', '/profile', '/settings', '/edit-profile'];
+const adminRoutes = ['/admin', '/admin/dashboard'];
+
 export default function App() {
+  const { isLoggedIn, logout } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Inactivity Timeout Management (20 minutes inactivity / 2 minutes warning)
+  const handleInactivityTimeout = useCallback(() => {
+    logout();
+    navigate('/login');
+    toast.warning('เซสชันหมดอายุเนื่องจากไม่มีการใช้งานเป็นเวลา 20 นาที กรุณาเข้าสู่ระบบใหม่อีกครั้ง', 'เซสชันหมดอายุ');
+  }, [logout, navigate, toast]);
+
+  const handleManualLogout = useCallback(() => {
+    logout();
+    navigate('/');
+    toast.info('ออกจากระบบเรียบร้อยแล้ว');
+  }, [logout, navigate, toast]);
+
+  const {
+    showWarning,
+    remainingSeconds,
+    extendSession,
+    logoutNow
+  } = useInactivityTimeout({
+    isLoggedIn,
+    onTimeout: handleInactivityTimeout,
+    onLogout: handleManualLogout
+  });
+
+  const handleExtendSession = useCallback(() => {
+    extendSession();
+    toast.success('ต่ออายุเซสชันการใช้งานเรียบร้อยแล้ว');
+  }, [extendSession, toast]);
+
   return (
     <div className="app-container">
       <ScrollToTop />
       <TopBar />
       <Navbar />
-      
+
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/board" element={<BoardPage />} />
-          <Route path="/statistics" element={<StatisticsPage />} />
-          <Route path="/assets" element={<StatisticsPage />} />
-          <Route path="/financial-assets" element={<StatisticsPage />} />
-          
-          <Route path="/deposits" element={<DepositsPage />} />
-          <Route path="/rates" element={<DepositsPage />} />
-          <Route path="/loans" element={<LoansPage />} />
-          <Route path="/calculator" element={<CalculatorPage />} />
-          <Route path="/loan-checklist" element={<LoanChecklistPage />} />
-          <Route path="/loan-readiness" element={<LoanChecklistPage />} />
-          <Route path="/loans/checklist" element={<LoanChecklistPage />} />
-          <Route path="/dividend-estimator" element={<CalculatorPage />} />
-          
-          <Route path="/welfare" element={<WelfarePage />} />
-          <Route path="/eservice" element={<EServicePage />} />
-          <Route path="/documents" element={<DocumentsPage />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/announcements" element={<NewsPage />} />
-          <Route path="/events" element={<NewsPage />} />
-          <Route path="/calendar" element={<NewsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/complaints" element={<ContactPage />} />
-          <Route path="/faqs" element={<ContactPage />} />
-          
-          <Route path="/verify-receipt" element={<VerifyReceiptPage />} />
-          <Route path="/verify-receipt/:token" element={<VerifyReceiptPage />} />
-          
-          <Route path="/dashboard" element={<MemberDashboardPage />} />
-          <Route path="/member" element={<MemberDashboardPage />} />
-          <Route path="/member/dashboard" element={<MemberDashboardPage />} />
-          <Route path="/member/profile" element={<ProfilePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/settings" element={<ProfilePage />} />
-          <Route path="/edit-profile" element={<ProfilePage />} />
-          <Route path="/member/shares" element={<MemberDashboardPage />} />
-          <Route path="/member/deposits" element={<MemberDashboardPage />} />
-          <Route path="/member/loans" element={<MemberDashboardPage />} />
-          <Route path="/member/loan-requests" element={<MemberDashboardPage />} />
-          <Route path="/member/complaints" element={<MemberDashboardPage />} />
-          <Route path="/member/receipts" element={<MemberDashboardPage />} />
-          <Route path="/e-tracking" element={<MemberDashboardPage />} />
-          <Route path="/tracking" element={<MemberDashboardPage />} />
-          <Route path="/loan-requests" element={<MemberDashboardPage />} />
-          <Route path="/portal" element={<MemberDashboardPage />} />
-          <Route path="/staff" element={<MemberDashboardPage />} />
-          <Route path="/staff/dashboard" element={<MemberDashboardPage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <Suspense fallback={<PageSkeletonLoader />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            {publicRoutes.map(([path, Page]) => <Route key={path} path={path} element={<Page />} />)}
+
+            <Route path="/verify-receipt" element={<VerifyReceiptPage />} />
+            <Route path="/verify-receipt/:token" element={<VerifyReceiptPage />} />
+
+            {memberRoutes.map((path) => <Route key={path} path={path} element={<MemberDashboardPage />} />)}
+            {profileRoutes.map((path) => <Route key={path} path={path} element={<ProfilePage />} />)}
+            {adminRoutes.map((path) => <Route key={path} path={path} element={<AdminDashboardPage />} />)}
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <Footer />
@@ -111,6 +147,14 @@ export default function App() {
       <AIChatWidget />
       <AuthModal />
       <CampaignModal />
+
+      {/* Inactivity Warning Modal */}
+      <SessionTimeoutModal
+        isOpen={showWarning}
+        remainingSeconds={remainingSeconds}
+        onExtendSession={handleExtendSession}
+        onLogout={logoutNow}
+      />
     </div>
   );
 }

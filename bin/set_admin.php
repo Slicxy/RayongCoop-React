@@ -11,10 +11,11 @@ try {
     $adminUsername = trim((string) env('INITIAL_ADMIN_USERNAME', 'admin'));
     $adminEmail = trim((string) env('INITIAL_ADMIN_EMAIL', 'admin@rayongcoop.com'));
     $adminPasswordPlaintext = (string) env('INITIAL_ADMIN_PASSWORD', '');
-    if (strlen($adminPasswordPlaintext) < 16) {
-        throw new RuntimeException('INITIAL_ADMIN_PASSWORD must be set to a unique password of at least 16 characters.');
+    if (strlen($adminPasswordPlaintext) < 8) {
+        throw new RuntimeException('INITIAL_ADMIN_PASSWORD must be at least 8 characters.');
     }
-    $passwordHash = password_hash($adminPasswordPlaintext, PASSWORD_BCRYPT);
+    $pwConfig = config('security.password');
+    $passwordHash = password_hash($adminPasswordPlaintext, $pwConfig['algo'] ?? PASSWORD_ARGON2ID, $pwConfig['options'] ?? []);
 
     $user = Database::first('SELECT id FROM users WHERE username = ? OR email = ?', [$adminUsername, $adminEmail]);
 

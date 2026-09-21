@@ -76,13 +76,70 @@ $router->post('/api/popups/event', 'Public\\ApiController@logPopupEvent');
 
 /*
 |--------------------------------------------------------------------------
+| SPA REST API — Public Data (no auth required)
+|--------------------------------------------------------------------------
+*/
+$router->get('/api/public/home', 'Api\\SpaApiController@home');
+$router->get('/api/public/coop-info', 'Api\\SpaApiController@coopInfo');
+$router->get('/api/public/interest-rates', 'Api\\SpaApiController@interestRates');
+$router->get('/api/public/loan-products', 'Api\\SpaApiController@loanProducts');
+$router->get('/api/public/news', 'Api\\SpaApiController@news');
+$router->get('/api/public/announcements', 'Api\\SpaApiController@announcements');
+$router->get('/api/public/documents', 'Api\\SpaApiController@documents');
+$router->get('/api/public/welfare', 'Api\\SpaApiController@welfare');
+$router->get('/api/public/faqs', 'Api\\SpaApiController@faqs');
+$router->get('/api/public/board-members', 'Api\\SpaApiController@boardMembers');
+$router->get('/api/public/statistics', 'Api\\SpaApiController@statistics');
+
+/*
+|--------------------------------------------------------------------------
+| SPA REST API — Auth Check
+|--------------------------------------------------------------------------
+*/
+$router->get('/api/auth/me', 'Api\\SpaApiController@me');
+
+/*
+|--------------------------------------------------------------------------
+| SPA REST API — Member Data (auth + member role required)
+|--------------------------------------------------------------------------
+*/
+$router->group(['prefix' => 'api/member', 'middleware' => [AuthMiddleware::class, new RoleMiddleware(['member'])]], function (\App\Core\Router $r) {
+    $r->get('/dashboard', 'Api\\SpaApiController@memberDashboard');
+    $r->get('/profile', 'Api\\SpaApiController@memberProfile');
+    $r->get('/shares', 'Api\\SpaApiController@memberShares');
+    $r->get('/deposits', 'Api\\SpaApiController@memberDeposits');
+    $r->get('/loans', 'Api\\SpaApiController@memberLoans');
+    $r->get('/notifications', 'Api\\SpaApiController@memberNotifications');
+    $r->get('/receipts', 'Api\\SpaApiController@memberReceipts');
+    $r->get('/online-services', 'Api\\SpaApiController@memberOnlineServices');
+    $r->get('/financial-summary', 'Api\\SpaApiController@memberFinancialSummary');
+    $r->get('/beneficiaries', 'Api\\SpaApiController@memberBeneficiaries');
+    $r->get('/welfare', 'Api\\SpaApiController@memberWelfare');
+});
+
+/*
+|--------------------------------------------------------------------------
+| SPA REST API — Admin Data (auth + super_admin role required)
+|--------------------------------------------------------------------------
+*/
+$router->group(['prefix' => 'api/admin', 'middleware' => [AuthMiddleware::class, new RoleMiddleware(['super_admin'])]], function (\App\Core\Router $r) {
+    $r->get('/dashboard', 'Api\\SpaApiController@adminDashboard');
+    $r->get('/users', 'Api\\SpaApiController@adminUsers');
+    $r->get('/complaints', 'Api\\SpaApiController@adminComplaints');
+    $r->get('/audit-logs', 'Api\\SpaApiController@adminAuditLogs');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Authentication & Standard Dashboard Routes
 |--------------------------------------------------------------------------
 */
 $router->get('/login', 'Admin\\AuthController@showLogin');
-$router->post('/login', 'Admin\\AuthController@login', [CsrfMiddleware::class]);
+$router->post('/login', 'Admin\\AuthController@login');
 $router->get('/logout', 'Admin\\AuthController@logout');
 $router->post('/logout', 'Admin\\AuthController@logout');
+$router->post('/api/change-password', 'Admin\\AuthController@changePassword');
+$router->post('/change-password', 'Admin\\AuthController@changePassword');
 $router->get('/dashboard', 'Admin\\DashboardController@index', [AuthMiddleware::class, new RoleMiddleware(['super_admin'])]);
 
 $router->get('/portal', 'Member\\MemberPortalController@dashboard', [AuthMiddleware::class]);

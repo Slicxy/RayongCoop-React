@@ -218,6 +218,95 @@ class AuthController extends Controller
         $this->redirect($targetUrl);
     }
 
+    public function changePassword(): void
+    {
+        $inputUsername = trim((string)($this->request->input('username') ?? ''));
+        $userId = $this->request->input('user_id') ? (int)$this->request->input('user_id') : (Auth::id() ?? null);
+        $currentPass = (string)$this->request->input('current_password');
+        $newPass = (string)$this->request->input('new_password');
+        $confirmPass = (string)$this->request->input('confirm_password');
+        $isAjax = $this->request->isAjax() || !empty($this->request->input('ajax'));
+
+        if (empty($newPass) || strlen($newPass) < 8) {
+            $msg = 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 8 ตัวอักษร';
+            if ($isAjax) {
+                $this->response->json(['success' => false, 'message' => $msg], 400);
+                return;
+            }
+            Session::flash('error', $msg);
+            $this->redirect($_SERVER['HTTP_REFERER'] ?? url('/'));
+            return;
+        }
+
+        if ($newPass !== $confirmPass) {
+            $msg = 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน';
+            if ($isAjax) {
+                $this->response->json(['success' => false, 'message' => $msg], 400);
+                return;
+            }
+            Session::flash('error', $msg);
+            $this->redirect($_SERVER['HTTP_REFERER'] ?? url('/'));
+            return;
+        }
+
+        // Find user by ID or username
+        $user = null;
+        if ($userId) {
+            $user = Database::first("SELECT * FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1", [$userId]);
+        }
+        if (!$user && !empty($inputUsername)) {
+            $cleanInput = str_replace(['-', ' '], '', $inputUsername);
+            $sql = "SELECT u.* FROM users u
+                    LEFT JOIN members m ON u.id = m.user_id
+                    WHERE (u.username = ? OR u.username = ? OR u.email = ? OR m.member_no = ? OR REPLACE(m.member_no, '-', '') = ?)
+                    AND u.deleted_at IS NULL LIMIT 1";
+            $user = Database::first($sql, [$inputUsername, $cleanInput, $inputUsername, $inputUsername, $cleanInput]);
+        }
+
+        if (!$user) {
+            $msg = 'ไม่พบข้อมูลบัญชีผู้ใช้งานในระบบ';
+            if ($isAjax) {
+                $this->response->json(['success' => false, 'message' => $msg], 404);
+                return;
+            }
+            Session::flash('error', $msg);
+            $this->redirect($_SERVER['HTTP_REFERER'] ?? url('/'));
+            return;
+        }
+
+        // Check current password against DB hash — never compare plaintext
+        if (!empty($user['password'])) {
+            if (!password_verify($currentPass, $user['password'])) {
+                $msg = 'รหัสผ่านปัจจุบันไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
+                if ($isAjax) {
+                    $this->response->json(['success' => false, 'message' => $msg], 400);
+                    return;
+                }
+                Session::flash('error', $msg);
+                $this->redirect($_SERVER['HTTP_REFERER'] ?? url('/'));
+                return;
+            }
+        }
+
+        // Update password in DB using the configured hashing algorithm
+        $pwConfig = config('security.password');
+        $hash = password_hash($newPass, $pwConfig['algo'] ?? PASSWORD_DEFAULT, $pwConfig['options'] ?? []);
+        Database::execute("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?", [$hash, $user['id']]);
+
+        try {
+            AuditService::log('auth', 'password_change', (string)$user['id'], null, ['username' => $user['username']]);
+        } catch (\Throwable $e) {}
+
+        $msg = 'เปลี่ยนรหัสผ่านสำเร็จเรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที';
+        if ($isAjax) {
+            $this->response->json(['success' => true, 'message' => $msg]);
+            return;
+        }
+
+        Session::flash('success', $msg);
+        $this->redirect($_SERVER['HTTP_REFERER'] ?? url('/'));
+    }
+
     public function logout(): void
     {
         if (Auth::id()) {
