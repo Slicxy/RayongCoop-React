@@ -18,6 +18,7 @@ final class SecurityRegressionTest
         self::assertRouteRoleGuards();
         self::assertRateLimitUsesSharedStorage();
         self::assertLoginKeepsCsrfProtection();
+        self::assertAdminDashboardImportsLoanProducts();
 
         if (self::$failures === 0) {
             echo "Security regression tests passed.\n";
@@ -70,6 +71,15 @@ final class SecurityRegressionTest
     {
         $source = file_get_contents(__DIR__ . '/../app/Middlewares/CsrfMiddleware.php');
         self::assert($source !== false && !str_contains($source, 'Allow initial Ajax login request from SPA'), 'CSRF protection is not bypassed for AJAX login');
+    }
+
+    private static function assertAdminDashboardImportsLoanProducts(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../src/pages/AdminDashboardPage.jsx');
+        self::assert(
+            $source !== false && preg_match('/import\s*\{[^}]*\bLOAN_PRODUCTS\b[^}]*\}\s*from\s*[\'\"]\.\.\/data\/mockData[\'\"]/', $source) === 1,
+            'admin dashboard imports LOAN_PRODUCTS before using it'
+        );
     }
 
     private static function assertRouteHasRoles(array $routes, string $path, array $expectedRoles): void

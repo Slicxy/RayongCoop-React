@@ -10,7 +10,7 @@ import {
   UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera, Percent
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS } from '../data/mockData';
+import { COOP_INFO, KEY_STATS, INTEREST_RATES, ANNOUNCEMENTS, NEWS_LIST, FAQS, MEMBER_COMPLAINTS, LOAN_PRODUCTS } from '../data/mockData';
 import EditProfileModal from '../components/member/EditProfileModal';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import KpiCard from '../components/dashboard/KpiCard';
