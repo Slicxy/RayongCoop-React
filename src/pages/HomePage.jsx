@@ -8,6 +8,7 @@ import {
 import { fetchHomeData, fetchCoopInfo } from '../services/api';
 import LoanCalculator from '../components/calculators/LoanCalculator';
 import DividendEstimator from '../components/calculators/DividendEstimator';
+import heroPortrait from '../assets/hero-portrait-official.png';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -132,7 +133,7 @@ export default function HomePage() {
         }} />
 
         <div className="container" style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '3rem', alignItems: 'center' }}>
+          <div className="home-hero-grid">
             
             {/* Left Hero Content */}
             <div className="animate-fade-in">
@@ -155,12 +156,13 @@ export default function HomePage() {
               </div>
 
               <h1 style={{
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontSize: 'clamp(1.45rem, 2.15vw, 2.5rem)',
                 fontWeight: 800,
                 lineHeight: 1.2,
                 color: '#ffffff',
                 marginBottom: '1rem',
-                letterSpacing: '-0.02em'
+                letterSpacing: '-0.02em',
+                whiteSpace: 'nowrap'
               }}>
                 {heroSettings.title || COOP_INFO.nameTh}
               </h1>
@@ -270,6 +272,22 @@ export default function HomePage() {
               </div>
 
             </div>
+
+            <figure className="hero-portrait">
+              <div className="hero-portrait-frame">
+                <img
+                  src={heroPortrait}
+                  alt="นางสาวอุษา อิศรางกูร ณ อยุธยา ประธานกรรมการสหกรณ์"
+                  width="294"
+                  height="394"
+                  fetchPriority="high"
+                />
+              </div>
+              <figcaption className="hero-portrait-caption">
+                <strong>นางสาวอุษา อิศรางกูร ณ อยุธยา</strong>
+                <span>ประธานกรรมการสหกรณ์</span>
+              </figcaption>
+            </figure>
 
           </div>
         </div>

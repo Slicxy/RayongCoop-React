@@ -225,7 +225,7 @@ export default function Navbar() {
                   setActiveMegaMenu(null);
                   setUserDropdownOpen(!userDropdownOpen);
                 }}
-                className="user-pill-btn"
+                className="user-pill-btn user-avatar-only"
                 aria-label="User Account Menu"
               >
                 <div className="user-pill-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -235,15 +235,6 @@ export default function Navbar() {
                     getAvatarInitial()
                   )}
                 </div>
-                <div className="user-pill-info hide-mobile">
-                  <div className="user-pill-name">
-                    {user.name} {user.roleBadge ? `(${user.roleBadge})` : ''}
-                  </div>
-                  <div className="user-pill-subtitle">
-                    {user.role === 'super_admin' ? 'Super Admin' : 'พอร์ทัลสมาชิก'}
-                  </div>
-                </div>
-                <ChevronDown size={14} style={{ color: 'var(--text-muted)', transform: userDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
 
               {/* User Account Dropdown Menu (Exact match to screenshot) */}
