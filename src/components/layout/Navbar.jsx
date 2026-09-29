@@ -378,7 +378,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/board" className="mega-menu-card-item">
+                    <Link to="/board_committee" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
                         <Award size={18} />
                       </div>
@@ -388,7 +388,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/board" className="mega-menu-card-item">
+                    <Link to="/board_officer" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
                         <Users size={18} />
                       </div>
@@ -523,7 +523,7 @@ export default function Navbar() {
                     <span>ผลิตภัณฑ์สินเชื่อ & เงินกู้</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <Link to="/loans" className="mega-menu-card-item">
+                    <Link to="/loans#emergency" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
                         <Zap size={18} />
                       </div>
@@ -536,7 +536,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/loans" className="mega-menu-card-item">
+                    <Link to="/loans#ordinary" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
                         <Banknote size={18} />
                       </div>
@@ -546,7 +546,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/loans" className="mega-menu-card-item">
+                    <Link to="/loans#housing" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
                         <Home size={18} />
                       </div>
@@ -933,8 +933,8 @@ export default function Navbar() {
             {mobileAccordion === 'about' && (
               <div style={mobileSubMenuStyle}>
                 <Link to="/about" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ประวัติและวิสัยทัศน์</Link>
-                <Link to="/board" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• คณะกรรมการดำเนินการ</Link>
-                <Link to="/board" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฝ่ายจัดการและเจ้าหน้าที่</Link>
+                <Link to="/board_committee" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• คณะกรรมการดำเนินการ</Link>
+                <Link to="/board_officer" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฝ่ายจัดการและเจ้าหน้าที่</Link>
                 <Link to="/statistics" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฐานะและสถิติทางการเงิน</Link>
                 <Link to="/documents" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ข้อบังคับและระเบียบสหกรณ์</Link>
               </div>

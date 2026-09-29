@@ -4,13 +4,13 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // In production, React is served from /app/ under the PHP document root.
-  // In development, Vite dev server uses '/' and proxies API calls to PHP.
-  base: process.env.NODE_ENV === 'production' ? './' : '/',
+  // Apache serves the production SPA from this project directory.
+  // The explicit base keeps routes and built assets under the same URL prefix.
+  base: process.env.NODE_ENV === 'production' ? '/rayongcoop-react/' : '/',
   plugins: [react()],
-  // `public/` is already the PHP document root. Do not copy it into a
-  // subdirectory of itself when building the React application.
-  publicDir: false,
+  // Vite must serve `public/` in development so files under public/assets
+  // are available at /assets. Production already serves that directory via PHP.
+  publicDir: process.env.NODE_ENV === 'production' ? false : 'public',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
