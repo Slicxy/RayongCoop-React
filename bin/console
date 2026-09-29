@@ -106,7 +106,76 @@ switch ($command) {
         $stmt->execute();
         echo "✓ Cleaned old login logs.\n";
 
+        // 4. RYCOOP LED Member Check (Scheduled at 08:00 Asia/Bangkok)
+        try {
+            $tz = new DateTimeZone('Asia/Bangkok');
+            $now = new DateTime('now', $tz);
+            $currentTime = $now->format('H:i');
+            $currentDate = $now->format('Y-m-d');
+
+            $ledService = new \App\Services\LedService();
+            $dbSettings = $ledService->getDbSettings();
+
+            $autoEnabled = ($dbSettings['led_auto_check_enabled'] ?? '0') === '1' || ($dbSettings['led_auto_check_enabled'] ?? '') === 'true';
+            $scheduledTime = $dbSettings['led_auto_check_time'] ?? '08:00';
+
+            if ($autoEnabled) {
+                $forceRun = in_array('--force-led', $argv, true);
+                if ($currentTime === $scheduledTime || $forceRun) {
+                    $existingToday = Database::first(
+                        "SELECT id FROM led_check_runs WHERE run_type = 'SCHEDULED' AND DATE(created_at) = ? LIMIT 1",
+                        [$currentDate]
+                    );
+
+                    if ($existingToday && !$forceRun) {
+                        echo "ℹ LED Scheduled Check: Already executed for today ({$currentDate}), skipping duplicate run.\n";
+                    } else {
+                        echo "Running LED Scheduled Member Check (Time: {$currentTime})...\n";
+                        $batchService = new \App\Services\LedBatchService($ledService);
+                        $created = $batchService->createBatchRun([], 'SCHEDULED', null);
+
+                        if ($created['success']) {
+                            $runId = (int) $created['run_id'];
+                            $batchSize = $ledService->getConfiguredBatchSize();
+                            $result = $batchService->executeRun($runId, [], $batchSize);
+                            echo "✓ LED Scheduled Check completed for Run #{$runId}: Status {$result['status']}, Checked: {$result['checked_members']}/{$result['total_members']}\n";
+                        } else {
+                            echo "✗ LED Scheduled Check could not create run: " . ($created['message'] ?? 'Unknown error') . "\n";
+                        }
+                    }
+                } else {
+                    echo "ℹ LED Scheduled Check: Current time ({$currentTime}) does not match scheduled time ({$scheduledTime}).\n";
+                }
+            } else {
+                echo "ℹ LED Scheduled Check is disabled in settings.\n";
+            }
+        } catch (\Throwable $e) {
+            echo "✗ LED Scheduled Check error: " . $e->getMessage() . "\n";
+        }
+
         echo "All scheduled cron tasks completed.\n";
+        break;
+
+    case 'led:run':
+        $runId = (int) ($argv[2] ?? 0);
+        if ($runId <= 0) {
+            echo "Usage: php bin/console led:run <runId>\n";
+            exit(1);
+        }
+        echo "Processing LED Member Check Run #{$runId}...\n";
+        try {
+            $batchService = new \App\Services\LedBatchService();
+            $result = $batchService->executeRun($runId);
+            if ($result['success']) {
+                echo "✓ Successfully processed Run #{$runId}: Status {$result['status']} (Checked: {$result['checked_members']}/{$result['total_members']})\n";
+            } else {
+                echo "✗ Failed to process Run #{$runId}: " . ($result['message'] ?? 'Unknown error') . "\n";
+                exit(1);
+            }
+        } catch (\Throwable $e) {
+            echo "✗ Exception while running LED Check: " . $e->getMessage() . "\n";
+            exit(1);
+        }
         break;
 
     case 'backup:run':

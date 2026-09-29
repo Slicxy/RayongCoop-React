@@ -319,8 +319,8 @@ if (!function_exists('str_slug')) {
     function str_slug(string $title, string $separator = '-'): string
     {
         $title = trim($title);
-        $title = preg_replace('/[^\p{L}\p{N}\s-_]+/u', '', $title);
-        $title = preg_replace('/[\s-_]+/', $separator, $title);
+        $title = preg_replace('/[^\p{L}\p{M}\p{N}\s_-]+/u', '', $title);
+        $title = preg_replace('/[\s_-]+/u', $separator, $title);
         return trim($title, $separator);
     }
 }

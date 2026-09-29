@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { fetchCurrentUser } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -23,6 +24,23 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('coop_auth_user');
     }
   }, [user]);
+
+  // localStorage only remembers the UI state. The PHP session remains the source
+  // of truth for protected actions such as publishing news.
+  useEffect(() => {
+    if (!user) return undefined;
+
+    let cancelled = false;
+    fetchCurrentUser().then((result) => {
+      if (!cancelled && (!result?.success || !result.authenticated)) {
+        setUser(null);
+      }
+    }).catch(() => {
+      if (!cancelled) setUser(null);
+    });
+
+    return () => { cancelled = true; };
+  }, []);
 
   /** Real authentication against the same-origin PHP backend. */
   const login = async (usernameOrId, password) => {

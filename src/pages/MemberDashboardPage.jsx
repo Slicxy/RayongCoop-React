@@ -6,7 +6,7 @@ import {
   CheckCircle2, ShieldAlert, Users, Settings, Database,
   Activity, Check, X, Search, FileCheck, Eye, MessageSquare,
   AlertCircle, ExternalLink, Trash2, Send, PlusCircle, Edit3, Phone, Camera,
-  FileSpreadsheet, ArrowUpRight, Calculator, HelpCircle, Shield
+  FileSpreadsheet, ArrowUpRight, Calculator, HelpCircle, Shield, Scale, Layers, CheckSquare, LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -691,6 +691,109 @@ export default function MemberDashboardPage() {
               />
             </div>
 
+            {/* RYCOOP LED Member Check Integration Card for Staff */}
+            <div className="rounded-3xl p-6 lg:p-7 mb-8 border transition-all duration-300 shadow-sm
+              bg-gradient-to-br from-slate-50 via-white to-sky-50/40 border-slate-200/80
+              dark:from-[#0b1329] dark:via-[#0f1d3d] dark:to-[#091124] dark:border-blue-900/50 dark:shadow-[0_8px_32px_rgba(7,59,116,0.25)]">
+              <div className="flex flex-col gap-5">
+                <div className="flex justify-between items-start flex-wrap gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-md
+                      bg-gradient-to-br from-[#073B74] to-teal-700 text-white
+                      dark:from-blue-600 dark:to-teal-500 dark:shadow-[0_0_20px_rgba(59,130,246,0.35)]">
+                      <Scale size={24} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-lg lg:text-xl font-extrabold text-slate-900 dark:text-white m-0">
+                          RYCOOP LED Member Check
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold
+                          bg-emerald-100 text-emerald-800 border border-emerald-300
+                          dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-600/50">
+                          สิทธิ์ตัดสินใจเทียบเท่า Admin
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        ระบบตรวจสอบสมาชิกสหกรณ์กับฐานข้อมูลคดีล้มละลาย/บังคับคดี กรมบังคับคดี (LED Open Data)
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/admin/led/dashboard"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all
+                      bg-gradient-to-r from-[#073B74] to-[#0B5ED7] hover:brightness-110
+                      dark:from-blue-600 dark:to-indigo-600 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]"
+                  >
+                    <LayoutDashboard size={16} />
+                    <span>เข้าสู่ระบบ LED Check</span>
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-4 border-t border-slate-200/80 dark:border-slate-800">
+                  <Link
+                    to="/admin/led/review"
+                    className="group flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 border
+                      bg-white/90 hover:bg-amber-50/60 border-slate-200/80 hover:border-amber-300 shadow-sm
+                      dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:border-slate-700/80 dark:hover:border-amber-500/50 dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105
+                      bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 dark:border dark:border-amber-500/40">
+                      <CheckSquare size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors truncate">
+                        คิวรอตรวจสอบ (Review)
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                        พิจารณาและบันทึกผลตัดสินใจ
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    to="/admin/led/search"
+                    className="group flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 border
+                      bg-white/90 hover:bg-blue-50/60 border-slate-200/80 hover:border-blue-300 shadow-sm
+                      dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:border-slate-700/80 dark:hover:border-blue-500/50 dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105
+                      bg-blue-100 text-[#073B74] dark:bg-blue-950/70 dark:text-blue-300 dark:border dark:border-blue-500/40">
+                      <Search size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors truncate">
+                        ค้นหาและตรวจรายคน
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                        ตรวจสอบสมาชิกเดี่ยว Real-time
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    to="/admin/led/batch"
+                    className="group flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 border
+                      bg-white/90 hover:bg-emerald-50/60 border-slate-200/80 hover:border-emerald-300 shadow-sm
+                      dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:border-slate-700/80 dark:hover:border-emerald-500/50 dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105
+                      bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border dark:border-emerald-500/40">
+                      <Layers size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors truncate">
+                        ตรวจสอบแบบกลุ่ม (Batch)
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+                        เริ่มรอบตรวจตามสังกัด/ช่วงเลข
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* Worklist Section */}
             <div className="surface-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2rem' }}>
               <SectionHeader
@@ -947,24 +1050,141 @@ export default function MemberDashboardPage() {
               />
             </div>
 
-            {/* Tab Navigation */}
-            <div className="dashboard-tabs-bar">
-              <button onClick={() => setActiveTab('overview')} className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-                <Landmark size={15} />
-                <span>บัญชีเงินฝาก & หนี้สิน</span>
+            {/* Tab Navigation (4-column Grid Layout) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+
+              {/* 1. Accounts & Loans Overview */}
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+                  activeTab === 'overview'
+                    ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    activeTab === 'overview'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-400 dark:border dark:border-teal-900/50'
+                  }`}>
+                    <Landmark size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-bold truncate">1. เงินฝาก & หนี้สิน</div>
+                    <div className={`text-[11px] truncate ${activeTab === 'overview' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                      บัญชีเงินฝากและสัญญาเงินกู้
+                    </div>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+                  activeTab === 'overview'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                }`}>
+                  ภาพรวม
+                </span>
               </button>
-              <button onClick={() => setActiveTab('receipts')} className={`btn ${activeTab === 'receipts' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-                <FileText size={15} />
-                <span>ใบเสร็จรับเงิน (e-Receipt)</span>
+
+              {/* 2. Receipts */}
+              <button
+                onClick={() => setActiveTab('receipts')}
+                className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+                  activeTab === 'receipts'
+                    ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    activeTab === 'receipts'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-blue-50 text-[#073B74] dark:bg-blue-950/60 dark:text-blue-400 dark:border dark:border-blue-900/50'
+                  }`}>
+                    <FileText size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-bold truncate">2. ใบเสร็จ e-Receipt</div>
+                    <div className={`text-[11px] truncate ${activeTab === 'receipts' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                      ประวัติและพิมพ์ใบเสร็จ
+                    </div>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+                  activeTab === 'receipts'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                }`}>
+                  e-Doc
+                </span>
               </button>
-              <button onClick={() => setActiveTab('complaints')} className={`btn ${activeTab === 'complaints' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-                <MessageSquare size={15} />
-                <span>เรื่องร้องเรียน & ข้อเสนอแนะ ({myComplaints.length})</span>
+
+              {/* 3. Feedback & Complaints */}
+              <button
+                onClick={() => setActiveTab('complaints')}
+                className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+                  activeTab === 'complaints'
+                    ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    activeTab === 'complaints'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-400 dark:border dark:border-cyan-900/50'
+                  }`}>
+                    <MessageSquare size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-bold truncate">3. ข้อเสนอแนะ/ร้องเรียน</div>
+                    <div className={`text-[11px] truncate ${activeTab === 'complaints' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                      ติดตามสถานะเรื่องร้องเรียน
+                    </div>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+                  activeTab === 'complaints'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                }`}>
+                  {myComplaints.length}
+                </span>
               </button>
-              <button onClick={() => setActiveTab('services')} className={`btn ${activeTab === 'services' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-                <Calculator size={15} />
-                <span>บริการด่วน & แบบคำนวณ</span>
+
+              {/* 4. Quick Services & Calculators */}
+              <button
+                onClick={() => setActiveTab('services')}
+                className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+                  activeTab === 'services'
+                    ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    activeTab === 'services'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 dark:border dark:border-amber-900/50'
+                  }`}>
+                    <Calculator size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-bold truncate">4. บริการ & เครื่องคำนวณ</div>
+                    <div className={`text-[11px] truncate ${activeTab === 'services' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                      คำนวณเงินกู้และเงินปันผล
+                    </div>
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+                  activeTab === 'services'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                }`}>
+                  เครื่องมือ
+                </span>
               </button>
+
             </div>
 
             {/* TAB 1: ACCOUNTS & LOANS OVERVIEW */}

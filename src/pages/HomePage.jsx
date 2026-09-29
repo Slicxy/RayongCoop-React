@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Calculator, TrendingUp, ShieldCheck, Coins, Users, Building2, 
   ArrowRight, Landmark, FileText, HeartHandshake, PhoneCall, 
-  ChevronRight, Sparkles, CheckCircle2, Clock, Award, Download
+  ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Award
 } from 'lucide-react';
 import { fetchHomeData, fetchCoopInfo } from '../services/api';
 import LoanCalculator from '../components/calculators/LoanCalculator';
 import DividendEstimator from '../components/calculators/DividendEstimator';
 import heroPortrait from '../assets/hero-portrait-official.png';
+import { normalizeNewsItem } from '../utils/news';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 
 // Fallback defaults when API is unreachable (development/offline mode)
 const FALLBACK_COOP = {
@@ -20,9 +20,13 @@ const FALLBACK_COOP = {
 
 export default function HomePage() {
   const { setShowAuthModal, isLoggedIn } = useAuth();
-  const { toast } = useToast();
   const [activeRateTab, setActiveRateTab] = useState('deposits');
   const [activeNewsTab, setActiveNewsTab] = useState('news');
+  const [activeNewsSlide, setActiveNewsSlide] = useState(0);
+  const [isNewsSlideshowPaused, setIsNewsSlideshowPaused] = useState(false);
+  const [isNewsSlideDragging, setIsNewsSlideDragging] = useState(false);
+  const newsSlideDragStartRef = useRef(null);
+  const newsSlideWasDraggedRef = useRef(false);
   const [loading, setLoading] = useState(true);
 
   // API-fetched data state
@@ -49,7 +53,7 @@ export default function HomePage() {
           setDepositRates(d.depositRates || []);
           setLoanRates(d.loanRates || []);
           setLoanProducts(d.featuredLoans || []);
-          setNewsList(d.latestNews || []);
+          setNewsList((d.latestNews || []).map(normalizeNewsItem));
           setAnnouncements(d.importantAnnouncements || []);
           setWelfareItems(d.heroSlides || []); // welfare comes from separate endpoint if needed
 
@@ -84,6 +88,57 @@ export default function HomePage() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    setActiveNewsSlide((currentSlide) => Math.min(currentSlide, Math.max(newsList.length - 1, 0)));
+  }, [newsList.length]);
+
+  useEffect(() => {
+    if (activeNewsTab !== 'news' || isNewsSlideshowPaused || newsList.length < 2) return undefined;
+
+    const timer = window.setInterval(() => {
+      setActiveNewsSlide((currentSlide) => (currentSlide + 1) % newsList.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [activeNewsTab, isNewsSlideshowPaused, newsList.length]);
+
+  const handleNewsSlidePointerDown = (event) => {
+    if (newsList.length < 2 || (event.pointerType === 'mouse' && event.button !== 0)) return;
+
+    newsSlideDragStartRef.current = { pointerId: event.pointerId, x: event.clientX };
+    newsSlideWasDraggedRef.current = false;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setIsNewsSlideDragging(true);
+    setIsNewsSlideshowPaused(true);
+  };
+
+  const handleNewsSlidePointerEnd = (event) => {
+    const dragStart = newsSlideDragStartRef.current;
+    if (!dragStart || dragStart.pointerId !== event.pointerId) return;
+
+    const distance = event.clientX - dragStart.x;
+    const swipeThreshold = 48;
+    newsSlideDragStartRef.current = null;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    setIsNewsSlideDragging(false);
+    setIsNewsSlideshowPaused(false);
+
+    if (Math.abs(distance) < swipeThreshold) return;
+
+    newsSlideWasDraggedRef.current = true;
+    setActiveNewsSlide((currentSlide) => (
+      distance < 0
+        ? (currentSlide + 1) % newsList.length
+        : (currentSlide - 1 + newsList.length) % newsList.length
+    ));
+  };
+
+  const handleNewsSlidePointerCancel = () => {
+    newsSlideDragStartRef.current = null;
+    setIsNewsSlideDragging(false);
+    setIsNewsSlideshowPaused(false);
+  };
 
   const heroSettings = {
     title: coopInfo.nameTh,
@@ -155,8 +210,8 @@ export default function HomePage() {
                 <span>{heroSettings.badgeText || 'ยินดีต้อนรับสู่ระบบสหกรณ์ดิจิทัล'}</span>
               </div>
 
-              <h1 style={{
-                fontSize: 'clamp(1.45rem, 2.15vw, 2.5rem)',
+              <h1 className="home-hero-title" style={{
+                fontSize: 'clamp(1.8rem, 3vw, 3rem)',
                 fontWeight: 800,
                 lineHeight: 1.2,
                 color: '#ffffff',
@@ -211,8 +266,9 @@ export default function HomePage() {
 
             </div>
 
+            <div className="hero-dashboard-row">
             {/* Right Hero Card: Quick Rates & Services Widget */}
-            <div className="glass-card" style={{
+            <div className="glass-card hero-rate-card" style={{
               background: 'rgba(15, 23, 42, 0.65)',
               border: '1px solid rgba(255,255,255,0.15)',
               padding: '2rem',
@@ -271,6 +327,127 @@ export default function HomePage() {
                 </Link>
               </div>
 
+            </div>
+
+            <section className="glass-card hero-news-card" aria-labelledby="hero-news-heading">
+              <div className="hero-news-header">
+                <div>
+                  <h3 id="hero-news-heading">
+                    <FileText aria-hidden="true" size={20} />
+                    <span>ข่าวสารและประกาศ</span>
+                  </h3>
+                  <span>อัปเดตล่าสุดจากสหกรณ์</span>
+                </div>
+                <Link to="/news" className="hero-news-all">
+                  <span>ทั้งหมด</span>
+                  <ChevronRight aria-hidden="true" size={16} />
+                </Link>
+              </div>
+
+              <div className="hero-news-tabs" aria-label="ประเภทข่าวสาร">
+                <button
+                  type="button"
+                  aria-pressed={activeNewsTab === 'news'}
+                  className={activeNewsTab === 'news' ? 'is-active' : ''}
+                  onClick={() => {
+                    setActiveNewsTab('news');
+                    setActiveNewsSlide(0);
+                  }}
+                >
+                  ข่าวประชาสัมพันธ์
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={activeNewsTab === 'announcements'}
+                  className={activeNewsTab === 'announcements' ? 'is-active' : ''}
+                  onClick={() => setActiveNewsTab('announcements')}
+                >
+                  ประกาศทางการ
+                </button>
+              </div>
+
+              <div className="hero-news-list">
+                {activeNewsTab === 'news' ? (
+                  newsList.length > 0 && (
+                    <div
+                      className={`hero-news-slideshow${isNewsSlideDragging ? ' is-dragging' : ''}`}
+                      onMouseEnter={() => setIsNewsSlideshowPaused(true)}
+                      onMouseLeave={() => setIsNewsSlideshowPaused(false)}
+                      onFocusCapture={() => setIsNewsSlideshowPaused(true)}
+                      onBlurCapture={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget)) {
+                          setIsNewsSlideshowPaused(false);
+                        }
+                      }}
+                      onPointerDown={handleNewsSlidePointerDown}
+                      onPointerUp={handleNewsSlidePointerEnd}
+                      onPointerCancel={handleNewsSlidePointerCancel}
+                    >
+                      {(() => {
+                        const item = newsList[activeNewsSlide];
+                        return (
+                          <article className="hero-news-slide" key={item.id}>
+                            <img src={item.image} alt="" />
+                            <div className="hero-news-slide-overlay">
+                              <span className="hero-news-meta">{item.category || 'ข่าวสาร'} · {item.date}</span>
+                              <h4>{item.title}</h4>
+                              <Link
+                                to="/news"
+                                className="hero-news-read-more"
+                                onClick={(event) => {
+                                  if (newsSlideWasDraggedRef.current) {
+                                    event.preventDefault();
+                                    newsSlideWasDraggedRef.current = false;
+                                  }
+                                }}
+                              >
+                                อ่านข่าวฉบับเต็ม <ChevronRight aria-hidden="true" size={15} />
+                              </Link>
+                            </div>
+                          </article>
+                        );
+                      })()}
+
+                      {newsList.length > 1 && (
+                        <>
+                          <div className="hero-news-slide-actions">
+                            <button type="button" onClick={() => setActiveNewsSlide((activeNewsSlide - 1 + newsList.length) % newsList.length)} aria-label="ข่าวก่อนหน้า">
+                              <ChevronLeft aria-hidden="true" size={18} />
+                            </button>
+                            <button type="button" onClick={() => setActiveNewsSlide((activeNewsSlide + 1) % newsList.length)} aria-label="ข่าวถัดไป">
+                              <ChevronRight aria-hidden="true" size={18} />
+                            </button>
+                          </div>
+                          <div className="hero-news-slide-dots" aria-label="เลือกข่าวที่ต้องการดู">
+                            {newsList.map((item, index) => (
+                              <button
+                                type="button"
+                                key={item.id}
+                                className={index === activeNewsSlide ? 'is-active' : ''}
+                                aria-label={`แสดงข่าว ${index + 1}: ${item.title}`}
+                                aria-pressed={index === activeNewsSlide}
+                                onClick={() => setActiveNewsSlide(index)}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                ) : (
+                  announcements.slice(0, 3).map((item) => (
+                    <Link key={item.id} to="/news" className="hero-news-item">
+                      <span className="hero-news-meta">{item.important ? 'ประกาศสำคัญ' : 'ประกาศ'} · {item.date}</span>
+                      <strong>{item.title}</strong>
+                      <ChevronRight aria-hidden="true" size={16} />
+                    </Link>
+                  ))
+                )}
+                {((activeNewsTab === 'news' && newsList.length === 0) || (activeNewsTab === 'announcements' && announcements.length === 0)) && (
+                  <p className="hero-news-empty">ยังไม่มีรายการในขณะนี้</p>
+                )}
+              </div>
+            </section>
             </div>
 
             <figure className="hero-portrait">
@@ -469,123 +646,6 @@ export default function HomePage() {
       <section className="section" style={{ background: 'var(--bg-surface)' }}>
         <div className="container">
           <LoanCalculator />
-        </div>
-      </section>
-
-      {/* =========================================================================
-          LATEST NEWS & ANNOUNCEMENTS TABS
-          ========================================================================= */}
-      <section className="section" style={{ background: 'var(--bg-main)' }}>
-        <div className="container">
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
-            <div>
-              <span className="section-badge">ข่าวสารและประกาศ</span>
-              <h2 className="section-title" style={{ textAlign: 'left', marginBottom: 0 }}>อัปเดตข้อมูลสหกรณ์</h2>
-            </div>
-
-            {/* Tab Controls */}
-            <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-surface)', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <button
-                onClick={() => setActiveNewsTab('news')}
-                style={{
-                  padding: '0.45rem 1rem',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  borderRadius: '6px',
-                  background: activeNewsTab === 'news' ? 'var(--primary-600)' : 'transparent',
-                  color: activeNewsTab === 'news' ? '#ffffff' : 'var(--text-muted)'
-                }}
-              >
-                ข่าวประชาสัมพันธ์
-              </button>
-              <button
-                onClick={() => setActiveNewsTab('announcements')}
-                style={{
-                  padding: '0.45rem 1rem',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  borderRadius: '6px',
-                  background: activeNewsTab === 'announcements' ? 'var(--primary-600)' : 'transparent',
-                  color: activeNewsTab === 'announcements' ? '#ffffff' : 'var(--text-muted)'
-                }}
-              >
-                ประกาศทางการ
-              </button>
-            </div>
-          </div>
-
-          {activeNewsTab === 'news' ? (
-            <div className="grid-4">
-              {newsList.map((item) => (
-                <div key={item.id} className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ height: '160px', background: 'var(--primary-100)', position: 'relative' }}>
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                    <span style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(15, 23, 42, 0.75)', color: '#fff', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>
-                      {item.category}
-                    </span>
-                  </div>
-
-                  <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Clock size={12} />
-                        <span>{item.date}</span>
-                      </div>
-                      <h4 style={{ fontSize: '0.98rem', fontWeight: 700, lineHeight: 1.4, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-                        {item.title}
-                      </h4>
-                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '1rem' }}>
-                        {item.excerpt.slice(0, 85)}...
-                      </p>
-                    </div>
-
-                    <Link to="/news" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary-600)' }}>
-                      <span>อ่านรายละเอียด</span>
-                      <ChevronRight size={14} />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {announcements.map((ann) => (
-                <div key={ann.id} className="surface-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ padding: '0.75rem', borderRadius: '10px', background: ann.important ? 'var(--accent-rose-light)' : 'var(--primary-100)', color: ann.important ? 'var(--accent-rose)' : 'var(--primary-600)' }}>
-                      <FileText size={22} />
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                        {ann.important && <span className="badge badge-rose">สำคัญ</span>}
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{ann.date}</span>
-                      </div>
-                      <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>{ann.title}</h4>
-                    </div>
-                  </div>
-
-                  <button className="btn btn-outline btn-sm" onClick={() => toast.info(`จำลองการดาวน์โหลดไฟล์: ${ann.title} (${ann.fileSize})`)}>
-                    <Download size={14} />
-                    <span>ดาวน์โหลด ({ann.fileSize})</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
-            <Link to="/news" className="btn btn-outline">
-              <span>ดูข่าวสารและประกาศทั้งหมด</span>
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-
         </div>
       </section>
 
