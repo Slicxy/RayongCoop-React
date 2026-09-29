@@ -12,6 +12,7 @@ import QuickActionDock from './components/layout/QuickActionDock';
 import AuthModal from './components/member/AuthModal';
 import CampaignModal from './components/common/CampaignModal';
 import AIChatWidget from './components/common/AIChatWidget';
+import CookieConsent from './components/common/CookieConsent';
 import PageSkeletonLoader from './components/common/PageSkeletonLoader';
 import SessionTimeoutModal from './components/common/SessionTimeoutModal';
 
@@ -33,23 +34,41 @@ const NewsPage = lazy(() => import('./pages/NewsPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const BoardPage = lazy(() => import('./pages/BoardPage'));
+const BoardOfficerPage = lazy(() => import('./pages/BoardOfficerPage'));
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const VerifyReceiptPage = lazy(() => import('./pages/VerifyReceiptPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
+// RYCOOP LED Member Check Pages
+const AdminLedDashboardPage = lazy(() => import('./pages/AdminLedDashboardPage'));
+const AdminLedSearchPage = lazy(() => import('./pages/AdminLedSearchPage'));
+const AdminLedReviewPage = lazy(() => import('./pages/AdminLedReviewPage'));
+const AdminLedBatchPage = lazy(() => import('./pages/AdminLedBatchPage'));
+const AdminLedSchemaPage = lazy(() => import('./pages/AdminLedSchemaPage'));
+
 // Scroll to top component on route changes
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   useEffect(() => {
+    if (hash) {
+      const targetId = hash.slice(1);
+      const timeoutId = window.setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
+    }
     window.scrollTo(0, 0);
-  }, [pathname]);
+    return undefined;
+  }, [pathname, hash]);
   return null;
 }
 
 const publicRoutes = [
   ['/about', AboutPage],
   ['/board', BoardPage],
+  ['/board_committee', BoardPage],
+  ['/board_officer', BoardOfficerPage],
   ['/statistics', StatisticsPage],
   ['/assets', StatisticsPage],
   ['/financial-assets', StatisticsPage],
@@ -135,6 +154,15 @@ export default function App() {
             {memberRoutes.map((path) => <Route key={path} path={path} element={<MemberDashboardPage />} />)}
             {profileRoutes.map((path) => <Route key={path} path={path} element={<ProfilePage />} />)}
             {adminRoutes.map((path) => <Route key={path} path={path} element={<AdminDashboardPage />} />)}
+
+            {/* RYCOOP LED Member Check Routes */}
+            <Route path="/admin/led" element={<AdminLedDashboardPage />} />
+            <Route path="/admin/led/dashboard" element={<AdminLedDashboardPage />} />
+            <Route path="/admin/led/search" element={<AdminLedSearchPage />} />
+            <Route path="/admin/led/review" element={<AdminLedReviewPage />} />
+            <Route path="/admin/led/batch" element={<AdminLedBatchPage />} />
+            <Route path="/admin/led/schema" element={<AdminLedSchemaPage />} />
+
             <Route path="/login" element={<LoginPage />} />
 
             <Route path="*" element={<NotFoundPage />} />
@@ -145,6 +173,7 @@ export default function App() {
       <Footer />
       <QuickActionDock />
       <AIChatWidget />
+      <CookieConsent />
       <AuthModal />
       <CampaignModal />
 

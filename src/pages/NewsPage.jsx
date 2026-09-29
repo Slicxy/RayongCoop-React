@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
-import { Clock, Eye, ChevronRight, Search, X, Share2 } from 'lucide-react';
-import { NEWS_LIST } from '../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { Clock, Eye, ChevronRight, Search, X } from 'lucide-react';
+import { fetchNews } from '../services/api';
+import { normalizeNewsItem } from '../utils/news';
 
 export default function NewsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNews, setSelectedNews] = useState(null);
+  const [newsList, setNewsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredNews = NEWS_LIST.filter(item => 
+  useEffect(() => {
+    let cancelled = false;
+    fetchNews().then((result) => {
+      if (!cancelled && result?.success && Array.isArray(result.data)) {
+        setNewsList(result.data.map(normalizeNewsItem));
+      }
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const filteredNews = newsList.filter(item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     item.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -77,6 +92,12 @@ export default function NewsPage() {
             </div>
           ))}
         </div>
+
+        {!loading && filteredNews.length === 0 && (
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2rem' }}>
+            ยังไม่พบข่าวสารที่ตรงกับเงื่อนไข
+          </p>
+        )}
 
         {/* News Detail Modal */}
         {selectedNews && (

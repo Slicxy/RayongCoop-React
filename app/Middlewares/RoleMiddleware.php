@@ -21,6 +21,14 @@ class RoleMiddleware
     public function handle(Request $request, Response $response): bool
     {
         if (!Auth::check()) {
+            if ($request->isAjax()) {
+                $response->json([
+                    'success' => false,
+                    'code' => 'UNAUTHORIZED',
+                    'message' => 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'
+                ], 401);
+                return false;
+            }
             $response->redirect(url('admin/login'));
             return false;
         }

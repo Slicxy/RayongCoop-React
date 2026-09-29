@@ -11,59 +11,72 @@ export default function AboutPage() {
         <div className="section-title-wrap">
           <span className="section-badge">ข้อมูลองค์กร</span>
           <h1 className="section-title">เกี่ยวกับสหกรณ์</h1>
-          <p className="section-subtitle">{COOP_INFO.nameTh} ({COOP_INFO.nameEn})</p>
+          <p className="section-subtitle">
+            <span style={{ display: 'block' }}>{COOP_INFO.nameTh}</span>
+            <span style={{ display: 'block', marginTop: '0.2rem' }}>({COOP_INFO.nameEn})</span>
+          </p>
           <div className="section-line" />
         </div>
 
-        {/* History Card */}
+        {/* History */}
         <div className="glass-card" style={{ padding: '2.5rem', borderRadius: 'var(--radius-xl)', marginBottom: '2.5rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2.5rem', alignItems: 'center' }}>
-            <div>
-              <span className="badge badge-primary" style={{ marginBottom: '0.75rem' }}>ความเป็นมา</span>
-              <h2 style={{ fontSize: '1.75rem', color: 'var(--primary-800)', marginBottom: '1rem' }}>
-                ประวัติการก่อตั้งสหกรณ์
-              </h2>
+          <span className="badge badge-primary" style={{ marginBottom: '0.75rem' }}>ความเป็นมา</span>
+          <h2 style={{ fontSize: '1.75rem', color: 'var(--primary-800)', marginBottom: '2rem' }}>
+            รากฐานของการออม เพื่อความมั่นคงของสมาชิก
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <section aria-labelledby="thai-health-coops-heading">
+              <h3 id="thai-health-coops-heading" style={{ fontSize: '1.25rem', color: 'var(--primary-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Landmark size={20} aria-hidden="true" />
+                สหกรณ์สาธารณสุขของไทย
+              </h3>
               <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: '1rem' }}>
-                <strong>{COOP_INFO.nameTh}</strong> ได้รับการจดทะเบียนจัดตั้งตามพระราชบัญญัติสหกรณ์ เมื่อปี พ.ศ. {COOP_INFO.establishedYear} โดยการริเริ่มของบุคลากรสาธารณสุขจังหวัดระยอง เพื่อเป็นสถาบันการเงินที่มุ่งส่งเสริมการออมทรัพย์ และให้บริการสินเชื่อเพื่อบรรเทาความเดือดร้อนทางการเงินแก่สมาชิก
+                สหกรณ์ออมทรัพย์สาธารณสุขอยู่บนรากฐานของขบวนการสหกรณ์ออมทรัพย์ไทย ซึ่งรวมสมาชิกที่มีอาชีพหรือชุมชนร่วมกันเพื่อออมเงิน สร้างกองทุน และช่วยเหลือกันทางการเงินตามหลักช่วยตนเองและช่วยเหลือซึ่งกันและกัน
+              </p>
+              <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: '1rem' }}>
+                ประเทศไทยเริ่มศึกษาวิธีการสหกรณ์ใน พ.ศ. 2457 และมีสหกรณ์แห่งแรกคือ “สหกรณ์วัดจันทร์ ไม่จำกัดสินใช้” จดทะเบียนเมื่อ 26 กุมภาพันธ์ พ.ศ. 2459 ต่อมา สหกรณ์ออมทรัพย์แห่งแรกของไทยจดทะเบียนเมื่อ 28 กันยายน พ.ศ. 2492
               </p>
               <p style={{ color: 'var(--text-muted)', lineHeight: 1.8 }}>
-                ตลอดระยะเวลากว่า 30 ปี สหกรณ์ได้ดำเนินงานด้วยความซื่อสัตย์ โปร่งใส มีธรรมาภิบาล และพัฒนาเทคโนโลยีการให้บริการอย่างต่อเนื่อง เพื่อประโยชน์สูงสุดและความมั่นคงของมวลสมาชิก
+                ในบริบทบุคลากรสาธารณสุข รูปแบบนี้ช่วยให้สมาชิกมีแหล่งออม แหล่งเงินกู้ตามความจำเป็น และสวัสดิการที่ร่วมกันดูแลผ่านองค์กรของสมาชิกเอง
               </p>
-            </div>
+            </section>
 
-            <div style={{ background: 'var(--gradient-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Target size={20} />
-                <span>วิสัยทัศน์ (Vision)</span>
+            <section aria-labelledby="rayong-coop-history-heading" style={{ background: 'var(--gradient-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '2rem' }}>
+              <h3 id="rayong-coop-history-heading" style={{ fontSize: '1.25rem', color: 'var(--accent-teal-dark)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Target size={20} aria-hidden="true" />
+                สหกรณ์ออมทรัพย์สาธารณสุขระยอง จำกัด
               </h3>
-              <blockquote style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', borderLeft: '4px solid var(--accent-gold)', paddingLeft: '1rem', fontStyle: 'italic', marginBottom: '1.5rem' }}>
-                "เป็นสถาบันการเงินชั้นนำของบุคลากรสาธารณสุข บริหารงานโปร่งใส ใช้เทคโนโลยีดิจิทัล พัฒนาคุณภาพชีวิตสมาชิกอย่างยั่งยืน"
-              </blockquote>
-
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-teal-dark)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Shield size={20} />
-                <span>พันธกิจ (Mission)</span>
-              </h3>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                  <span>ส่งเสริมการออมทรัพย์และสร้างวินัยทางการเงินแก่สมาชิก</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                  <span>ให้บริการสินเชื่ออัตราดอกเบี้ยเป็นธรรม เพื่อสวัสดิการและที่อยู่อาศัย</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                  <span>จัดสวัสดิการที่ครอบคลุมทุกช่วงชีวิตของสมาชิกและครอบครัว</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                  <span>พัฒนาระบบเทคโนโลยีดิจิทัลเพื่อความสะดวกรวดเร็วและปลอดภัย</span>
-                </li>
-              </ul>
-            </div>
+              <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: '1rem' }}>
+                <strong>{COOP_INFO.nameTh}</strong> จัดตั้งเมื่อวันที่ 21 สิงหาคม พ.ศ. 2530 มีสมาชิกแรกตั้ง 230 คน ทุนเรือนหุ้นแรกตั้ง 878,370 บาท และคณะผู้จัดตั้ง 18 คน
+              </p>
+              <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: '1rem' }}>
+                สหกรณ์มีเป้าหมายส่งเสริมการประหยัดและอดออม รวบรวมเงินออมเป็นกองทุนเพื่อให้สมาชิกกู้ ส่งเสริมการลงทุนประกอบอาชีพ และจัดสวัสดิการรวมถึงการสงเคราะห์แก่สมาชิกและครอบครัว
+              </p>
+              <p style={{ color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: '1rem' }}>
+                คณะผู้จัดตั้งนำโดยนายแพทย์อรรณพ สมาธิวัฒน์ ประธานคณะผู้จัดตั้ง ร่วมกับนายแพทย์มนูญ จิรัฐติกาลกิจ และนายแพทย์สาโรจน์ คงประศาสตร์ ในตำแหน่งรองประธาน โดยนางสาวอุษา อิศรางกูร ณ อยุธยา รับหน้าที่เหรัญญิก และนายบุญจอม ณ นคร รับหน้าที่เลขานุการ
+              </p>
+              <p style={{ color: 'var(--text-muted)', lineHeight: 1.8 }}>
+                ระยะแรกสหกรณ์ใช้ห้องเล็กของตึกอำนวยการด้านหน้าเป็นสำนักงาน ก่อนต่อเติมอาคารด้านหลังในราว พ.ศ. 2542 และต่อมาปรับปรุงชั้นล่างอาคารควบคุมโรคเฉลิมพระเกียรติพระบรมราชินีนาถ เพื่อเป็นสำนักงานสหกรณ์ในปัจจุบัน
+              </p>
+            </section>
           </div>
+        </div>
+
+        <div className="glass-card" style={{ padding: '2rem', borderRadius: 'var(--radius-xl)', marginBottom: '2.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', color: 'var(--primary-800)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Shield size={21} aria-hidden="true" />
+            วิสัยทัศน์และพันธกิจ
+          </h2>
+          <blockquote style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', borderLeft: '4px solid var(--accent-gold)', paddingLeft: '1rem', fontStyle: 'italic', marginBottom: '1.5rem' }}>
+            "เป็นสถาบันการเงินชั้นนำของบุคลากรสาธารณสุข บริหารงานโปร่งใส ใช้เทคโนโลยีดิจิทัล พัฒนาคุณภาพชีวิตสมาชิกอย่างยั่งยืน"
+          </blockquote>
+          <ul style={{ listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem 1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}><CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0, marginTop: '0.2rem' }} aria-hidden="true" /><span>ส่งเสริมการออมทรัพย์และสร้างวินัยทางการเงินแก่สมาชิก</span></li>
+            <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}><CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0, marginTop: '0.2rem' }} aria-hidden="true" /><span>ให้บริการสินเชื่ออัตราดอกเบี้ยเป็นธรรม เพื่อสวัสดิการและที่อยู่อาศัย</span></li>
+            <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}><CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0, marginTop: '0.2rem' }} aria-hidden="true" /><span>จัดสวัสดิการที่ครอบคลุมทุกช่วงชีวิตของสมาชิกและครอบครัว</span></li>
+            <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}><CheckCircle2 size={16} style={{ color: 'var(--accent-teal)', flexShrink: 0, marginTop: '0.2rem' }} aria-hidden="true" /><span>พัฒนาระบบเทคโนโลยีดิจิทัลเพื่อความสะดวกรวดเร็วและปลอดภัย</span></li>
+          </ul>
         </div>
 
         {/* Core Values */}

@@ -7,7 +7,7 @@ import {
   Sliders, Shield, HardDrive, Cpu, Terminal, Sparkles,
   LogOut, ArrowRight, Eye, Bell, Newspaper, Image,
   Megaphone, MessageSquare, HelpCircle, Plus, Check, X, ExternalLink,
-  UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera, Percent
+  UploadCloud, FileImage, ImagePlus, Edit3, Phone, Camera, Percent, Scale
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -422,43 +422,266 @@ export default function AdminDashboardPage() {
           />
         </div>
 
-        {/* Navigation Tabs for All 6 Modules + Users */}
-        <div className="dashboard-tabs-bar">
+        {/* Navigation Tabs for All 8 Modules (4-column Grid Layout) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
 
-          <button onClick={() => setActiveTab('announcements')} className={`btn ${activeTab === 'announcements' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <Bell size={15} />
-            <span>1. ประกาศสหกรณ์ ({announcements.length})</span>
+          {/* 1. Announcements */}
+          <button
+            onClick={() => setActiveTab('announcements')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'announcements'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'announcements'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-blue-50 text-[#073B74] dark:bg-blue-950/60 dark:text-blue-400 dark:border dark:border-blue-900/50'
+              }`}>
+                <Bell size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">1. ประกาศสหกรณ์</div>
+                <div className={`text-[11px] truncate ${activeTab === 'announcements' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  แจ้งเตือนทางการ
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'announcements'
+                ? 'bg-white/25 text-white'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              {announcements.length}
+            </span>
           </button>
 
-          <button onClick={() => setActiveTab('news')} className={`btn ${activeTab === 'news' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <Newspaper size={15} />
-            <span>2. ข่าวสาร & กิจกรรม ({news.length})</span>
+          {/* 2. News & Events */}
+          <button
+            onClick={() => setActiveTab('news')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'news'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'news'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-900/50'
+              }`}>
+                <Newspaper size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">2. ข่าวสาร & กิจกรรม</div>
+                <div className={`text-[11px] truncate ${activeTab === 'news' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  ประชาสัมพันธ์
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'news'
+                ? 'bg-white/25 text-white'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              {news.length}
+            </span>
           </button>
 
-          <button onClick={() => setActiveTab('hero')} className={`btn ${activeTab === 'hero' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <Image size={15} />
-            <span>3. ปรับแต่ง Hero Section</span>
+          {/* 3. Hero Section */}
+          <button
+            onClick={() => setActiveTab('hero')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'hero'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'hero'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-400 dark:border dark:border-purple-900/50'
+              }`}>
+                <Image size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">3. ปรับแต่ง Hero</div>
+                <div className={`text-[11px] truncate ${activeTab === 'hero' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  แบนเนอร์หน้าแรก
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'hero'
+                ? 'bg-white/25 text-white'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              ตั้งค่า
+            </span>
           </button>
 
-          <button onClick={() => setActiveTab('popup')} className={`btn ${activeTab === 'popup' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <Megaphone size={15} />
-            <span>4. Pop-up Campaign</span>
+          {/* 4. Pop-up Campaign */}
+          <button
+            onClick={() => setActiveTab('popup')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'popup'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'popup'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 dark:border dark:border-rose-900/50'
+              }`}>
+                <Megaphone size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">4. Pop-up Campaign</div>
+                <div className={`text-[11px] truncate ${activeTab === 'popup' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  แคมเปญป๊อปอัป
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'popup'
+                ? 'bg-white/25 text-white'
+                : popupCampaign.enabled
+                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              {popupCampaign.enabled ? 'เปิด' : 'ปิด'}
+            </span>
           </button>
 
-          <button onClick={() => setActiveTab('feedback')} className={`btn ${activeTab === 'feedback' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <MessageSquare size={15} />
-            <span>5. กล่องข้อเสนอแนะ ({feedbacks.length})</span>
+          {/* 5. Feedback Box */}
+          <button
+            onClick={() => setActiveTab('feedback')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'feedback'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'feedback'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-400 dark:border dark:border-cyan-900/50'
+              }`}>
+                <MessageSquare size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">5. ข้อเสนอแนะ</div>
+                <div className={`text-[11px] truncate ${activeTab === 'feedback' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  ความคิดเห็นสมาชิก
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'feedback'
+                ? 'bg-white/25 text-white'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              {feedbacks.length}
+            </span>
           </button>
 
-          <button onClick={() => setActiveTab('faqs')} className={`btn ${activeTab === 'faqs' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <HelpCircle size={15} />
-            <span>6. จัดการคำถาม FAQs ({faqsList.length})</span>
+          {/* 6. FAQs */}
+          <button
+            onClick={() => setActiveTab('faqs')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'faqs'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'faqs'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 dark:border dark:border-amber-900/50'
+              }`}>
+                <HelpCircle size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">6. คำถาม FAQs</div>
+                <div className={`text-[11px] truncate ${activeTab === 'faqs' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  ตอบข้อสงสัย
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'faqs'
+                ? 'bg-white/25 text-white'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              {faqsList.length}
+            </span>
           </button>
 
-          <button onClick={() => setActiveTab('loans')} className={`btn ${activeTab === 'loans' ? 'btn-primary' : 'btn-subtle'}`} style={{ borderRadius: '8px', fontSize: '0.85rem' }}>
-            <Percent size={15} />
-            <span>7. ดอกเบี้ย & สินเชื่อ ({loanProductsList.length})</span>
+          {/* 7. Interest & Loans */}
+          <button
+            onClick={() => setActiveTab('loans')}
+            className={`group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm ${
+              activeTab === 'loans'
+                ? 'bg-gradient-to-r from-[#073B74] to-[#0B5ED7] text-white border-[#073B74] shadow-md dark:from-blue-600 dark:to-indigo-600 dark:border-blue-500/60 dark:shadow-[0_0_18px_rgba(37,99,235,0.4)]'
+                : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-200/90 dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:text-slate-300 dark:hover:text-white dark:border-slate-800'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                activeTab === 'loans'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-400 dark:border dark:border-teal-900/50'
+              }`}>
+                <Percent size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">7. ดอกเบี้ย & สินเชื่อ</div>
+                <div className={`text-[11px] truncate ${activeTab === 'loans' ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  อัตรากู้ยืม
+                </div>
+              </div>
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${
+              activeTab === 'loans'
+                ? 'bg-white/25 text-white'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}>
+              {loanProductsList.length}
+            </span>
           </button>
+
+          {/* 8. LED Member Check */}
+          <Link
+            to="/admin/led/dashboard"
+            className="group flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all duration-200 shadow-sm
+              bg-gradient-to-r from-amber-50 to-amber-100/70 hover:from-amber-100 hover:to-amber-200 text-amber-950 border-amber-300/80
+              dark:from-[#0d1c3a] dark:to-[#132852] dark:hover:from-[#11244a] dark:hover:to-[#183266] dark:text-amber-300 dark:border-amber-500/50 dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105
+                bg-amber-500 text-white shadow-sm dark:bg-amber-500/20 dark:text-amber-400 dark:border dark:border-amber-500/30">
+                <Scale size={18} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">8. ตรวจกรมบังคับคดี</div>
+                <div className="text-[11px] text-amber-700/80 dark:text-amber-400/80 truncate">
+                  คดีล้มละลาย/บังคับคดี
+                </div>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0
+              bg-amber-200/90 text-amber-950 dark:bg-amber-950/80 dark:text-amber-300 dark:border dark:border-amber-500/40">
+              LED
+            </span>
+          </Link>
 
         </div>
 

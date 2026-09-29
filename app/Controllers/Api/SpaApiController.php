@@ -9,6 +9,7 @@ use App\Core\Controller;
 use App\Core\Database;
 use App\Core\Session;
 use App\Services\MemberPortalService;
+use App\Services\AuditService;
 
 /**
  * REST API Controller — serves JSON data for the React SPA frontend.
@@ -50,7 +51,8 @@ class SpaApiController extends Controller
         } catch (\Throwable $e) {}
 
         try {
-            $latestNews = Database::query("SELECT n.id, n.title, n.slug, n.excerpt, n.cover_image, n.publish_at, n.is_pinned, c.name as category_name FROM news n JOIN news_categories c ON n.category_id = c.id WHERE n.workflow_status = 'published' AND (n.publish_at IS NULL OR n.publish_at <= NOW()) ORDER BY n.is_pinned DESC, n.publish_at DESC LIMIT 6");
+            $latestNews = Database::query("SELECT n.id, n.title, n.slug, n.summary AS excerpt, n.cover_image, n.publish_at, n.is_pinned, c.name as category_name FROM news n JOIN news_categories c ON n.category_id = c.id WHERE n.deleted_at IS NULL AND n.workflow_status = 'published' AND (n.publish_at IS NULL OR n.publish_at <= NOW()) ORDER BY n.is_pinned DESC, n.publish_at DESC LIMIT 6");
+            $latestNews = array_map($this->withPublicNewsImageUrl(...), $latestNews);
         } catch (\Throwable $e) {}
 
         try {
@@ -160,8 +162,9 @@ class SpaApiController extends Controller
         $news = [];
         $total = 0;
         try {
-            $news = Database::query("SELECT n.id, n.title, n.slug, n.excerpt, n.cover_image, n.publish_at, n.is_pinned, c.name as category_name FROM news n JOIN news_categories c ON n.category_id = c.id WHERE n.workflow_status = 'published' AND (n.publish_at IS NULL OR n.publish_at <= NOW()) ORDER BY n.is_pinned DESC, n.publish_at DESC LIMIT {$perPage} OFFSET {$offset}");
-            $total = (int)Database::value("SELECT COUNT(*) FROM news WHERE workflow_status = 'published' AND (publish_at IS NULL OR publish_at <= NOW())");
+            $news = Database::query("SELECT n.id, n.title, n.slug, n.summary AS excerpt, n.cover_image, n.publish_at, n.is_pinned, c.name as category_name FROM news n JOIN news_categories c ON n.category_id = c.id WHERE n.deleted_at IS NULL AND n.workflow_status = 'published' AND (n.publish_at IS NULL OR n.publish_at <= NOW()) ORDER BY n.is_pinned DESC, n.publish_at DESC LIMIT {$perPage} OFFSET {$offset}");
+            $news = array_map($this->withPublicNewsImageUrl(...), $news);
+            $total = (int)Database::value("SELECT COUNT(*) FROM news WHERE deleted_at IS NULL AND workflow_status = 'published' AND (publish_at IS NULL OR publish_at <= NOW())");
         } catch (\Throwable $e) {}
 
         $this->json(['success' => true, 'data' => $news, 'meta' => ['page' => $page, 'per_page' => $perPage, 'total' => $total]]);
@@ -589,6 +592,136 @@ class SpaApiController extends Controller
         } catch (\Throwable $e) {}
 
         $this->json(['success' => true, 'data' => $logs]);
+    }
+
+    /**
+     * GET /api/admin/news
+     * Returns the same database-backed news records that the public website reads.
+     */
+    public function adminNews(): void
+    {
+        $news = [];
+        try {
+            $news = Database::query("SELECT n.id, n.title, n.summary AS excerpt, n.cover_image AS image, n.publish_at AS date, n.views_count AS views, c.name AS category
+                FROM news n
+                JOIN news_categories c ON n.category_id = c.id
+                WHERE n.deleted_at IS NULL
+                ORDER BY n.created_at DESC");
+            $news = array_map($this->withPublicNewsImageUrl(...), $news);
+        } catch (\Throwable $e) {}
+
+        $this->json(['success' => true, 'data' => $news]);
+    }
+
+    /**
+     * POST /api/admin/news
+     * Creates a published article for the React administrator dashboard.
+     */
+    public function createAdminNews(): void
+    {
+        $title = trim((string) $this->request->input('title', ''));
+        $categoryName = trim((string) $this->request->input('category', ''));
+        $excerpt = trim((string) $this->request->input('excerpt', ''));
+
+        if (mb_strlen($title) < 5 || mb_strlen($title) > 255 || $categoryName === '' || $excerpt === '') {
+            $this->json(['success' => false, 'message' => 'กรุณากรอกหัวข้อ หมวดหมู่ และสรุปข่าวให้ครบถ้วน'], 422);
+            return;
+        }
+
+        $category = Database::first('SELECT id FROM news_categories WHERE name = ? AND status = \'active\' LIMIT 1', [$categoryName]);
+        if (!$category) {
+            $this->json(['success' => false, 'message' => 'ไม่พบหมวดหมู่ข่าวที่เลือก'], 422);
+            return;
+        }
+
+        try {
+            $coverImage = $this->storeNewsCoverImage($this->request->input('image'));
+            $authorId = Auth::id();
+            $id = Database::insert(
+                'INSERT INTO news (category_id, title, slug, summary, content, cover_image, workflow_status, author_id, created_by, publish_at, created_at) VALUES (?, ?, ?, ?, ?, ?, \'published\', ?, ?, NOW(), NOW())',
+                [(int) $category['id'], $title, str_slug($title) . '-' . time(), $excerpt, $excerpt, $coverImage, $authorId, $authorId]
+            );
+            AuditService::log('news', 'create', (string) $id, null, ['title' => $title, 'status' => 'published']);
+            $item = Database::first("SELECT n.id, n.title, n.summary AS excerpt, n.cover_image AS image, n.publish_at AS date, n.views_count AS views, c.name AS category
+                FROM news n JOIN news_categories c ON n.category_id = c.id WHERE n.id = ? LIMIT 1", [(int) $id]);
+            $item = $item ? $this->withPublicNewsImageUrl($item) : null;
+        } catch (\InvalidArgumentException $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 422);
+            return;
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => 'ไม่สามารถบันทึกข่าวสารได้'], 500);
+            return;
+        }
+
+        $this->json(['success' => true, 'data' => $item, 'message' => 'เผยแพร่ข่าวสารเรียบร้อยแล้ว'], 201);
+    }
+
+    /** POST /api/admin/news/{id}/delete */
+    public function deleteAdminNews(string $id): void
+    {
+        $news = Database::first('SELECT id, title FROM news WHERE id = ? AND deleted_at IS NULL LIMIT 1', [(int) $id]);
+        if (!$news) {
+            $this->json(['success' => false, 'message' => 'ไม่พบข่าวสารที่ต้องการลบ'], 404);
+            return;
+        }
+
+        try {
+            Database::execute('UPDATE news SET deleted_at = NOW(), updated_by = ? WHERE id = ?', [Auth::id(), (int) $id]);
+            AuditService::log('news', 'delete', (string) $id, $news, ['deleted_at' => date('Y-m-d H:i:s')]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => 'ไม่สามารถลบข่าวสารได้'], 500);
+            return;
+        }
+
+        $this->json(['success' => true, 'message' => 'ลบข่าวสารเรียบร้อยแล้ว']);
+    }
+
+    private function storeNewsCoverImage(mixed $image): ?string
+    {
+        if (!is_string($image) || $image === '') {
+            return null;
+        }
+
+        if (!preg_match('/^data:image\/(png|jpe?g|webp);base64,([A-Za-z0-9+\/=\s]+)$/i', $image, $matches)) {
+            throw new \InvalidArgumentException('รูปภาพต้องเป็นไฟล์ PNG, JPEG หรือ WEBP ที่ถูกต้อง');
+        }
+
+        $binary = base64_decode($matches[2], true);
+        if ($binary === false || strlen($binary) > 5 * 1024 * 1024) {
+            throw new \InvalidArgumentException('รูปภาพต้องมีขนาดไม่เกิน 5 MB');
+        }
+
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($binary);
+        $extensions = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+        if (!isset($extensions[$mime])) {
+            throw new \InvalidArgumentException('รองรับเฉพาะรูปภาพ PNG, JPEG และ WEBP');
+        }
+
+        $directory = dirname(__DIR__, 3) . '/public/storage/uploads/news';
+        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+            throw new \RuntimeException('ไม่สามารถเตรียมพื้นที่จัดเก็บรูปภาพได้');
+        }
+
+        $filename = 'news-' . bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
+        if (file_put_contents($directory . '/' . $filename, $binary) === false) {
+            throw new \RuntimeException('ไม่สามารถบันทึกรูปภาพได้');
+        }
+
+        return '/storage/uploads/news/' . $filename;
+    }
+
+    /** Convert a stored relative image path into the public application URL. */
+    private function withPublicNewsImageUrl(array $item): array
+    {
+        $key = array_key_exists('image', $item) ? 'image' : 'cover_image';
+        $image = $item[$key] ?? null;
+
+        if (is_string($image) && $image !== '' && !preg_match('#^https?://#i', $image)) {
+            $relativePath = preg_replace('#^/?storage/uploads/#', '', $image);
+            $item[$key] = storage_url(ltrim($relativePath, '/'));
+        }
+
+        return $item;
     }
 
     // ──────────────────────────────────────────────

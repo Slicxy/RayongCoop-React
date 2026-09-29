@@ -163,6 +163,9 @@ export const fetchAdminComplaints = () => apiFetch('/api/admin/complaints');
 /** Fetch admin audit logs */
 export const fetchAdminAuditLogs = () => apiFetch('/api/admin/audit-logs');
 
+/** Fetch database-backed news for the administrator dashboard */
+export const fetchAdminNews = () => apiFetch('/api/admin/news');
+
 // ──────────────────────────────────────────────
 // POST APIs (mutations)
 // ──────────────────────────────────────────────
@@ -208,11 +211,26 @@ export const apiPost = async (path, body = {}) => {
         },
         credentials: 'include',
       });
-      if (res.ok || res.status === 400 || res.status === 422 || res.status === 419) {
-        return await res.json();
+      if (res.ok || [400, 401, 403, 419, 422].includes(res.status)) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          return await res.json();
+        }
+        return {
+          success: false,
+          message: res.status === 401 || res.status === 403
+            ? 'เซสชันหมดอายุหรือไม่มีสิทธิ์ใช้งาน กรุณาเข้าสู่ระบบใหม่'
+            : 'ระบบตอบกลับข้อมูลไม่ถูกต้อง'
+        };
       }
     } catch (e) {}
   }
 
-  return { success: false, message: 'ไม่สามารถส่งข้อมูลได้' };
+  return { success: false, message: 'ไม่สามารถเชื่อมต่อกับระบบบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง' };
 };
+
+/** Publish a news item from the React administrator dashboard */
+export const createAdminNews = (body) => apiPost('/api/admin/news', body);
+
+/** Soft-delete a news item from the React administrator dashboard */
+export const deleteAdminNews = (id) => apiPost(`/api/admin/news/${id}/delete`);

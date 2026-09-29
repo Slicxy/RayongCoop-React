@@ -225,7 +225,7 @@ export default function Navbar() {
                   setActiveMegaMenu(null);
                   setUserDropdownOpen(!userDropdownOpen);
                 }}
-                className="user-pill-btn"
+                className="user-pill-btn user-avatar-only"
                 aria-label="User Account Menu"
               >
                 <div className="user-pill-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -235,15 +235,6 @@ export default function Navbar() {
                     getAvatarInitial()
                   )}
                 </div>
-                <div className="user-pill-info hide-mobile">
-                  <div className="user-pill-name">
-                    {user.name} {user.roleBadge ? `(${user.roleBadge})` : ''}
-                  </div>
-                  <div className="user-pill-subtitle">
-                    {user.role === 'super_admin' ? 'Super Admin' : 'พอร์ทัลสมาชิก'}
-                  </div>
-                </div>
-                <ChevronDown size={14} style={{ color: 'var(--text-muted)', transform: userDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
 
               {/* User Account Dropdown Menu (Exact match to screenshot) */}
@@ -387,7 +378,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/board" className="mega-menu-card-item">
+                    <Link to="/board_committee" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
                         <Award size={18} />
                       </div>
@@ -397,7 +388,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/board" className="mega-menu-card-item">
+                    <Link to="/board_officer" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-teal-light)', color: 'var(--accent-teal-dark)' }}>
                         <Users size={18} />
                       </div>
@@ -532,7 +523,7 @@ export default function Navbar() {
                     <span>ผลิตภัณฑ์สินเชื่อ & เงินกู้</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <Link to="/loans" className="mega-menu-card-item">
+                    <Link to="/loans#emergency" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)' }}>
                         <Zap size={18} />
                       </div>
@@ -545,7 +536,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/loans" className="mega-menu-card-item">
+                    <Link to="/loans#ordinary" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold-dark)' }}>
                         <Banknote size={18} />
                       </div>
@@ -555,7 +546,7 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link to="/loans" className="mega-menu-card-item">
+                    <Link to="/loans#housing" className="mega-menu-card-item">
                       <div className="mega-menu-icon-wrap" style={{ background: 'var(--accent-emerald-light)', color: 'var(--accent-emerald-dark)' }}>
                         <Home size={18} />
                       </div>
@@ -942,8 +933,8 @@ export default function Navbar() {
             {mobileAccordion === 'about' && (
               <div style={mobileSubMenuStyle}>
                 <Link to="/about" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ประวัติและวิสัยทัศน์</Link>
-                <Link to="/board" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• คณะกรรมการดำเนินการ</Link>
-                <Link to="/board" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฝ่ายจัดการและเจ้าหน้าที่</Link>
+                <Link to="/board_committee" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• คณะกรรมการดำเนินการ</Link>
+                <Link to="/board_officer" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฝ่ายจัดการและเจ้าหน้าที่</Link>
                 <Link to="/statistics" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ฐานะและสถิติทางการเงิน</Link>
                 <Link to="/documents" style={mobileSubItemStyle} onClick={() => setMobileMenuOpen(false)}>• ข้อบังคับและระเบียบสหกรณ์</Link>
               </div>

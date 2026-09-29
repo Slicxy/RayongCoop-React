@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 use App\Middlewares\AuthMiddleware;
 use App\Middlewares\CsrfMiddleware;
+use App\Middlewares\RateLimitMiddleware;
 use App\Middlewares\RoleMiddleware;
 
 /*
@@ -116,7 +117,6 @@ $router->group(['prefix' => 'api/member', 'middleware' => [AuthMiddleware::class
     $r->get('/beneficiaries', 'Api\\SpaApiController@memberBeneficiaries');
     $r->get('/welfare', 'Api\\SpaApiController@memberWelfare');
 });
-
 /*
 |--------------------------------------------------------------------------
 | SPA REST API — Admin Data (auth + super_admin role required)
@@ -127,6 +127,35 @@ $router->group(['prefix' => 'api/admin', 'middleware' => [AuthMiddleware::class,
     $r->get('/users', 'Api\\SpaApiController@adminUsers');
     $r->get('/complaints', 'Api\\SpaApiController@adminComplaints');
     $r->get('/audit-logs', 'Api\\SpaApiController@adminAuditLogs');
+    $r->get('/news', 'Api\\SpaApiController@adminNews');
+    $r->post('/news', 'Api\\SpaApiController@createAdminNews', [CsrfMiddleware::class]);
+    $r->post('/news/{id}/delete', 'Api\\SpaApiController@deleteAdminNews', [CsrfMiddleware::class]);
+});
+
+/*
+|--------------------------------------------------------------------------
+| SPA REST API — LED Member Check Module (CKAN Open Data Integration)
+|--------------------------------------------------------------------------
+*/
+$router->group(['prefix' => 'api/admin/led', 'middleware' => [AuthMiddleware::class]], function (\App\Core\Router $r) {
+    // Dashboard & Schema Discovery
+    $r->get('/dashboard', 'Api\\LedApiController@dashboard');
+    $r->get('/schema', 'Api\\LedApiController@schema');
+    $r->post('/schema/refresh', 'Api\\LedApiController@refreshSchema', [CsrfMiddleware::class]);
+
+    // Member Search & Individual LED Check
+    $r->get('/members/search', 'Api\\LedApiController@searchMembers', [new RateLimitMiddleware('led_search', 60, 60)]);
+    $r->post('/check-member', 'Api\\LedApiController@checkMember', [CsrfMiddleware::class, new RateLimitMiddleware('led_check', 30, 60)]);
+
+    // Review Queue & Human Verification Decision
+    $r->get('/review', 'Api\\LedApiController@reviewQueue');
+    $r->get('/review/{id}', 'Api\\LedApiController@reviewDetail');
+    $r->post('/review/{id}', 'Api\\LedApiController@submitReview', [CsrfMiddleware::class]);
+
+    // Batch Processing & Run History
+    $r->post('/batch', 'Api\\LedApiController@startBatch', [CsrfMiddleware::class, new RateLimitMiddleware('led_batch', 10, 60)]);
+    $r->get('/runs', 'Api\\LedApiController@runs');
+    $r->get('/runs/{id}', 'Api\\LedApiController@runDetail');
 });
 
 /*
@@ -356,4 +385,19 @@ $router->group(['prefix' => 'admin', 'middleware' => [AuthMiddleware::class, new
     // Settings
     $r->get('/settings', 'Admin\\SettingController@index');
     $r->post('/settings/update', 'Admin\\SettingController@update', [CsrfMiddleware::class]);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Protected LED Member Check Web Routes (Super Admin & Staff)
+| Role Staff has full decision and view rights like admin in this section
+|--------------------------------------------------------------------------
+*/
+$router->group(['prefix' => 'admin/led', 'middleware' => [AuthMiddleware::class, new RoleMiddleware(['super_admin', 'staff'])]], function (\App\Core\Router $r) {
+    $r->get('', 'Admin\\LedController@index');
+    $r->get('/dashboard', 'Admin\\LedController@dashboard');
+    $r->get('/search', 'Admin\\LedController@search');
+    $r->get('/review', 'Admin\\LedController@review');
+    $r->get('/batch', 'Admin\\LedController@batch');
+    $r->get('/schema', 'Admin\\LedController@schema');
 });
