@@ -28,6 +28,7 @@ const LoansPage = lazy(() => import('./pages/LoansPage'));
 const DepositsPage = lazy(() => import('./pages/DepositsPage'));
 const LoanChecklistPage = lazy(() => import('./pages/LoanChecklistPage'));
 const WelfarePage = lazy(() => import('./pages/WelfarePage'));
+const WelfareDetailPage = lazy(() => import('./pages/WelfareDetailPage'));
 const EServicePage = lazy(() => import('./pages/EServicePage'));
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
@@ -147,6 +148,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             {publicRoutes.map(([path, Page]) => <Route key={path} path={path} element={<Page />} />)}
+            <Route path="/welfare/:welfareId" element={<WelfareDetailPage />} />
 
             <Route path="/verify-receipt" element={<VerifyReceiptPage />} />
             <Route path="/verify-receipt/:token" element={<VerifyReceiptPage />} />
